@@ -15,7 +15,7 @@ def main():
     # intents.guilds = True
 
     # To enable member intents:
-    # intents.members = True
+    intents.members = True
 
     # Set custom status to "Listening to ?help"
     activity = nextcord.Activity(
