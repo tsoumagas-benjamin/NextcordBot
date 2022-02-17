@@ -29,9 +29,9 @@ def main():
     )
 
     # Get the modules of all cogs whose directory structure is cogs/<module_name>/cog.py
-    for folder in os.listdir("cogs"):
-        if os.path.exists(os.path.join("cogs", folder, "cog.py")):
-            bot.load_extension(f"cogs.{folder}.cog")
+    for file in os.listdir("./cogs"):
+        if file.endswith('.py'):
+            bot.load_extension(f"cogs.{file[:-3]}")
 
     @bot.event
     async def on_ready():
