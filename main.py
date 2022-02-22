@@ -36,9 +36,10 @@ def main():
     )
 
     bot = NextcordBot(
-        intents=intents,
-        activity=activity,
+        intents=intents
     )
+
+    bot.activity = activity
 
     @bot.event
     async def on_ready():
