@@ -1,4 +1,4 @@
-import nextcord, os, random, config
+import nextcord, os, pymongo, random, config
 from nextcord.ext import commands
 from log import log
 
@@ -10,7 +10,11 @@ def main():
     # To enable member intents:
     intents.members = True
 
-    db = config.db
+    # Database config
+    client = pymongo.MongoClient(os.getenv('CONN_STRING'))
+
+    #Name our access to our client database
+    db = client.NextcordBot
 
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
@@ -35,11 +39,6 @@ def main():
         intents=intents,
         activity=activity,
     )
-
-    # Get the modules of all cogs whose directory structure is cogs/<module_name>/cog.py
-    for file in os.listdir("./cogs"):
-        if file.endswith('.py'):
-            bot.load_extension(f"cogs.{file[:-3]}")
 
     @bot.event
     async def on_ready():
