@@ -32,7 +32,7 @@ def main():
 
     # Set custom status to "Listening to ?help"
     activity = nextcord.Activity(
-        type=nextcord.ActivityType.listening, name=f"{config.BOT_PREFIX}help"
+        type=nextcord.ActivityType.listening, name=f"{bot.help_command}"
     )
 
     bot = NextcordBot(
