@@ -49,6 +49,15 @@ If you require additional API keys or variables specific to an enviroment, they 
 
 IDE config such as the `.vscode` folder do not normally belong on GitHub since they are often specific to a particular environment. To make sure GitHub will ignore the `.vscode` folder uncomment the line at the end of the `.gitignore`.
 
-## Coming soon
+## Other Setup
 
-This repo will eventually contain info on how to use slash commands and other interactions with Nextcord (these features are still in development).
+- You will have to make a new application and bot at https://discord.com/developers/applications
+- Create an account with MongoDB Atlas for a free cluster. Once you have set up you'll be needing your MongoDB password and connection string(with your username, password, and database name inserted) for the .env.
+
+## Credit
+
+- FreeCodeCamp: https://www.youtube.com/c/Freecodecamp
+- Glowstik: https://www.youtube.com/c/Glowstik
+- Code With Swastik: https://www.youtube.com/c/CodeWithSwastik
+- Jonah Lawrence • Dev Pro Tips: https://www.youtube.com/c/DevProTips
+- Special thanks to the Official Nextcord Discord server!
