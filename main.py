@@ -30,16 +30,14 @@ def main():
                 output = db.guilds.insert_one({"_id": message.guild.id, "prefix": "$"})
                 return output['prefix']
 
-    # Set custom status to "Listening to ?help"
-    activity = nextcord.Activity(
-        type=nextcord.ActivityType.listening, name=f"{bot.help_command}"
-    )
-
     bot = NextcordBot(
         intents=intents
     )
 
-    bot.activity = activity
+    # Set custom status to "Listening to ?help"
+    bot.activity =  nextcord.Activity(
+        type=nextcord.ActivityType.listening, name=f"{bot.help_command}"
+    )
 
     @bot.event
     async def on_ready():
