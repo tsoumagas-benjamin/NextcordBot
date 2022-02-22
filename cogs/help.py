@@ -99,7 +99,7 @@ class MyHelpCommand(commands.MinimalHelpCommand):
 
     async def bot_help_embed(self, mapping: dict):
         return await self.help_embed(
-            title="PersonalNextcordBot Commands",
+            title="PersonalDiscordBot Commands",
             description=self.context.bot.description,
             mapping=mapping,
             set_author=True
