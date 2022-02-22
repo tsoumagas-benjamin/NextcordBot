@@ -73,7 +73,7 @@ class MyHelpCommand(commands.MinimalHelpCommand):
                 embed.add_field(
                     name=self.get_command_signature(command),
                     value=command.short_doc or "...",
-                    inline=False
+                    inline=True
                 )
         elif mapping:
             # add a short description of commands in each cog
