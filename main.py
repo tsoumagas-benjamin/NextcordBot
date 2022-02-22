@@ -58,7 +58,7 @@ def main():
             db.keywords.insert_one({"_id": guild.id, "sad": config.sad_words, "filter": config.filter_words, "encouragements": config.encouragements, "status": True})
         # Add an entry for starter guild prefix
         if db.guilds.find_one({"_id": guild.id}) == None:
-            db.guilds.insert_one({"_id": guild.id, "prefix": "$"})
+            db.guilds.insert_one({"_id": guild.id, "prefix": ">"})
     
     @bot.event
     async def on_guild_remove(guild):

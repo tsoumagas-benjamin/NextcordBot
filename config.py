@@ -6,7 +6,6 @@ load_dotenv()
 
 # Discord config
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", "")
-BOT_PREFIX = os.getenv("TOKEN")
 
 #Default keywords to use in our keywords collection
 sad_words = ["sad", "depressed", "unhappy", "angry", "miserable", "depressing"]
