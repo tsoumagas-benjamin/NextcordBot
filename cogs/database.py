@@ -1,6 +1,11 @@
 import pymongo, os, nextcord
 from nextcord.ext import commands
-from main import db
+
+#Set up our mongodb client
+client = pymongo.MongoClient(os.getenv('CONN_STRING'))
+
+#Name our access to our client database
+db = client.NextcordBot
 
 #Create a cog for error handling
 class Database(commands.Cog, name="Database"):
