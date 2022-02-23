@@ -43,8 +43,8 @@ def main():
                 db.create_collection(c)
 
         await bot.change_presence(activity = nextcord.Activity(
-        type=nextcord.ActivityType.custom, 
-        name="@ me for help!"
+        type=nextcord.ActivityType.listening, 
+        name=f"{bot.help_command} or @ me for help!"
         ))
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
