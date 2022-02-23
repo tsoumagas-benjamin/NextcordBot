@@ -44,7 +44,7 @@ def main():
 
         await bot.change_presence(activity = nextcord.Activity(
         type=nextcord.ActivityType.listening, 
-        name="@ me for help!"
+        name=f"{bot.prefix}help or @ me!"
         ))
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
