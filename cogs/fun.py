@@ -107,7 +107,7 @@ class Fun(commands.Cog, name="Fun"):
         memeName = memeData['title']
         memePoster = memeData['author']
         memeSub = memeData['subreddit']
-        memeLink = memeData['postlink']
+        memeLink = memeData['postLink']
         memeVotes = memeData['ups']
 
         embed = nextcord.Embed(title=memeName, color=nextcord.Colour.orange)
