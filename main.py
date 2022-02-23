@@ -23,17 +23,8 @@ def main():
 
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
-        def __init__(self, *args, **kwargs):
-            self.intents = intents,
-            self.activity = activity
-            super().__init__(
-                self.get_prefix,
-                intents=intents,
-                activity=nextcord.Activity(
-                type=nextcord.ActivityType.listening, 
-                name=f"{self.command_prefix}help or @ me!"
-                ),
-            )
+        def __init__(self, **kwargs):
+            super().__init__(self.get_prefix)
 
         # Overrides bot.get_prefix
         async def get_prefix(self, message: nextcord.Message):
@@ -44,7 +35,7 @@ def main():
                 output = db.guilds.insert_one({"_id": message.guild.id, "prefix": "$"})
                 return output['prefix']
 
-    bot = NextcordBot()
+    bot = NextcordBot(intents=intents, activity=activity)
 
     @bot.event
     async def on_ready():
