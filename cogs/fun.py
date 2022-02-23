@@ -110,7 +110,7 @@ class Fun(commands.Cog, name="Fun"):
         memeLink = memeData['postLink']
         memeVotes = memeData['ups']
 
-        embed = nextcord.Embed(title=memeName, color=nextcord.Colour.orange)
+        embed = nextcord.Embed(title=memeName, color=nextcord.Colour.orange())
         embed.set_image(url=memeURL)
         embed.set_author(text=f"r/{memeSub} • Posted by u/{memePoster}")
         embed.set_footer(text=f"{memeVotes}🔺 • Original post at: {memeLink}")
