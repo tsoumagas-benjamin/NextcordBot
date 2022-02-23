@@ -11,7 +11,7 @@ def main():
     intents.members = True
     
     # Set custom status to "Listening to ?help"
-    activity = nextcord.CustomActivity("@ me for help!")
+    activity = nextcord.CustomActivity(name="@ me for help!")
 
     # Database config
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
