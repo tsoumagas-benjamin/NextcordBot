@@ -8,10 +8,7 @@ def main():
     intents = nextcord.Intents.default()
 
     # To enable member intents:
-    intents.members = True
-    
-    # Set custom status to "Listening to ?help"
-    activity = nextcord.CustomActivity(name="@ me for help!")
+    intents.members = True    
 
     # Database config
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -46,7 +43,10 @@ def main():
                 db.create_collection(c)
 
         # Set up bot activity
-        await bot.change_presence(activity=activity)
+        await bot.change_presence(activity = nextcord.Activity(
+        type=nextcord.ActivityType.custom, 
+        name="@ me for help!"
+        ))
 
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
