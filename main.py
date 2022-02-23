@@ -43,7 +43,7 @@ def main():
                 db.create_collection(c)
 
         await bot.change_presence(activity = nextcord.Activity(
-        type=nextcord.ActivityType.listening, 
+        type=nextcord.ActivityType.custom, 
         name="@ me for help!"
         ))
         print(f"Collections: {collections}")
@@ -67,7 +67,6 @@ def main():
             mycol = db[collection]
             mycol.delete_many({"_id": guild.id})
     
-
     # Defining bot behaviour when a message is sent
     @bot.event
     async def on_message(message):
