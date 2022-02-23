@@ -104,15 +104,16 @@ class Fun(commands.Cog, name="Fun"):
         memeData = json.load(memeAPI)
 
         memeURL = memeData['url']
-        memeName = memeData['name']
+        memeName = memeData['title']
         memePoster = memeData['author']
         memeSub = memeData['subreddit']
         memeLink = memeData['postlink']
+        memeVotes = memeData['ups']
 
         embed = nextcord.Embed(title=memeName, color=nextcord.Colour.orange)
         embed.set_image(url=memeURL)
         embed.set_author(text=f"r/{memeSub} • Posted by u/{memePoster}")
-        embed.set_footer(text=f"Original post at: {memeLink}")
+        embed.set_footer(text=f"{memeVotes}🔺 • Original post at: {memeLink}")
         await ctx.send(embed=embed)
 
     @commands.command()
