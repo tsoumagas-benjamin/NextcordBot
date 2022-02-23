@@ -11,9 +11,7 @@ def main():
     intents.members = True
     
     # Set custom status to "Listening to ?help"
-    activity = nextcord.Activity(
-        type=nextcord.ActivityType.listening, name="@ me for help!"
-    )
+    activity = nextcord.CustomActivity("@ me for help!")
 
     # Database config
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -35,8 +33,13 @@ def main():
                 output = db.guilds.insert_one({"_id": message.guild.id, "prefix": "$"})
                 return output['prefix']
 
-    bot = NextcordBot(intents=intents, activity=activity)
+    # Instantiate the bot
+    bot = NextcordBot(intents=intents)
 
+    # Set up bot activity
+    bot.change_presence(activity=activity)
+
+    # Define bot behaviour on start up
     @bot.event
     async def on_ready():
         """When discord is connected"""
@@ -46,8 +49,10 @@ def main():
                 db.create_collection(c)
 
         print(f"Collections: {collections}")
+        print(f"Intents: {intents}")
         print(f'We have logged in as {bot.user}')
     
+    # Define bot behaviour on joining server
     @bot.event
     async def on_guild_join(guild):
         # Add an entry for starter keywords
@@ -57,6 +62,7 @@ def main():
         if db.guilds.find_one({"_id": guild.id}) == None:
             db.guilds.insert_one({"_id": guild.id, "prefix": ">"})
     
+    # Defining bot behaviour on leaving server
     @bot.event
     async def on_guild_remove(guild):
         for collection in db.list_collection_names():
@@ -64,6 +70,7 @@ def main():
             mycol.delete_many({"_id": guild.id})
     
 
+    # Defining bot behaviour when a message is sent
     @bot.event
     async def on_message(message):
         # If the message is from a bot, don't react
