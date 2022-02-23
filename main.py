@@ -9,6 +9,16 @@ def main():
 
     # To enable member intents:
     intents.members = True
+    
+    # Set custom status to "Listening to ?help"
+    activity = nextcord.Activity(
+        type=nextcord.ActivityType.listening, name="@ me for help!"
+    )
+
+    # Set bot description
+    description = '''An example bot to showcase the nextcord.ext.commands extension
+    module.
+    There are a number of utility commands being showcased here.'''
 
     # Database config
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -19,7 +29,12 @@ def main():
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
         def __init__(self, **kwargs):
-            super().__init__(self.get_prefix)
+            super().__init__(
+                self.get_prefix,
+                description=description,
+                intents=intents,
+                activity=activity,
+            )
 
         # Overrides bot.get_prefix
         async def get_prefix(self, message: nextcord.Message):
@@ -30,15 +45,7 @@ def main():
                 output = db.guilds.insert_one({"_id": message.guild.id, "prefix": "$"})
                 return output['prefix']
 
-    # Set custom status to "Listening to ?help"
-    activity = nextcord.Activity(
-        type=nextcord.ActivityType.listening, name="@ me for help!"
-    )
-
-    bot = NextcordBot(
-        intents=intents,
-        activity=activity,
-    )
+    bot = NextcordBot()
 
     @bot.event
     async def on_ready():
