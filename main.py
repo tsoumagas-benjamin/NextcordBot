@@ -23,13 +23,15 @@ def main():
 
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
-        def __init__(self, **kwargs):
+        def __init__(self, *args, **kwargs):
+            self.intents = intents,
+            self.activity = activity
             super().__init__(
                 self.get_prefix,
                 intents=intents,
                 activity=nextcord.Activity(
                 type=nextcord.ActivityType.listening, 
-                name=f"{self.get_prefix}help or @ me!"
+                name=f"{self.command_prefix}help or @ me!"
                 ),
             )
 
