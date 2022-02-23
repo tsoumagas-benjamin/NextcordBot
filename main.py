@@ -13,12 +13,20 @@ def main():
     # Database config
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 
-    #Name our access to our client database
+    # Name our access to our client database
     db = client.NextcordBot
+
+    # Set up the bot activity
+    activity = nextcord.Activity(
+        type=nextcord.Game, 
+        name="@ me for help!"
+        )
 
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
         def __init__(self, **kwargs):
+            self.intents=kwargs.pop('intents')
+            self.activity=kwargs.pop('activity')
             super().__init__(self.get_prefix)
 
         # Overrides bot.get_prefix
@@ -31,7 +39,7 @@ def main():
                 return output['prefix']
 
     # Instantiate the bot
-    bot = NextcordBot(intents=intents)
+    bot = NextcordBot(intents=intents, activity=activity)
 
     # Define bot behaviour on start up
     @bot.event
@@ -41,12 +49,6 @@ def main():
         for c in ['guilds', 'rules', 'keywords', 'songs']:
             if c not in collections:
                 db.create_collection(c)
-
-        # Set up bot activity
-        await bot.change_presence(activity = nextcord.Activity(
-        type=nextcord.ActivityType.custom, 
-        name="@ me for help!"
-        ))
 
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
