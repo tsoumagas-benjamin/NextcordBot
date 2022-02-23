@@ -25,8 +25,6 @@ def main():
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
         def __init__(self, **kwargs):
-            self.intents=kwargs.pop('intents')
-            self.activity=kwargs.pop('activity')
             super().__init__(self.get_prefix)
 
         # Overrides bot.get_prefix
