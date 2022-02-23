@@ -15,11 +15,6 @@ def main():
         type=nextcord.ActivityType.listening, name="@ me for help!"
     )
 
-    # Set bot description
-    description = '''An example bot to showcase the nextcord.ext.commands extension
-    module.
-    There are a number of utility commands being showcased here.'''
-
     # Database config
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 
@@ -31,9 +26,11 @@ def main():
         def __init__(self, **kwargs):
             super().__init__(
                 self.get_prefix,
-                description=description,
                 intents=intents,
-                activity=activity,
+                activity=nextcord.Activity(
+                type=nextcord.ActivityType.listening, 
+                name=f"{self.get_prefix}help or @ me!"
+                ),
             )
 
         # Overrides bot.get_prefix
