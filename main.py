@@ -36,9 +36,6 @@ def main():
     # Instantiate the bot
     bot = NextcordBot(intents=intents)
 
-    # Set up bot activity
-    bot.change_presence(activity=activity)
-
     # Define bot behaviour on start up
     @bot.event
     async def on_ready():
@@ -47,6 +44,9 @@ def main():
         for c in ['guilds', 'rules', 'keywords', 'songs']:
             if c not in collections:
                 db.create_collection(c)
+
+        # Set up bot activity
+        await bot.change_presence(activity=activity)
 
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
