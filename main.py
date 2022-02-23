@@ -14,13 +14,7 @@ def main():
     client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 
     # Name our access to our client database
-    db = client.NextcordBot
-
-    # Set up the bot activity
-    activity = nextcord.Activity(
-        type=nextcord.Game, 
-        name="@ me for help!"
-        )
+    db = client.NextcordBot    
 
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
@@ -37,7 +31,7 @@ def main():
                 return output['prefix']
 
     # Instantiate the bot
-    bot = NextcordBot(intents=intents, activity=activity)
+    bot = NextcordBot(intents=intents)
 
     # Define bot behaviour on start up
     @bot.event
@@ -48,6 +42,10 @@ def main():
             if c not in collections:
                 db.create_collection(c)
 
+        await bot.change_presence(activity = nextcord.Activity(
+        type=nextcord.ActivityType.listening, 
+        name="@ me for help!"
+        ))
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
         print(f'We have logged in as {bot.user}')
