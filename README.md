@@ -4,6 +4,10 @@
 [![Powered by Nextcord](https://custom-icon-badges.herokuapp.com/badge/-Powered%20by%20Nextcord-0d1620?logo=nextcord)](https://github.com/nextcord/nextcord "Powered by Nextcord Python API Wrapper")
 ![Heroku](https://heroku-badge.herokuapp.com/?app=heroku-badge)
 
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
+![Visual Studio Code](https://img.shields.io/badge/Visual_Studio_Code-0078D4?style=for-the-badge&logo=visual%20studio%20code&logoColor=white)
+![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+
 This repo is a personal project to work with Python, nextcord, mongoDB, and Heroku to make a Discord bot. Currently undergoing development.
 
 The library used is [Nextcord](https://github.com/nextcord/nextcord), a maintained fork of Discord.py.
