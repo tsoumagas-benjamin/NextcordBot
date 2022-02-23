@@ -97,16 +97,23 @@ class Fun(commands.Cog, name="Fun"):
 
     @commands.command()
     async def meme(self, ctx):
-        """Gets a random meme from r/dankmemes
+        # """Gets a random meme from Heroku's meme API
         
-        Example: `$meme`"""
-        embed = nextcord.Embed(title="", description="")
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://www.reddit.com/r/dankmemes/new.json?sort=hot') as r:
-                res = await r.json()
-                embed.set_image(url=res['data']['children'][random.randint(0, 25)]['data']['url'])
-                await ctx.send(embed=embed)
-                await cs.close()
+        # Example: `$meme`"""
+        memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
+        memeData = json.load(memeAPI)
+
+        memeURL = memeData['url']
+        memeName = memeData['name']
+        memePoster = memeData['author']
+        memeSub = memeData['subreddit']
+        memeLink = memeData['postlink']
+
+        embed = nextcord.Embed(title=memeName, color=nextcord.Colour.orange)
+        embed.set_image(url=memeURL)
+        embed.set_author(text=f"r/{memeSub} • Posted by u/{memePoster}")
+        embed.set_footer(text=f"Original post at: {memeLink}")
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def youtube(self, ctx, *, message: str):
