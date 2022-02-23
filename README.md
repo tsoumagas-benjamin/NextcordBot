@@ -27,7 +27,7 @@ mkdir my-discord-bot
 cd my-discord-bot
 # Initialize the folder as a git repository and clone the repo
 git init
-git clone https://github.com/tsoumagas-benjamin/pnb-test.git
+git clone https://github.com/tsoumagas-benjamin/NextcordBot.git
 ```
 
 ## Environment variables
