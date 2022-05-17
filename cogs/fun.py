@@ -13,7 +13,7 @@ class Fun(commands.Cog, name="Fun"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.slash_command()
     async def bored(self, ctx):
         """Get some activity to cure your boredom
         
@@ -25,7 +25,7 @@ class Fun(commands.Cog, name="Fun"):
         embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',colour=nextcord.Colour.blurple())
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['quote'])
+    @commands.slash_command(aliases=['quote'])
     async def embed(self, ctx, *, message: str=None):
         """Turn your message into an embed
         
@@ -34,7 +34,7 @@ class Fun(commands.Cog, name="Fun"):
         embed.set_footer(icon_url=ctx.author.avatar.url,text=f'Requested by {ctx.author.name}')
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.slash_command()
     @commands.has_permissions(manage_emojis=True)
     async def getemoji(self, ctx, url: str, *, name: str):
         """Add an emoji to the server, requires manage emojis permission
@@ -54,7 +54,7 @@ class Fun(commands.Cog, name="Fun"):
                     await ctx.send('The emoji is too big!')
                 await ses.close()
 
-    @commands.command()
+    @commands.slash_command()
     async def getpost(self, ctx, message: str):
         """Search a subreddit for a random post
         
@@ -68,7 +68,7 @@ class Fun(commands.Cog, name="Fun"):
                 await ctx.send(embed=embed)
                 await cs.close()
     
-    @commands.command()
+    @commands.slash_command()
     async def guessme(self, ctx, *, name: str):
         """The bot will guess user age, gender, and nationality based on their name using various APIs.
         
@@ -95,7 +95,7 @@ class Fun(commands.Cog, name="Fun"):
             embed.add_field(name=f'Country {country_id}', value=f'Probability: {country_prob}', inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.slash_command()
     async def meme(self, ctx):
         # """Gets a random meme from Heroku's meme API
         
@@ -121,7 +121,7 @@ class Fun(commands.Cog, name="Fun"):
         )
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.slash_command()
     async def youtube(self, ctx, *, message: str):
         """Search youtube for a video
         

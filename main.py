@@ -27,7 +27,7 @@ def main():
                 output = db.guilds.find_one({"_id": message.guild.id})
                 return output['prefix']
             else:
-                output = db.guilds.insert_one({"_id": message.guild.id, "prefix": "$"})
+                output = db.guilds.insert_one({"_id": message.guild.id, "prefix": ">"})
                 return output['prefix']
 
     # Instantiate the bot
