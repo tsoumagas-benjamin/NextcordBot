@@ -36,7 +36,7 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    #@application_checks.has_permissions(manage_emojis=True)
+    @application_checks.has_permissions(manage_emojis=True)
     async def getemoji(self, interaction: Interaction, url: str, *, name: str):
         """Add an emoji to the server, requires manage emojis permission
         
