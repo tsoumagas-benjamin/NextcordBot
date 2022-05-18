@@ -1,4 +1,5 @@
 import nextcord
+from nextcord import Interaction
 from nextcord.ext import commands
 import urllib.parse as parse
 import urllib.request as request
@@ -13,8 +14,8 @@ class Fun(commands.Cog, name="Fun"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command()
-    async def bored(self, ctx):
+    @nextcord.slash_command()
+    async def bored(self, interaction):
         """Get some activity to cure your boredom
         
         Example: `$bored`"""
@@ -23,20 +24,20 @@ class Fun(commands.Cog, name="Fun"):
         activity = json_data['activity'].title()
         category = json_data['type'].title()
         embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',colour=nextcord.Colour.blurple())
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.slash_command(aliases=['quote'])
-    async def embed(self, ctx, *, message: str=None):
+    @nextcord.slash_command(aliases=['quote'])
+    async def embed(self, interaction, *, message: str=None):
         """Turn your message into an embed
         
         Example: `$embed Hello, World!`"""
         embed = nextcord.Embed(title='', description=message, colour=nextcord.Colour.blurple())
         embed.set_footer(icon_url=ctx.author.avatar.url,text=f'Requested by {ctx.author.name}')
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.slash_command()
+    @nextcord.slash_command()
     @commands.has_permissions(manage_emojis=True)
-    async def getemoji(self, ctx, url: str, *, name: str):
+    async def getemoji(self, interaction, url: str, *, name: str):
         """Add an emoji to the server, requires manage emojis permission
         
         Example: `$getemoji https://ggscore.com/media/logo/t62288.png?75 kekW`"""
@@ -46,16 +47,16 @@ class Fun(commands.Cog, name="Fun"):
                     media = BytesIO(await r.read())
                     val = media.getvalue()
                     if r.status in range(200,299):
-                        emoji = await ctx.guild.create_custom_emoji(image=val, name=name)
-                        await ctx.send(f'Added emoji {name} {emoji}!')
+                        emoji = await interaction.guild.create_custom_emoji(image=val, name=name)
+                        await interaction.send(f'Added emoji {name} {emoji}!')
                     else:
-                        await ctx.send(f'Could not add emoji. Status: {r.status}.')
+                        await interaction.send(f'Could not add emoji. Status: {r.status}.')
                 except nextcord.HTTPException:
-                    await ctx.send('The emoji is too big!')
+                    await interaction.send('The emoji is too big!')
                 await ses.close()
 
-    @commands.slash_command()
-    async def getpost(self, ctx, message: str):
+    @nextcord.slash_command()
+    async def getpost(self, interaction, message: str):
         """Search a subreddit for a random post
         
         Example: `$getpost memes`"""
@@ -65,11 +66,11 @@ class Fun(commands.Cog, name="Fun"):
             async with cs.get(base_url) as r:
                 res = await r.json()
                 embed.set_image(url=res['data']['children'][random.randint(0, 25)]['data']['url'])
-                await ctx.send(embed=embed)
+                await interaction.send(embed=embed)
                 await cs.close()
     
-    @commands.slash_command()
-    async def guessme(self, ctx, *, name: str):
+    @nextcord.slash_command()
+    async def guessme(self, interaction, *, name: str):
         """The bot will guess user age, gender, and nationality based on their name using various APIs.
         
         Example: `$guessme Ben`"""
@@ -93,10 +94,10 @@ class Fun(commands.Cog, name="Fun"):
         for country in nation_data['country']:
             country_id, country_prob = country['country_id'], country['probability']
             embed.add_field(name=f'Country {country_id}', value=f'Probability: {country_prob}', inline=False)
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.slash_command()
-    async def meme(self, ctx):
+    @nextcord.slash_command()
+    async def meme(self, interaction):
         # """Gets a random meme from Heroku's meme API
         
         # Example: `$meme`"""
@@ -119,10 +120,10 @@ class Fun(commands.Cog, name="Fun"):
         embed.set_footer(
             text=f"{memeVotes}🔺 • Original post at: {memeLink}"
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.slash_command()
-    async def youtube(self, ctx, *, message: str):
+    @nextcord.slash_command()
+    async def youtube(self, interaction, *, message: str):
         """Search youtube for a video
         
         Example: `$youtube Screen Rant`"""
@@ -130,7 +131,7 @@ class Fun(commands.Cog, name="Fun"):
         html_content = request.urlopen('http://www.youtube.com/results?' + query_string)
         search_content = html_content.read().decode()
         search_results = re.findall(r'\/watch\?v=\w+', search_content)
-        await ctx.send('https://www.youtube.com' + search_results[0])
+        await interaction.send('https://www.youtube.com' + search_results[0])
 
 def setup(bot):
     bot.add_cog(Fun(bot))
