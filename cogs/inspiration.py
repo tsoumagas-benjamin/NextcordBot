@@ -109,7 +109,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
         embed.add_field(name="Encouragements the bot can offer:",
                         value=encourage,
                         inline=False)
-        embed.set_footer(text=f"Requested by {interaction.author.name}",icon_url=interaction.author.avatar)
+        embed.set_footer(text=f"Requested by {interaction.user.name}",icon_url=interaction.user.avatar)
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()

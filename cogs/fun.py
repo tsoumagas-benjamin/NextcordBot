@@ -32,7 +32,7 @@ class Fun(commands.Cog, name="Fun"):
         
         Example: `$embed Hello, World!`"""
         embed = nextcord.Embed(title='', description=message, colour=nextcord.Colour.blurple())
-        embed.set_footer(icon_url=ctx.author.avatar.url,text=f'Requested by {ctx.author.name}')
+        embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
