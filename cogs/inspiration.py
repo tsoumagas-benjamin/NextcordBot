@@ -100,11 +100,11 @@ class Inspiration(commands.Cog, name="Inspiration"):
         filtered = kw['filter']
         encourage = kw['encouragements']
         if sad == []:
-            sad = ''
+            sad = "N/a"
         if filtered == []:
-            filtered = ''
+            filtered = "N/a"
         if encourage == []:
-            encourage = ''
+            encourage = "N/a"
         embed = nextcord.Embed(title=f"{interaction.guild.name} Keywords", description="",color=nextcord.Colour.blurple())
         embed.add_field(name="Words that the bot will offer encouragement for:",
                         value=sad,
