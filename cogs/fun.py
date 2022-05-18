@@ -26,7 +26,7 @@ class Fun(commands.Cog, name="Fun"):
         embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',colour=nextcord.Colour.blurple())
         await interaction.send(embed=embed)
 
-    @nextcord.slash_command(aliases=['quote'])
+    @nextcord.slash_command()
     async def embed(self, interaction, *, message: str=None):
         """Turn your message into an embed
         
