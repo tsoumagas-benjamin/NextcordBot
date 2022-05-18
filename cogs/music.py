@@ -126,10 +126,7 @@ class Music(commands.Cog, name="Music"):
         
         Example: `$leave`"""
         await interaction.guild.voice_client.disconnect()
-        if (interaction.user.voice.channel):
-            await interaction.send(f"Left {interaction.user.voice.channel}")
-        else: 
-            await interaction.send(f"Left voice channel")
+        await interaction.send(f"Left voice channel")
         
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, url):
