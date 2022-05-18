@@ -118,6 +118,7 @@ class Music(commands.Cog, name="Music"):
         
         Example: `$join`"""
         await interaction.user.voice.channel.connect() #Joins author's voice channel
+        await interaction.send(f"Joined {interaction.user.voice.channel}")
         
     @nextcord.slash_command()
     async def leave(self, interaction: Interaction):
@@ -125,6 +126,7 @@ class Music(commands.Cog, name="Music"):
         
         Example: `$leave`"""
         await interaction.guild.voice_client.disconnect()
+        await interaction.send(f"Left {interaction.guild.voice_client}")
         
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, url):
