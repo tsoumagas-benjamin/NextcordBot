@@ -35,7 +35,7 @@ class Fun(commands.Cog, name="Fun"):
         embed.set_footer(icon_url=ctx.author.avatar.url,text=f'Requested by {ctx.author.name}')
         await interaction.send(embed=embed)
 
-    @nextcord.slash_command()
+    @nextcord.slash_command(guild_ids = [686394755009347655])
     @application_checks.has_permissions(manage_emojis=True)
     async def getemoji(self, interaction: Interaction, url: str, *, name: str):
         """Add an emoji to the server, requires manage emojis permission
