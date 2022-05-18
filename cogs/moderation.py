@@ -33,7 +33,8 @@ class Moderation(commands.Cog, name="Moderation"):
         """Clear a specified amount of messages, requires manage messages permission
         
         Example: `$clear 5`"""
-        await interaction.channel.purge(limit=amount + 1)
+        await interaction.channel.purge(limit=amount)
+        await interaction.send(f"Cleared {amount} messages.", ephemeral = True)
 
     @nextcord.slash_command()
     @application_checks.has_permissions(kick_members=True)
