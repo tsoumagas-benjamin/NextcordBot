@@ -117,7 +117,7 @@ class Music(commands.Cog, name="Music"):
         """Get the bot to join a voice channel
         
         Example: `$join`"""
-        await interaction.author.voice.channel.connect() #Joins author's voice channel
+        await interaction.user.voice.channel.connect() #Joins author's voice channel
         
     @nextcord.slash_command()
     async def leave(self, interaction: Interaction):
