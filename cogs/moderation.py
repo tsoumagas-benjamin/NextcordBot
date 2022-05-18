@@ -1,5 +1,6 @@
 import nextcord
-from nextcord.ext import commands
+from nextcord import Interaction
+from nextcord.ext import commands, application_checks
 import humanfriendly, datetime
 
 #Create a cog for information commands
@@ -11,47 +12,47 @@ class Moderation(commands.Cog, name="Moderation"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['b'])
-    @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, member: nextcord.Member, reason: str = None):
+    @nextcord.slash_command()
+    @application_checks.has_permissions(ban_members=True)
+    async def ban(self, interaction: Interaction, member: nextcord.Member, reason: str = None):
         """Ban a member from the server, requires ban members permission
         
         Example: `$ban @PersonalNextcordBot spamming`"""
         if reason is None:
-            await ctx.send(
-                f"{member.name} has been banned from {ctx.guild.name}.")
+            await interaction.send(
+                f"{member.name} has been banned from {interaction.guild.name}.")
             await member.ban()
         else:
-            await ctx.send(
-                f"{member.name} has been banned from {ctx.guild.name}. Reason: {reason}.")
+            await interaction.send(
+                f"{member.name} has been banned from {interaction.guild.name}. Reason: {reason}.")
             await member.ban(reason=reason)
 
-    @commands.command(aliases=['c'])
-    @commands.has_permissions(manage_messages=True)
-    async def clear(self, ctx, amount: int = 1):
+    @nextcord.slash_command()
+    @application_checks.has_permissions(manage_messages=True)
+    async def clear(self, interaction: Interaction, amount: int = 1):
         """Clear a specified amount of messages, requires manage messages permission
         
         Example: `$clear 5`"""
-        await ctx.channel.purge(limit=amount + 1)
+        await interaction.channel.purge(limit=amount + 1)
 
-    @commands.command(aliases=['k'])
-    @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, member: nextcord.Member, *, reason: str = None):
+    @nextcord.slash_command()
+    @application_checks.has_permissions(kick_members=True)
+    async def kick(self, interaction: Interaction, member: nextcord.Member, *, reason: str = None):
         """Kick a member from the server, requires kick members permission
         
         Example: `$kick @PersonalNextcordBot spamming`"""
         if reason is None:
             await member.kick()
-            await ctx.send(f"{member} has been kicked from {ctx.guild.name}.")
+            await interaction.send(f"{member} has been kicked from {interaction.guild.name}.")
         else:
             await member.kick()
-            await ctx.send(
-                f"{member} has been kicked from {ctx.guild.name}. Reason: {reason}.")
+            await interaction.send(
+                f"{member} has been kicked from {interaction.guild.name}. Reason: {reason}.")
 
-    @commands.command(aliases=['m'])
-    @commands.has_permissions(moderate_members=True)
+    @nextcord.slash_command()
+    @application_checks.has_permissions(moderate_members=True)
     async def mute(self,
-                   ctx,
+                   interaction: Interaction,
                    member: nextcord.Member,
                    amount: str,
                    *,
@@ -64,25 +65,25 @@ class Moderation(commands.Cog, name="Moderation"):
         await member.edit(timeout=nextcord.utils.utcnow() +
                           datetime.timedelta(seconds=amount))
         if reason == None:
-            await ctx.send(
+            await interaction.send(
                 f"Member {member.name} has been muted for {init_time}.")
         else:
-            await ctx.send(
+            await interaction.send(
                 f"Member {member.name} has been muted for {init_time}. Reason: {reason}.")
 
-    @commands.command(aliases=['ub'])
-    @commands.has_permissions(ban_members=True)
-    async def unban(self, ctx, *, member: nextcord.Object):
+    @nextcord.slash_command()
+    @application_checks.has_permissions(ban_members=True)
+    async def unban(self, interaction: Interaction, *, member: nextcord.Object):
         """Takes member off the ban list, requires ban members permission
         
         Example: `$unban @PersonalNextcordBot`"""
-        await ctx.guild.unban(member)
-        await ctx.send(f"Member {member.id} has been unbanned.")
+        await interaction.guild.unban(member)
+        await interaction.send(f"Member {member.id} has been unbanned.")
 
-    @commands.command(aliases=['um'])
-    @commands.has_permissions(moderate_members=True)
+    @nextcord.slash_command()
+    @application_checks.has_permissions(moderate_members=True)
     async def unmute(self,
-                     ctx,
+                     interaction: Interaction,
                      member: nextcord.Member,
                      *,
                      reason: str = None):
@@ -91,9 +92,9 @@ class Moderation(commands.Cog, name="Moderation"):
         Example: `unmute @PersonalDiscordBot good behaviour`"""
         await member.edit(timeout=None)
         if reason == None:
-            await ctx.send(f"Member {member.name} has been unmuted.")
+            await interaction.send(f"Member {member.name} has been unmuted.")
         else:
-            await ctx.send(
+            await interaction.send(
                 f"Member {member.name} has been unmuted. Reason: {reason}.")
 
 
