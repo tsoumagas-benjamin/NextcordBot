@@ -1,4 +1,5 @@
 import nextcord, pymongo, os
+from nextcord import Interaction
 from nextcord.ext import commands
 import asyncio, InfixParser, time
 
@@ -26,66 +27,66 @@ class Information(commands.Cog, name = "Information"):
     async def on_message_delete(self, message):
         self.last_msg = message
     
-    @commands.command(aliases=['calc','eval'])
-    async def calculate(self, ctx, *, equation: str):
+    @nextcord.slash_command()
+    async def calculate(self, interaction: Interaction, *, equation: str):
         """Calculates user input and returns the output
         
         Example: `$calculate 9^0.5 + 6*2 - 8/2`"""
         equation = equation.replace(" ", "")
         evaluator = InfixParser.Evaluator()
-        await ctx.send(f' Result is {evaluator.eval(equation)}')
+        await interaction.send(f' Result is {evaluator.eval(equation)}')
 
-    @commands.command()
-    async def ping(self, ctx):
+    @nextcord.slash_command()
+    async def ping(self, interaction: Interaction):
         """Gets bot ping and API response time
         
         Example: `$ping`"""
         start_time = time.time()
-        msg = await ctx.send("Testing ping...")
+        msg = await interaction.send("Testing ping...")
         end_time = time.time()
 
         await msg.edit(content=f"Ping: {round(self.bot.latency * 1000)}ms \nAPI: {round((end_time - start_time) * 1000)}ms")
 
-    @commands.command()
-    async def rule(self, ctx, number: int):
+    @nextcord.slash_command()
+    async def rule(self, interaction: Interaction, number: int):
         """Returns a numbered server rule
         
         Example: `$rule 2`"""
-        if db.rules.find_one({"_id": ctx.guild.id}) != None:
-            output = db.rules.find_one({"_id": ctx.guild.id})
+        if db.rules.find_one({"_id": interaction.guild.id}) != None:
+            output = db.rules.find_one({"_id": interaction.guild.id})
             if number < 1 or number >= len(output['rules']):
-                await ctx.send(f"Rule {number} doesn't exist!")
+                await interaction.send(f"Rule {number} doesn't exist!")
                 return
             description = output['rules'][number-1]
-            embed = nextcord.Embed(title=f"{ctx.guild.name} Rule {number}", description=description, color=nextcord.Colour.blurple())
-            embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar)
-            await ctx.send(embed=embed)
+            embed = nextcord.Embed(title=f"{interaction.guild.name} Rule {number}", description=description, color=nextcord.Colour.blurple())
+            embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=ctx.author.avatar)
+            await interaction.send(embed=embed)
         else:
-            await ctx.send("You must first set your rules with $setrules!")
+            await interaction.send("You must first set your rules with $setrules!")
 
-    @commands.command()
-    async def rules(self, ctx):
+    @nextcord.slash_command()
+    async def rules(self, interaction: Interaction):
         """Returns all server rules
         
         Example: `$rules`"""
-        if db.rules.find_one({"_id": ctx.guild.id}) != None:
-            output = db.rules.find_one({"_id": ctx.guild.id})
+        if db.rules.find_one({"_id": interaction.guild.id}) != None:
+            output = db.rules.find_one({"_id": interaction.guild.id})
             description = ""
             for rule in output['rules']:
                 description += f"{rule}\n"
-            embed = nextcord.Embed(title=f"{ctx.guild.name} Rules", description=description, color=nextcord.Colour.blurple())
-            embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar)
-            await ctx.send(embed=embed)
+            embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=description, color=nextcord.Colour.blurple())
+            embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=interaction.author.avatar)
+            await interaction.send(embed=embed)
         else:
-            await ctx.send("You must first set your rules with $setrules!")
+            await interaction.send("You must first set your rules with $setrules!")
     
-    @commands.command()
-    async def snipe(self, ctx):
+    @nextcord.slash_command()
+    async def snipe(self, interaction: Interaction):
         """Snipes the last deleted message
         
         Example: `$snipe`"""
         if self.last_msg == None:
-            await ctx.send("Could not snipe a message!")
+            await interaction.send("Could not snipe a message!")
             return
         
         author = self.last_msg.author.name
@@ -94,25 +95,25 @@ class Information(commands.Cog, name = "Information"):
 
         embed = nextcord.Embed(title="", description=content, color=nextcord.Colour.blurple())
         embed.set_author(name=author, icon_url=author_pfp)
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.command(aliases=['stat'])
-    async def statistics(self, ctx):
+    @nextcord.slash_command()
+    async def statistics(self, interaction: Interaction):
         """Returns statistics about the bot
         
         Example: `$statistics`"""
-        server_members = len(ctx.guild.humans)
-        server_bots = len(ctx.guild.bots)
+        server_members = len(interaction.guild.humans)
+        server_bots = len(interaction.guild.bots)
         server_count = len(self.bot.guilds)
         total_members = 0
         for guild in self.bot.guilds:
             total_members += guild.member_count
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
                                color=nextcord.Colour.blurple())
-        embed.add_field(name=f"{ctx.guild.name} member count: ",
+        embed.add_field(name=f"{interaction.guild.name} member count: ",
                         value=str(server_members),
                         inline=False)
-        embed.add_field(name=f"{ctx.guild.name} bot count: ",
+        embed.add_field(name=f"{interaction.guild.name} bot count: ",
                         value=str(server_bots),
                         inline=False)
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
@@ -121,12 +122,12 @@ class Information(commands.Cog, name = "Information"):
         embed.add_field(name=f"{self.bot.user.name} serving: ",
                         value=total_members,
                         inline=False)
-        embed.set_footer(icon_url=ctx.guild.icon.url, text=ctx.guild.name)
-        await ctx.send(embed=embed)
+        embed.set_footer(icon_url=interaction.guild.icon.url, text=interaction.guild.name)
+        await interaction.send(embed=embed)
 
-    @commands.command()
+    @nextcord.slash_command()
     async def timer(self,
-                    ctx,
+                    interaction: Interaction,
                     amount: int,
                     unit: str, *,
                     description: str = None):
@@ -136,21 +137,21 @@ class Information(commands.Cog, name = "Information"):
         if description == None:
             description = ''
         letter = unit[:1]
-        await ctx.reply(f"Timer {description} set for {amount} {unit}.")
+        await interaction.reply(f"Timer {description} set for {amount} {unit}.")
         if letter == "s":
             await asyncio.sleep(amount)
-            await ctx.reply(f"Timer {description} is done.")
+            await interaction.reply(f"Timer {description} is done.")
         elif letter == "m":
             await asyncio.sleep(amount * 60)
-            await ctx.reply(f"Timer {description} is done.")
+            await interaction.reply(f"Timer {description} is done.")
         elif letter == "h":
             await asyncio.sleep(amount * 3600)
-            await ctx.reply(f"Timer {description} is done.")
+            await interaction.reply(f"Timer {description} is done.")
         else:
-            await ctx.reply("Please enter a valid unit of time.")
+            await interaction.reply("Please enter a valid unit of time.")
 
-    @commands.command(aliases=['user', 'whois'])
-    async def info(self, ctx, member: nextcord.Member):
+    @nextcord.slash_command()
+    async def info(self, interaction: Interaction, member: nextcord.Member):
         """Get information on a user
         
         Example: `$info @PersonalNextcordBot`"""
@@ -176,9 +177,9 @@ class Information(commands.Cog, name = "Information"):
                             value=member.activity,
                             inline=False)
         embed.set_thumbnail(url=member.display_avatar)
-        embed.set_footer(icon_url=ctx.author.display_avatar,
-                         text=f'Requested by {ctx.author.name}')
-        await ctx.send(embed=embed)
+        embed.set_footer(icon_url=interaction.author.display_avatar,
+                         text=f'Requested by {interaction.author.name}')
+        await interaction.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Information(bot))

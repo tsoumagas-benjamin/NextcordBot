@@ -1,6 +1,6 @@
 import nextcord
 from nextcord import Interaction
-from nextcord.ext import commands
+from nextcord.ext import commands, application_checks
 import urllib.parse as parse
 import urllib.request as request
 import random, aiohttp, re, requests, json
@@ -15,7 +15,7 @@ class Fun(commands.Cog, name="Fun"):
         self.bot = bot
 
     @nextcord.slash_command()
-    async def bored(self, interaction):
+    async def bored(self, interaction: Interaction):
         """Get some activity to cure your boredom
         
         Example: `$bored`"""
@@ -27,7 +27,7 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def embed(self, interaction, *, message: str=None):
+    async def embed(self, interaction: Interaction, *, message: str=None):
         """Turn your message into an embed
         
         Example: `$embed Hello, World!`"""
@@ -36,8 +36,8 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    @commands.has_permissions(manage_emojis=True)
-    async def getemoji(self, interaction, url: str, *, name: str):
+    @application_checks.has_permissions(manage_emojis=True)
+    async def getemoji(self, interaction: Interaction, url: str, *, name: str):
         """Add an emoji to the server, requires manage emojis permission
         
         Example: `$getemoji https://ggscore.com/media/logo/t62288.png?75 kekW`"""
@@ -56,7 +56,7 @@ class Fun(commands.Cog, name="Fun"):
                 await ses.close()
 
     @nextcord.slash_command()
-    async def getpost(self, interaction, message: str):
+    async def getpost(self, interaction: Interaction, message: str):
         """Search a subreddit for a random post
         
         Example: `$getpost memes`"""
@@ -70,7 +70,7 @@ class Fun(commands.Cog, name="Fun"):
                 await cs.close()
     
     @nextcord.slash_command()
-    async def guessme(self, interaction, *, name: str):
+    async def guessme(self, interaction: Interaction, *, name: str):
         """The bot will guess user age, gender, and nationality based on their name using various APIs.
         
         Example: `$guessme Ben`"""
@@ -97,7 +97,7 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def meme(self, interaction):
+    async def meme(self, interaction: Interaction):
         # """Gets a random meme from Heroku's meme API
         
         # Example: `$meme`"""
@@ -123,7 +123,7 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def youtube(self, interaction, *, message: str):
+    async def youtube(self, interaction: Interaction, *, message: str):
         """Search youtube for a video
         
         Example: `$youtube Screen Rant`"""
