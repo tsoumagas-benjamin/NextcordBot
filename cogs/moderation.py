@@ -73,7 +73,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
     @nextcord.slash_command()
     @application_checks.has_permissions(ban_members=True)
-    async def unban(self, interaction: Interaction, *, member: nextcord.Member | int):
+    async def unban(self, interaction: Interaction, *, member):
         """Takes member off the ban list, requires ban members permission
         
         Example: `$unban @PersonalNextcordBot`"""
