@@ -124,7 +124,7 @@ class Music(commands.Cog, name="Music"):
         """Get the bot to leave a voice channel
         
         Example: `$leave`"""
-        await interaction.voice_client.disconnect()
+        await self.bot.disconnect()
         
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, url):
