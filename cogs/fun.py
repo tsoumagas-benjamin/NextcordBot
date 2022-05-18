@@ -1,6 +1,7 @@
 import nextcord
 from nextcord import Interaction
-from nextcord.ext import commands, application_checks
+from nextcord.ext import commands
+import nextcord.ext.application_checks
 import urllib.parse as parse
 import urllib.request as request
 import random, aiohttp, re, requests, json
