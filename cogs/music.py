@@ -136,7 +136,7 @@ class Music(commands.Cog, name="Music"):
         player = music.get_player(guild_id=interaction.guild.id)
         if not player:
             player = music.create_player(interaction, ffmpeg_error_betterfix=True)
-        if not interaction.voice_client.is_playing():
+        if not interaction.guild.voice_client.is_playing():
             await player.queue(url, search=True)
             song = await player.play()
             await interaction.send(f"Playing {song.name}")
