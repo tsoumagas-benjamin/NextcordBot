@@ -1,8 +1,8 @@
 import nextcord, pymongo, os
 from nextcord import Interaction
-from nextcord.ext import commands
+from nextcord.ext import commands, tasks
 import asyncio, InfixParser, time
-from datetime import date
+from datetime import datetime
 
 #Set up our mongodb client
 client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -38,8 +38,8 @@ class Information(commands.Cog, name = "Information"):
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def date(self, interaction: Interaction):
         """Gets today's date"""
-        today = date.today()
-        await interaction.send(f"Today is : {today}")
+        date_time = datetime.now().strftime("%B %d, %Y %H:%M:%S")
+        await interaction.send(f"Today is : {date_time}")
 
     @nextcord.slash_command()
     async def ping(self, interaction: Interaction):
