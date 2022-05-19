@@ -55,36 +55,28 @@ class Inspiration(commands.Cog, name="Inspiration"):
     @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
     async def encouragement(self, interaction: Interaction, *, message: str):
-        """Command to add an encouragement or remove it if it already exists, requires administrator permission
-        
-        Example: `$encouragement You're great!`"""
+        """Command to add an encouragement or remove it if it already exists"""
         action = find_entry(interaction.guild.id, "encouragements", message)
         await interaction.send(f"{action} encouragement: {message}.")
 
     @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
     async def filter(self, interaction: Interaction, *, message: str):
-        """Command to add an filtered word or remove it if it already exists, requires administrator permission
-        
-        Example: `$filter bad word`"""
+        """Command to add an filtered word or remove it if it already exists"""
         action = find_entry(interaction.guild.id, "filter", message)
         await interaction.send(f"{action} filter for: {message}.")
 
     @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
     async def sad(self, interaction: Interaction, *, message: str):
-        """Command to add a sad word or remove it if it already exists, requires administrator permission
-        
-        Example: `$sad boo hoo`"""
+        """Command to add a sad word or remove it if it already exists"""
         action = find_entry(interaction.guild.id, "sad", message)
         await interaction.send(f"{action} sad word: {message}.")
     
     @nextcord.slash_command()
     @commands.has_permissions(administrator=True)
     async def responding(self, interaction: Interaction):
-        """Command to change the bot's responding status on/off to keywords, requires administrator permission
-        
-        Example: `$responding on`"""
+        """Command to change the bot's responding status on/off to keywords"""
         current = db.keywords.find_one({"_id": interaction.guild.id})
         new_status = not current["status"]
         db.keywords.update_one({"_id": interaction.guild.id}, {"$set": {"status": new_status}})
@@ -92,9 +84,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
     
     @nextcord.slash_command()
     async def keywords(self, interaction: Interaction):
-        """Command to give information on all keywords stored for this server
-        
-        Example: `$keywords`"""
+        """Command to give information on all keywords stored for this server"""
         kw = db.keywords.find_one({"_id": interaction.guild.id})
         sad = kw['sad']
         filtered = kw['filter']
@@ -120,9 +110,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
 
     @nextcord.slash_command()
     async def inspire(self, interaction: Interaction):
-        """Command to return an inspirational quote
-        
-        Example: `$inspire`"""
+        """Command to return an inspirational quote"""
         quote = get_quote()
         embed = nextcord.Embed(title='', description=quote, colour=nextcord.Colour.blurple())
         await interaction.send(embed=embed)

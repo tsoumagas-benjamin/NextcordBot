@@ -28,9 +28,7 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def embed(self, interaction: Interaction, *, message: str=None):
-        """Turn your message into an embed
-        
-        Example: `$embed Hello, World!`"""
+        """Turn your message into an embed"""
         embed = nextcord.Embed(title='', description=message, colour=nextcord.Colour.blurple())
         embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
@@ -38,9 +36,7 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_emojis=True)
     async def getemoji(self, interaction: Interaction, url: str, *, name: str):
-        """Add an emoji to the server, requires manage emojis permission
-        
-        Example: `$getemoji https://ggscore.com/media/logo/t62288.png?75 kekW`"""
+        """Add an emoji to the server, requires manage emojis permission"""
         async with aiohttp.ClientSession() as ses:
             async with ses.get(url) as r:
                 try:
@@ -57,9 +53,7 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def getpost(self, interaction: Interaction, message: str):
-        """Search a subreddit for a random post
-        
-        Example: `$getpost memes`"""
+        """Search a subreddit for a random post"""
         embed = nextcord.Embed(title='', description='')
         base_url = f'https://www.reddit.com/r/{message}/new.json?sort=hot'
         async with aiohttp.ClientSession() as cs:
@@ -98,9 +92,7 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def meme(self, interaction: Interaction):
-        # """Gets a random meme from Heroku's meme API
-        
-        # Example: `$meme`"""
+        """Gets a random meme from Heroku's meme API"""
         memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
         memeData = json.load(memeAPI)
 
@@ -124,9 +116,7 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def youtube(self, interaction: Interaction, *, message: str):
-        """Search youtube for a video
-        
-        Example: `$youtube Screen Rant`"""
+        """Search youtube for a video"""
         query_string = parse.urlencode({'search_query': message})
         html_content = request.urlopen('http://www.youtube.com/results?' + query_string)
         search_content = html_content.read().decode()

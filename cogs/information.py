@@ -29,18 +29,14 @@ class Information(commands.Cog, name = "Information"):
     
     @nextcord.slash_command()
     async def calculate(self, interaction: Interaction, *, equation: str):
-        """Calculates user input and returns the output
-        
-        Example: `$calculate 9^0.5 + 6*2 - 8/2`"""
+        """Calculates user input and returns the output"""
         equation = equation.replace(" ", "")
         evaluator = InfixParser.Evaluator()
         await interaction.send(f' Result is {evaluator.eval(equation)}')
 
     @nextcord.slash_command()
     async def ping(self, interaction: Interaction):
-        """Gets bot ping and API response time
-        
-        Example: `$ping`"""
+        """Gets bot ping and API response time"""
         start_time = time.time()
         msg = await interaction.send("Testing ping...")
         end_time = time.time()
@@ -49,9 +45,7 @@ class Information(commands.Cog, name = "Information"):
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):
-        """Returns a numbered server rule
-        
-        Example: `$rule 2`"""
+        """Returns a numbered server rule"""
         if db.rules.find_one({"_id": interaction.guild.id}) != None:
             output = db.rules.find_one({"_id": interaction.guild.id})
             if number < 1 or number >= len(output['rules']):
@@ -66,9 +60,7 @@ class Information(commands.Cog, name = "Information"):
 
     @nextcord.slash_command()
     async def rules(self, interaction: Interaction):
-        """Returns all server rules
-        
-        Example: `$rules`"""
+        """Returns all server rules"""
         if db.rules.find_one({"_id": interaction.guild.id}) != None:
             output = db.rules.find_one({"_id": interaction.guild.id})
             description = ""
@@ -82,9 +74,7 @@ class Information(commands.Cog, name = "Information"):
     
     @nextcord.slash_command()
     async def snipe(self, interaction: Interaction):
-        """Snipes the last deleted message
-        
-        Example: `$snipe`"""
+        """Snipes the last deleted message"""
         if self.last_msg == None:
             await interaction.send("Could not snipe a message!")
             return
@@ -97,11 +87,21 @@ class Information(commands.Cog, name = "Information"):
         embed.set_author(name=author, icon_url=author_pfp)
         await interaction.send(embed=embed)
 
+    @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096])
+    async def socials(self, interaction: Interaction):
+        """Returns links to Olivia's socials"""
+        embed = nextcord.Embed(title=f"Olivia's Socials", color=nextcord.Colour.purple())
+        embed.add_field(name=f"Twitch:", url="https://www.twitch.tv/oliviavisentin")
+        embed.add_field(name=f"YouTube:", url="https://www.youtube.com/channel/UCk92VCcs2zWzj_bTQ6aeTdg")
+        embed.add_field(name=f"Instagram:", url="https://www.instagram.com/oliviavisentin/")
+        embed.add_field(name=f"Facebook:", url="https://www.facebook.com/olivia.visentin.50")
+        embed.set_footer(icon_url=interaction.guild.icon.url, text=interaction.guild.name)
+        await interaction.send(embed=embed)
+
+
     @nextcord.slash_command()
     async def statistics(self, interaction: Interaction):
-        """Returns statistics about the bot
-        
-        Example: `$statistics`"""
+        """Returns statistics about the bot"""
         server_members = len(interaction.guild.humans)
         server_bots = len(interaction.guild.bots)
         server_count = len(self.bot.guilds)
@@ -131,9 +131,7 @@ class Information(commands.Cog, name = "Information"):
                     amount: int,
                     unit: str, *,
                     description: str = None):
-        """Sets a timer with an optional description
-        
-        Example: `$timer 15 m Snooze`"""
+        """Sets a timer with an optional description"""
         if description == None:
             description = ''
         letter = unit[:1]
@@ -152,9 +150,7 @@ class Information(commands.Cog, name = "Information"):
 
     @nextcord.slash_command()
     async def info(self, interaction: Interaction, member: nextcord.Member):
-        """Get information on a user
-        
-        Example: `$info @PersonalNextcordBot`"""
+        """Get information on a user"""
         embed = nextcord.Embed(title=member.display_name,
                                description=member.mention,
                                color=nextcord.Colour.blurple())

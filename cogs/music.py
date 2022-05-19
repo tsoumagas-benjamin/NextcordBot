@@ -69,9 +69,7 @@ class Music(commands.Cog, name="Music"):
         
     @nextcord.slash_command()
     async def addsong(self, interaction: Interaction, *, song):
-        """Adds a song to the music quiz playlist
-        
-        Example: `$addsong Africa, Toto`"""
+        """Adds a song to the music quiz playlist"""
         title, artist = song.split(", ",2)
         title = title_case(title)
         artist = title_case(artist)
@@ -81,9 +79,7 @@ class Music(commands.Cog, name="Music"):
 
     @nextcord.slash_command()
     async def deletesong(self, interaction: Interaction, *, song):
-        """Deletes a song from the music quiz playlist
-        
-        Example: `$deletesong Africa, Toto`"""
+        """Deletes a song from the music quiz playlist"""
         title, artist = song.split(", ",2)
         title = title_case(title)
         artist = title_case(artist)
@@ -93,9 +89,7 @@ class Music(commands.Cog, name="Music"):
 
     @nextcord.slash_command()
     async def songs(self, interaction: Interaction):
-        """Gets all songs available for music quiz
-        
-        Example: `$songs`"""
+        """Gets all songs available for music quiz"""
         embed = nextcord.Embed(title="Songs", description="Songs that will appear in music quiz.", color=nextcord.Colour.blurple())
         song_cursor = song_list.find({}, {"_id":0, "title":1, "artist":1})
         for song in song_cursor:
@@ -104,9 +98,7 @@ class Music(commands.Cog, name="Music"):
 
     @nextcord.slash_command()
     async def randomsong(self, interaction: Interaction):
-        """Gets a random song from the music quiz playlist
-        
-        Example: `$randomsong`"""
+        """Gets a random song from the music quiz playlist"""
         object = song_list.aggregate([{ "$sample": { "size": 1 }}])
         for x in object:
             title, artist = x['title'], x['artist']
@@ -114,25 +106,19 @@ class Music(commands.Cog, name="Music"):
         
     @nextcord.slash_command()
     async def join(self, interaction: Interaction):
-        """Get the bot to join a voice channel
-        
-        Example: `$join`"""
+        """Get the bot to join a voice channel"""
         await interaction.user.voice.channel.connect() #Joins author's voice channel
         await interaction.send(f"Joined {interaction.user.voice.channel}")
         
     @nextcord.slash_command()
     async def leave(self, interaction: Interaction):
-        """Get the bot to leave a voice channel
-        
-        Example: `$leave`"""
+        """Get the bot to leave a voice channel"""
         await interaction.guild.voice_client.disconnect()
         await interaction.send(f"Left voice channel")
         
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, url):
-        """Get the bot to play a song from a url
-        
-        Example: `$play https://youtu.be/dQw4w9WgXcQ"""
+        """Get the bot to play a song from a url"""
         player = music.get_player(guild_id=interaction.guild.id)
         if not player:
             player = music.create_player(interaction, ffmpeg_error_betterfix=True)
@@ -146,36 +132,28 @@ class Music(commands.Cog, name="Music"):
 
     @nextcord.slash_command()
     async def pause(self, interaction: Interaction):
-        """Get the bot to pause the music
-        
-        Example: `$pause`"""
+        """Get the bot to pause the music"""
         player = music.get_player(guild_id=interaction.guild.id)
         song = await player.pause()
         await interaction.send(f"Paused {song.name}")
         
     @nextcord.slash_command()
     async def resume(self, interaction: Interaction):
-        """Get the bot to resume the music
-        
-        Example: `$resume`"""
+        """Get the bot to resume the music"""
         player = music.get_player(guild_id=interaction.guild.id)
         song = await player.resume()
         await interaction.send(f"Resumed {song.name}")
         
     @nextcord.slash_command()
     async def stop(self, interaction: Interaction):
-        """Get the bot to stop the music and leave the voice channel
-        
-        Example: `$stop`"""
+        """Get the bot to stop the music and leave the voice channel"""
         player = music.get_player(guild_id=interaction.guild.id)
         await player.stop()
         await interaction.send("Stopped")
         
     @nextcord.slash_command()
     async def loop(self, interaction: Interaction):
-        """Get the bot to loop the current song
-        
-        Example: `$loop`"""
+        """Get the bot to loop the current song"""
         player = music.get_player(guild_id=interaction.guild.id)
         song = await player.toggle_song_loop()
         if song.is_looping:
@@ -185,26 +163,20 @@ class Music(commands.Cog, name="Music"):
         
     @nextcord.slash_command()
     async def queue(self, interaction: Interaction):
-        """Show all the songs currently queued to play in open
-        
-        Example: `$queue`"""
+        """Show all the songs currently queued to play in open"""
         player = music.get_player(guild_id=interaction.guild.id)
         await interaction.send(f"{', '.join([song.name for song in player.current_queue()])}")
         
     @nextcord.slash_command()
     async def np(self, interaction: Interaction):
-        """Get information on the song currently Playing
-        
-        Example: `$np`"""
+        """Get information on the song currently playing"""
         player = music.get_player(guild_id=interaction.guild.id)
         song = player.now_playing()
         await interaction.send(song.name)
         
     @nextcord.slash_command()
     async def skip(self, interaction: Interaction):
-        """Skip the currently playing song
-        
-        Example: `$skip`"""
+        """Skip the currently playing song"""
         player = music.get_player(guild_id=interaction.guild.id)
         data = await player.skip(force=True)
         if len(data) == 2:
@@ -214,18 +186,14 @@ class Music(commands.Cog, name="Music"):
 
     @nextcord.slash_command()
     async def volume(self, interaction: Interaction, vol):
-        """Changes the bot's volume (0-100)
-        
-        Example: `$volume 25`"""
+        """Changes the bot's volume (0-100)"""
         player = music.get_player(guild_id=interaction.guild.id)
         song, volume = await player.change_volume(float(vol) / 100) # volume should be a float between 0 to 1
         await interaction.send(f"Changed volume for {song.name} to {volume*100}%")
         
     @nextcord.slash_command()
     async def remove(self, interaction: Interaction, index):
-        """Removes a song at a specified index
-        
-        Example: `$remove 3`"""
+        """Removes a song at a specified index"""
         player = music.get_player(guild_id=interaction.guild.id)
         song = await player.remove_from_queue(int(index))
         await interaction.send(f"Removed {song.name} from queue")

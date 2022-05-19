@@ -15,9 +15,7 @@ class Moderation(commands.Cog, name="Moderation"):
     @nextcord.slash_command()
     @application_checks.has_permissions(ban_members=True)
     async def ban(self, interaction: Interaction, member: nextcord.Member, reason: str = None):
-        """Ban a member from the server, requires ban members permission
-        
-        Example: `$ban @PersonalNextcordBot spamming`"""
+        """Ban a member from the server"""
         if reason is None:
             await interaction.send(
                 f"{member.name} has been banned from {interaction.guild.name}.")
@@ -30,18 +28,14 @@ class Moderation(commands.Cog, name="Moderation"):
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_messages=True)
     async def clear(self, interaction: Interaction, amount: int = 1):
-        """Clear a specified amount of messages, requires manage messages permission
-        
-        Example: `$clear 5`"""
+        """Clear a specified amount of messages"""
         await interaction.channel.purge(limit=amount)
         await interaction.send(f"Cleared {amount} messages.", ephemeral = True)
 
     @nextcord.slash_command()
     @application_checks.has_permissions(kick_members=True)
     async def kick(self, interaction: Interaction, member: nextcord.Member, *, reason: str = None):
-        """Kick a member from the server, requires kick members permission
-        
-        Example: `$kick @PersonalNextcordBot spamming`"""
+        """Kick a member from the server"""
         if reason is None:
             await member.kick()
             await interaction.send(f"{member} has been kicked from {interaction.guild.name}.")
@@ -58,9 +52,7 @@ class Moderation(commands.Cog, name="Moderation"):
                    amount: str,
                    *,
                    reason: str = None):
-        """Timeout a member, requires moderate members permission
-        
-        Example: `$mute @PersonalDiscordBot 5m too loud`"""
+        """Timeout a member"""
         init_time = amount
         amount = humanfriendly.parse_timespan(amount)
         await member.edit(timeout=nextcord.utils.utcnow() +
@@ -75,9 +67,7 @@ class Moderation(commands.Cog, name="Moderation"):
     @nextcord.slash_command()
     @application_checks.has_permissions(ban_members=True)
     async def unban(self, interaction: Interaction, *, member):
-        """Takes member off the ban list, requires ban members permission
-        
-        Example: `$unban @PersonalNextcordBot`"""
+        """Takes member off the ban list"""
         await interaction.guild.unban(member)
         await interaction.send(f"Member {member.id} has been unbanned.")
 
@@ -88,9 +78,7 @@ class Moderation(commands.Cog, name="Moderation"):
                      member: nextcord.Member,
                      *,
                      reason: str = None):
-        """Removes member from timeout, requires moderate members permission
-        
-        Example: `unmute @PersonalDiscordBot good behaviour`"""
+        """Removes member from timeout"""
         await member.edit(timeout=None)
         if reason == None:
             await interaction.send(f"Member {member.name} has been unmuted.")
