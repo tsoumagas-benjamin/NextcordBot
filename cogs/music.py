@@ -128,7 +128,7 @@ class Music(commands.Cog, name="Music"):
         await interaction.guild.voice_client.disconnect()
         await interaction.send(f"Left voice channel")
         
-    @nextcord.slash_command(guild_ids=[686394755009347655])
+    @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, url):
         """Get the bot to play a song from a url
         
@@ -136,7 +136,6 @@ class Music(commands.Cog, name="Music"):
         player = music.get_player(guild_id=interaction.guild.id)
         if not player:
             player = music.create_player(interaction, ffmpeg_error_betterfix=True)
-        await interaction.send(interaction.guild)
         if not interaction.guild.voice_client.is_playing():
             await player.queue(url, search=True)
             song = await player.play()
