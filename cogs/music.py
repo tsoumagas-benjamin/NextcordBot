@@ -128,7 +128,7 @@ class Music(commands.Cog, name="Music"):
         await interaction.guild.voice_client.disconnect()
         await interaction.send(f"Left voice channel")
         
-    @nextcord.slash_command()
+    @nextcord.slash_command(guild_ids=[686394755009347655])
     async def play(self, interaction: Interaction, *, url):
         """Get the bot to play a song from a url
         
