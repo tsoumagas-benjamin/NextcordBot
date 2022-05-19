@@ -11,4 +11,3 @@ cffi==1.15.0
 pycparser==2.21
 six==1.16.0
 youtube_dl==2021.12.17
-pytz==2022.1
