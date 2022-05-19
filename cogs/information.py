@@ -35,6 +35,10 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(f' Result is {evaluator.eval(equation)}')
 
     @nextcord.slash_command()
+    async def date(self, interaction: Interaction):
+
+
+    @nextcord.slash_command()
     async def ping(self, interaction: Interaction):
         """Gets bot ping and API response time"""
         start_time = time.time()
