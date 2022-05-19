@@ -16,16 +16,7 @@ def main():
     # Subclass our bot instance
     class NextcordBot(commands.AutoShardedBot):
         def __init__(self, **kwargs):
-            super().__init__(self.get_prefix)
-
-        # Overrides bot.get_prefix
-        async def get_prefix(self, message: nextcord.Message):
-            if db.guilds.find_one({"_id": message.guild.id}) != None:
-                output = db.guilds.find_one({"_id": message.guild.id})
-                return output['prefix']
-            else:
-                output = db.guilds.insert_one({"_id": message.guild.id, "prefix": ">"})
-                return output['prefix']
+            super().__init__()
 
     # Instantiate the bot
     bot = NextcordBot(intents=intents)
@@ -35,7 +26,7 @@ def main():
     async def on_ready():
         """When discord is connected"""
         collections = db.list_collection_names()
-        for c in ['guilds', 'rules', 'keywords', 'songs']:
+        for c in ['rules', 'keywords', 'songs']:
             if c not in collections:
                 db.create_collection(c)
 
@@ -52,10 +43,7 @@ def main():
     async def on_guild_join(guild):
         # Add an entry for starter keywords
         if db.keywords.find_one({"_id": guild.id}) == None:
-            db.keywords.insert_one({"_id": guild.id, "sad": config.sad_words, "filter": config.filter_words, "encouragements": config.encouragements, "status": True})
-        # Add an entry for starter guild prefix
-        if db.guilds.find_one({"_id": guild.id}) == None:
-            db.guilds.insert_one({"_id": guild.id, "prefix": ">"})
+            db.keywords.insert_one({"_id": guild.id, "sad": config.sad_words, "filter": config.filter_words, "encouragements": config.encouragements, "status": False})
     
     # Defining bot behaviour on leaving server
     @bot.event
@@ -92,12 +80,7 @@ def main():
                     break
 
         if bot.user.mentioned_in(message):
-            curr_channel = message.channel
-            if db.guilds.find_one({"_id": message.guild.id}) != None:
-                output = db.guilds.find_one({"_id": message.guild.id})
-                await curr_channel.send(f"My prefix in this server is {output['prefix']}")
-            else:
-                await curr_channel.send("My prefix in this server is $")
+            await message.channel.send("My prefix in this server is /")
 
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):

@@ -37,6 +37,7 @@ class Information(commands.Cog, name = "Information"):
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def date(self, interaction: Interaction):
+        """Gets today's date"""
         today = date.today()
         await interaction.send(f"Today is : {today}")
 
