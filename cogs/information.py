@@ -91,10 +91,10 @@ class Information(commands.Cog, name = "Information"):
     async def socials(self, interaction: Interaction):
         """Returns links to Olivia's socials"""
         embed = nextcord.Embed(title=f"Olivia's Socials", color=nextcord.Colour.purple())
-        embed.add_field(name=f"Twitch:", url="https://www.twitch.tv/oliviavisentin")
-        embed.add_field(name=f"YouTube:", url="https://www.youtube.com/channel/UCk92VCcs2zWzj_bTQ6aeTdg")
-        embed.add_field(name=f"Instagram:", url="https://www.instagram.com/oliviavisentin/")
-        embed.add_field(name=f"Facebook:", url="https://www.facebook.com/olivia.visentin.50")
+        embed.add_field(name=f"Twitch:", value="https://www.twitch.tv/oliviavisentin")
+        embed.add_field(name=f"YouTube:", value="https://www.youtube.com/channel/UCk92VCcs2zWzj_bTQ6aeTdg")
+        embed.add_field(name=f"Instagram:", value="https://www.instagram.com/oliviavisentin/")
+        embed.add_field(name=f"Facebook:", value="https://www.facebook.com/olivia.visentin.50")
         embed.set_footer(icon_url=interaction.guild.icon.url, text=interaction.guild.name)
         await interaction.send(embed=embed)
 
