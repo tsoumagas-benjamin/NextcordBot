@@ -110,7 +110,6 @@ class Information(commands.Cog, name = "Information"):
         embed.set_footer(icon_url=interaction.guild.icon.url, text=interaction.guild.name)
         await interaction.send(embed=embed)
 
-
     @nextcord.slash_command()
     async def statistics(self, interaction: Interaction):
         """Returns statistics about the bot"""
