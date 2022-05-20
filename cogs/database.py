@@ -40,7 +40,7 @@ class Database(commands.Cog, name="Database"):
             username = member.name + "#" + member.discriminator
             input = {"member":username, "month":month, "day":day}
             if db.birthdays.find_one({"member": username}):
-                db['birthdays'].delete_one(input)
+                db['birthdays'].delete_one({"member": username})
                 await interaction.send(f"Removed birthday for {member.name}.")
             else:
                 db['birthdays'].insert_one(input)
