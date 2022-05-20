@@ -60,7 +60,7 @@ class Information(commands.Cog, name = "Information"):
                 return
             description = output['rules'][number-1]
             embed = nextcord.Embed(title=f"{interaction.guild.name} Rule {number}", description=description, color=nextcord.Colour.from_rgb(225, 0, 255))
-            embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=ctx.author.avatar)
+            embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
             await interaction.send(embed=embed)
         else:
             await interaction.send("You must first set your rules with $setrules!")
