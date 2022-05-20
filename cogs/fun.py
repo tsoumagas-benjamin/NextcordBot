@@ -134,7 +134,7 @@ class Fun(commands.Cog, name="Fun"):
         else:
             jokeSetup = response["setup"]
             jokeDelivery = response["delivery"]
-            embed.description = f"{jokeSetup}\n||{jokeDelivery}||"
+            embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
             embed.color = nextcord.Colour.from_rgb(225, 0, 255)
         await interaction.send(embed=embed)
         
