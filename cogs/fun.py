@@ -114,6 +114,21 @@ class Fun(commands.Cog, name="Fun"):
         )
         await interaction.send(embed=embed)
 
+    @nextcord.slash_command(guild_ids=[686394755009347655])
+    async def joke(self, interaction: Interaction):
+        """Gets a random joke from a joke API"""
+        url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
+        querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
+        headers = {
+            "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
+            "X-RapidAPI-Key": "21fe04bf11mshb7a648a5b2818d2p13fedejsn6cb9f5aed027"
+        }
+        response = requests.request("GET", url, headers=headers, params=querystring)
+
+        print(response)
+        await interaction.send(response)
+        
+
     @nextcord.slash_command()
     async def youtube(self, interaction: Interaction, *, message: str):
         """Search youtube for a video"""
