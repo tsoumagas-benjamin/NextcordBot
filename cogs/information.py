@@ -21,7 +21,6 @@ class Information(commands.Cog, name = "Information"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.last_msg = None
 
     #Stores last deleted message
     @commands.Cog.listener()
@@ -74,25 +73,10 @@ class Information(commands.Cog, name = "Information"):
             for rule in output['rules']:
                 description += f"{rule}\n"
             embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=description, color=nextcord.Colour.from_rgb(225, 0, 255))
-            embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=interaction.author.avatar)
+            embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.avatar)
             await interaction.send(embed=embed)
         else:
             await interaction.send("You must first set your rules with $setrules!")
-    
-    @nextcord.slash_command()
-    async def snipe(self, interaction: Interaction):
-        """Snipes the last deleted message"""
-        if self.last_msg == None:
-            await interaction.send("Could not snipe a message!")
-            return
-        
-        author = self.last_msg.author.name
-        content = self.last_msg.content
-        author_pfp = self.last_msg.author.display_avatar
-
-        embed = nextcord.Embed(title="", description=content, color=nextcord.Colour.from_rgb(225, 0, 255))
-        embed.set_author(name=author, icon_url=author_pfp)
-        await interaction.send(embed=embed)
 
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096])
     async def socials(self, interaction: Interaction):
