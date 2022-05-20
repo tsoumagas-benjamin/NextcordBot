@@ -124,8 +124,9 @@ class Fun(commands.Cog, name="Fun"):
             "X-RapidAPI-Key": "21fe04bf11mshb7a648a5b2818d2p13fedejsn6cb9f5aed027"
         }
         response = requests.request("GET", url, headers=headers, params=querystring)
-
-        print(json.load(response))
+        print(response.content)
+        returned = json.loads(response.content)["result"]
+        print(returned)
         await interaction.send(response)
         
 
