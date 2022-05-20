@@ -132,8 +132,10 @@ class Information(commands.Cog, name = "Information"):
         """Sets a timer with an optional description"""
         if description == None:
             description = ''
+        else:
+            description += " "
         letter = unit[:1]
-        await interaction.send(f"Timer {description} set for {amount} {unit}.")
+        await interaction.send(f"Timer {description}set for {amount} {unit}.")
         if letter == "s":
             await asyncio.sleep(amount)
             await interaction.send(f"Timer {description} is done.")
