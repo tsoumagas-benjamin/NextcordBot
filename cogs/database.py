@@ -38,7 +38,7 @@ class Database(commands.Cog, name="Database"):
         elif day < 1 or day > 31:
             await interaction.send("Invalid day.")
             print("B")
-        elif re.findall("#[0-9]{4}$", member.discriminator):
+        elif re.findall("[0-9]{4}", member.discriminator):
             print("C")
             username = member.name + "#" + member.discriminator
             input = {"member":username, "month":month, "day":day}
