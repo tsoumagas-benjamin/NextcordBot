@@ -32,7 +32,11 @@ class Database(commands.Cog, name="Database"):
     @application_checks.has_permissions(administrator=True)
     async def birthday(self, interaction: Interaction, member: str, month: int, day: int):
         """Allows you to store a person's birthdate for this server. (Username#1234)"""
-        if re.findall("#[0-9]{4}$", member):
+        if month < 1 or month > 12:
+            await interaction.send("Invalid month.")
+        elif day < 1 or day > 31:
+            await interaction.send("Invalid day.")
+        elif re.findall("#[0-9]{4}$", member):
             input = {"member":member, "month":month, "day":day}
             if db.birthdays.find_one({"member": member}):
                 db['birthdays'].delete_one(input)
