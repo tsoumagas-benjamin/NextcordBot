@@ -25,7 +25,7 @@ class Database(commands.Cog, name="Database"):
         db.rules.replace_one({"_id": interaction.guild.id},{"_id": interaction.guild.id, "rules": rule_arr}, upsert=True)
         rule_body = rules.replace("; ", "\n")
         embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=rule_body, color=nextcord.Colour.from_rgb(225, 0, 255))
-        embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=interaction.author.avatar)
+        embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
         await interaction.send(embed=embed)
     
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
