@@ -33,7 +33,7 @@ class Database(commands.Cog, name="Database"):
     async def birthday(self, interaction: Interaction, member: str, month: int, day: int):
         """Allows you to store a person's birthdate for this server. (Username#1234)"""
         input = {"member":member.capitalize(), "month":month, "day":day}
-        if db.birthdays.find_one({"_id": id, "member": member.capitalize()}):
+        if db.birthdays.find_one({"member": member.capitalize()}):
             db['birthdays'].delete_one(input)
             await interaction.send(f"Removed birthday {month}/{day} for {member}.")
         else:
