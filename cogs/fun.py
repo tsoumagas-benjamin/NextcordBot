@@ -3,7 +3,7 @@ from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 import urllib.parse as parse
 import urllib.request as request
-import random, aiohttp, re, requests, json
+import random, aiohttp, os, re, requests, json
 from io import BytesIO
 
 class Fun(commands.Cog, name="Fun"):
@@ -91,6 +91,30 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
+    async def joke(self, interaction: Interaction):
+        """Gets a random joke from a joke API"""
+        url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
+        querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
+        headers = {
+            "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
+            "X-RapidAPI-Key": os.getenv("JOKE_KEY")
+        }
+        response = requests.request("GET", url, headers=headers, params=querystring).json()
+        jokeType = response["type"]
+        jokeCategory = response["category"]
+        embed = nextcord.Embed(title=f"{jokeCategory}")
+        if jokeType == "single":
+            joke = response["joke"]
+            embed.description = joke
+            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
+        else:
+            jokeSetup = response["setup"]
+            jokeDelivery = response["delivery"]
+            embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
+            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
+        await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
     async def meme(self, interaction: Interaction):
         """Gets a random meme from Heroku's meme API"""
         memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
@@ -113,31 +137,6 @@ class Fun(commands.Cog, name="Fun"):
             text=f"{memeVotes}🔺 • Original post at: {memeLink}"
         )
         await interaction.send(embed=embed)
-
-    @nextcord.slash_command()
-    async def joke(self, interaction: Interaction):
-        """Gets a random joke from a joke API"""
-        url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
-        querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
-        headers = {
-            "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
-            "X-RapidAPI-Key": "21fe04bf11mshb7a648a5b2818d2p13fedejsn6cb9f5aed027"
-        }
-        response = requests.request("GET", url, headers=headers, params=querystring).json()
-        jokeType = response["type"]
-        jokeCategory = response["category"]
-        embed = nextcord.Embed(title=f"{jokeCategory}")
-        if jokeType == "single":
-            joke = response["joke"]
-            embed.description = joke
-            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
-        else:
-            jokeSetup = response["setup"]
-            jokeDelivery = response["delivery"]
-            embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
-            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
-        await interaction.send(embed=embed)
-        
 
     @nextcord.slash_command()
     async def youtube(self, interaction: Interaction, *, message: str):
