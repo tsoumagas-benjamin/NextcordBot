@@ -177,6 +177,7 @@ class Information(commands.Cog, name = "Information"):
         for role in member.roles:
             if role.name != "@everyone":
                 role_list.append(role.mention)
+            role_list.reverse()
         embed.add_field(name="Roles", value=', '.join(role_list), inline=False)
         if member.activity != None:
             embed.add_field(name="Activity",
