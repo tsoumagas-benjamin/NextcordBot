@@ -30,20 +30,21 @@ class Database(commands.Cog, name="Database"):
     
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
     @application_checks.has_permissions(administrator=True)
-    async def birthday(self, interaction: Interaction, member: str, month: int, day: int):
-        """Allows you to store a person's birthdate for this server. (Username#1234)"""
+    async def birthday(self, interaction: Interaction, member: nextcord.Member, month: int, day: int):
+        """Allows you to store a person's birthdate for this server."""
         if month < 1 or month > 12:
             await interaction.send("Invalid month.")
         elif day < 1 or day > 31:
             await interaction.send("Invalid day.")
-        elif re.findall("#[0-9]{4}$", member):
-            input = {"member":member, "month":month, "day":day}
-            if db.birthdays.find_one({"member": member}):
+        elif re.findall("#[0-9]{4}$", member.discriminator):
+            username = member.name + "#" + member.discriminator
+            input = {"member":username, "month":month, "day":day}
+            if db.birthdays.find_one({"member": username}):
                 db['birthdays'].delete_one(input)
-                await interaction.send(f"Removed birthday {month}/{day} for {member}.")
+                await interaction.send(f"Removed birthday {month}/{day} for {member.name}.")
             else:
                 db['birthdays'].insert_one(input)
-                await interaction.send(f"Added birthday {month}/{day} for {member}.")
+                await interaction.send(f"Added birthday {month}/{day} for {member.name}.")
         else:
             await interaction.send(f"Invalid discriminator.")
 
