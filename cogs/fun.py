@@ -125,7 +125,7 @@ class Fun(commands.Cog, name="Fun"):
         }
         response = requests.request("GET", url, headers=headers, params=querystring)
 
-        print(response)
+        print(json.load(response))
         await interaction.send(response)
         
 
