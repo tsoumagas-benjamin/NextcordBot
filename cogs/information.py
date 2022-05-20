@@ -183,8 +183,8 @@ class Information(commands.Cog, name = "Information"):
                             value=member.activity,
                             inline=False)
         embed.set_thumbnail(url=member.display_avatar)
-        embed.set_footer(icon_url=interaction.author.display_avatar,
-                         text=f'Requested by {interaction.author.name}')
+        embed.set_footer(icon_url=interaction.user.display_avatar,
+                         text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
 
 def setup(bot):
