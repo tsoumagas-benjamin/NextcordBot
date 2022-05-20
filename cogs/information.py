@@ -91,6 +91,10 @@ class Information(commands.Cog, name = "Information"):
             value="https://www.youtube.com/channel/UCk92VCcs2zWzj_bTQ6aeTdg",
             inline=False)
         embed.add_field(
+            name=f"Twitter:", 
+            value="https://twitter.com/VisentinOlivia",
+            inline=False)
+        embed.add_field(
             name=f"Instagram:", 
             value="https://www.instagram.com/oliviavisentin/",
             inline=False)
