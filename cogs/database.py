@@ -1,4 +1,4 @@
-import pymongo, os, nextcord
+import pymongo, os, nextcord, re
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 
@@ -32,13 +32,16 @@ class Database(commands.Cog, name="Database"):
     @application_checks.has_permissions(administrator=True)
     async def birthday(self, interaction: Interaction, member: str, month: int, day: int):
         """Allows you to store a person's birthdate for this server. (Username#1234)"""
-        input = {"member":member.capitalize(), "month":month, "day":day}
-        if db.birthdays.find_one({"member": member.capitalize()}):
-            db['birthdays'].delete_one(input)
-            await interaction.send(f"Removed birthday {month}/{day} for {member}.")
+        if re.findall("#[0-9]{4}$", member):
+            input = {"member":member, "month":month, "day":day}
+            if db.birthdays.find_one({"member": member}):
+                db['birthdays'].delete_one(input)
+                await interaction.send(f"Removed birthday {month}/{day} for {member}.")
+            else:
+                db['birthdays'].insert_one(input)
+                await interaction.send(f"Added birthday {month}/{day} for {member}.")
         else:
-            db['birthdays'].insert_one(input)
-            await interaction.send(f"Added birthday {month}/{day} for {member}.")
+            await interaction.send(f"Invalid discriminator.")
 
 #Add the cog to the bot
 def setup(bot):
