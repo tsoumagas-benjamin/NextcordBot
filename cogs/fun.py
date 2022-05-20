@@ -100,6 +100,8 @@ class Fun(commands.Cog, name="Fun"):
             "X-RapidAPI-Key": os.getenv("JOKE_KEY")
         }
         response = requests.request("GET", url, headers=headers, params=querystring).json()
+        print(response)
+        print(response["type"])
         jokeType = response["type"]
         jokeCategory = response["category"]
         embed = nextcord.Embed(title=f"{jokeCategory}")
