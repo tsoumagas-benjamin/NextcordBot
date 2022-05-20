@@ -133,18 +133,18 @@ class Information(commands.Cog, name = "Information"):
         if description == None:
             description = ''
         letter = unit[:1]
-        await interaction.reply(f"Timer {description} set for {amount} {unit}.")
+        await interaction.send(f"Timer {description} set for {amount} {unit}.")
         if letter == "s":
             await asyncio.sleep(amount)
-            await interaction.reply(f"Timer {description} is done.")
+            await interaction.send(f"Timer {description} is done.")
         elif letter == "m":
             await asyncio.sleep(amount * 60)
-            await interaction.reply(f"Timer {description} is done.")
+            await interaction.send(f"Timer {description} is done.")
         elif letter == "h":
             await asyncio.sleep(amount * 3600)
-            await interaction.reply(f"Timer {description} is done.")
+            await interaction.send(f"Timer {description} is done.")
         else:
-            await interaction.reply("Please enter a valid unit of time.")
+            await interaction.send("Please enter a valid unit of time.")
 
     @nextcord.slash_command()
     async def info(self, interaction: Interaction, member: nextcord.Member):
