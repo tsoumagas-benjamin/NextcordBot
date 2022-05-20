@@ -59,7 +59,7 @@ class Information(commands.Cog, name = "Information"):
                 await interaction.send(f"Rule {number} doesn't exist!")
                 return
             description = output['rules'][number-1]
-            embed = nextcord.Embed(title=f"{interaction.guild.name} Rule {number}", description=description, color=nextcord.Colour.blurple())
+            embed = nextcord.Embed(title=f"{interaction.guild.name} Rule {number}", description=description, color=nextcord.Colour.from_rgb(225, 0, 255))
             embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=ctx.author.avatar)
             await interaction.send(embed=embed)
         else:
@@ -73,7 +73,7 @@ class Information(commands.Cog, name = "Information"):
             description = ""
             for rule in output['rules']:
                 description += f"{rule}\n"
-            embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=description, color=nextcord.Colour.blurple())
+            embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=description, color=nextcord.Colour.from_rgb(225, 0, 255))
             embed.set_footer(text=f"Requested by {interaction.author.name}", icon_url=interaction.author.avatar)
             await interaction.send(embed=embed)
         else:
@@ -90,14 +90,14 @@ class Information(commands.Cog, name = "Information"):
         content = self.last_msg.content
         author_pfp = self.last_msg.author.display_avatar
 
-        embed = nextcord.Embed(title="", description=content, color=nextcord.Colour.blurple())
+        embed = nextcord.Embed(title="", description=content, color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.set_author(name=author, icon_url=author_pfp)
         await interaction.send(embed=embed)
 
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096])
     async def socials(self, interaction: Interaction):
         """Returns links to Olivia's socials"""
-        embed = nextcord.Embed(title=f"Olivia's Socials", color=nextcord.Colour.purple())
+        embed = nextcord.Embed(title=f"Olivia's Socials", color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(
             name=f"Twitch:", 
             value="https://www.twitch.tv/oliviavisentin",
@@ -125,7 +125,7 @@ class Information(commands.Cog, name = "Information"):
         for guild in self.bot.guilds:
             total_members += guild.member_count
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
-                               color=nextcord.Colour.blurple())
+                               color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
                         value=server_count,
                         inline=False)
@@ -163,7 +163,7 @@ class Information(commands.Cog, name = "Information"):
         """Get information on a user"""
         embed = nextcord.Embed(title=member.display_name,
                                description=member.mention,
-                               color=nextcord.Colour.blurple())
+                               color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name="ID", value=member.id, inline=False)
         embed.add_field(
             name="Created at",

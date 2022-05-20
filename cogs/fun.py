@@ -23,13 +23,13 @@ class Fun(commands.Cog, name="Fun"):
         json_data = json.loads(response.text)
         activity = json_data['activity'].title()
         category = json_data['type'].title()
-        embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',colour=nextcord.Colour.blurple())
+        embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',color=nextcord.Colour.from_rgb(225, 0, 255))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def embed(self, interaction: Interaction, *, message: str=None):
         """Turn your message into an embed"""
-        embed = nextcord.Embed(title='', description=message, colour=nextcord.Colour.blurple())
+        embed = nextcord.Embed(title='', description=message, color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
 
@@ -70,7 +70,7 @@ class Fun(commands.Cog, name="Fun"):
         Example: `$guessme Ben`"""
         #Create results embed
         embed = nextcord.Embed(title=f'Results for {name.title()}',
-        description='',colour=nextcord.Colour.blurple())
+        description='',color=nextcord.Colour.from_rgb(225, 0, 255))
         #Guess user age
         response = requests.get(f"https://api.agify.io/?name={name}")
         age_data = json.loads(response.text)

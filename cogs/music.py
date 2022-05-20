@@ -1,6 +1,6 @@
 import nextcord, NextcordUtils, pymongo, os, re, random, asyncio
 from nextcord import Interaction
-from nextcord.ext import commands
+from nextcord.ext import commands, application_checks
 # from fuzzywuzzy import fuzz
 
 #Name our access to the music library
@@ -67,7 +67,8 @@ class Music(commands.Cog, name="Music"):
     def __init__(self, bot):
         self.bot = bot
         
-    @nextcord.slash_command()
+    @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
+    @application_checks.has_permissions(administrator=True)
     async def addsong(self, interaction: Interaction, *, song):
         """Adds a song to the music quiz playlist"""
         title, artist = song.split(", ",2)
@@ -77,7 +78,8 @@ class Music(commands.Cog, name="Music"):
         song_list.insert_one(input)
         await interaction.send(f"Added {title} by {artist}")
 
-    @nextcord.slash_command()
+    @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
+    @application_checks.has_permissions(administrator=True)
     async def deletesong(self, interaction: Interaction, *, song):
         """Deletes a song from the music quiz playlist"""
         title, artist = song.split(", ",2)
@@ -90,7 +92,7 @@ class Music(commands.Cog, name="Music"):
     @nextcord.slash_command()
     async def songs(self, interaction: Interaction):
         """Gets all songs available for music quiz"""
-        embed = nextcord.Embed(title="Songs", description="Songs that will appear in music quiz.", color=nextcord.Colour.blurple())
+        embed = nextcord.Embed(title="Songs", description="Songs that will appear in music quiz.", color=nextcord.Colour.from_rgb(225, 0, 255))
         song_cursor = song_list.find({}, {"_id":0, "title":1, "artist":1})
         for song in song_cursor:
             embed.add_field(name=f"{song['title']}", value=f"{song['artist']}")
