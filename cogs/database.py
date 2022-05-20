@@ -41,10 +41,10 @@ class Database(commands.Cog, name="Database"):
             input = {"member":username, "month":month, "day":day}
             if db.birthdays.find_one({"member": username}):
                 db['birthdays'].delete_one(input)
-                await interaction.send(f"Removed birthday {month}/{day} for {member.name}.")
+                await interaction.send(f"Removed birthday for {member.name}.")
             else:
                 db['birthdays'].insert_one(input)
-                await interaction.send(f"Added birthday {month}/{day} for {member.name}.")
+                await interaction.send(f"Added birthday for {member.name}.")
         else:
             await interaction.send(f"Invalid discriminator.")
 
