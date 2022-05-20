@@ -123,13 +123,20 @@ class Fun(commands.Cog, name="Fun"):
             "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
             "X-RapidAPI-Key": "21fe04bf11mshb7a648a5b2818d2p13fedejsn6cb9f5aed027"
         }
-        response = requests.request("GET", url, headers=headers, params=querystring)
-        print(response)
-        print(response.json())
-        print(response.json()["type"])
-
-
-        await interaction.send(response)
+        response = requests.request("GET", url, headers=headers, params=querystring).json()
+        jokeType = response["type"]
+        jokeCategory = response["category"]
+        embed = nextcord.Embed(title=f"{jokeCategory}")
+        if jokeType == "single":
+            joke = response["joke"]
+            embed.description = joke
+            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
+        else:
+            jokeSetup = response["setup"]
+            jokeDelivery = response["delivery"]
+            embed.description = f"{jokeSetup}\n||{jokeDelivery}||"
+            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
+        await interaction.send(embed=embed)
         
 
     @nextcord.slash_command()
