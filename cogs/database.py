@@ -34,18 +34,24 @@ class Database(commands.Cog, name="Database"):
         """Allows you to store a person's birthdate for this server."""
         if month < 1 or month > 12:
             await interaction.send("Invalid month.")
+            print("A")
         elif day < 1 or day > 31:
             await interaction.send("Invalid day.")
+            print("B")
         elif re.findall("#[0-9]{4}$", member.discriminator):
+            print("C")
             username = member.name + "#" + member.discriminator
             input = {"member":username, "month":month, "day":day}
             if db.birthdays.find_one({"member": username}):
+                print("D")
                 db['birthdays'].delete_one(input)
                 await interaction.send(f"Removed birthday {month}/{day} for {member.name}.")
             else:
+                print("E")
                 db['birthdays'].insert_one(input)
                 await interaction.send(f"Added birthday {month}/{day} for {member.name}.")
         else:
+            print("F")
             await interaction.send(f"Invalid discriminator.")
 
 #Add the cog to the bot
