@@ -120,20 +120,12 @@ class Information(commands.Cog, name = "Information"):
     @nextcord.slash_command()
     async def statistics(self, interaction: Interaction):
         """Returns statistics about the bot"""
-        server_members = len(interaction.guild.humans)
-        server_bots = len(interaction.guild.bots)
         server_count = len(self.bot.guilds)
         total_members = 0
         for guild in self.bot.guilds:
             total_members += guild.member_count
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
                                color=nextcord.Colour.blurple())
-        embed.add_field(name=f"{interaction.guild.name} member count: ",
-                        value=str(server_members),
-                        inline=False)
-        embed.add_field(name=f"{interaction.guild.name} bot count: ",
-                        value=str(server_bots),
-                        inline=False)
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
                         value=server_count,
                         inline=False)

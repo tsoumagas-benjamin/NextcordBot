@@ -1,4 +1,5 @@
 import nextcord
+from nextcord import Interaction
 from nextcord.ext import commands
 
 #Create a cog for error handling
@@ -8,7 +9,7 @@ class Error(commands.Cog):
 
     #Occurs whenever an error appears from a command
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, interaction: Interaction, error):
 
         #Error if user misses a necessary command parameter
         if isinstance(error, commands.MissingRequiredArgument):
@@ -48,8 +49,8 @@ class Error(commands.Cog):
           raise error
 
         embed = nextcord.Embed(title=error, description = message, color = nextcord.Colour.blurple())
-        await ctx.send(embed=embed, delete_after=5)
-        await ctx.message.delete(delay=5)
+        await interaction.send(embed=embed, delete_after=5)
+        await interaction.message.delete(delay=5)
 
 #Add the cog to the bot
 def setup(bot):

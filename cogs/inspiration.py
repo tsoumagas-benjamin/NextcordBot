@@ -19,11 +19,10 @@ def get_quote():
   quote = f"*{json_data[0]['q']}*  -  ***{json_data[0]['a']}***"
   return quote
 
-#Function to update entries in keywords
+#Functions to update entries in keywords
 def append_entry(id, category: str, content: str):
     db.keywords.update_one({"_id": id}, {'$push': {category: content}})
 
-#Function to update entries in keywords
 def remove_entry(id, category: str, content: str):
     db.keywords.update_one({"_id": id}, {'$pull': {category: content}})
 
