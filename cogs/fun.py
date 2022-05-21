@@ -21,7 +21,7 @@ class Fun(commands.Cog, name="Fun"):
         choice = random.choice(choices)
         url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
         response = requests.get(url)
-        result = response.text[1:-1]
+        result = response.text[2:-2]
         await interaction.send(result)
 
     @nextcord.slash_command()
