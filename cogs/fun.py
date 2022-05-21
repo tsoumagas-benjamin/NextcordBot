@@ -101,7 +101,6 @@ class Fun(commands.Cog, name="Fun"):
         }
         response = requests.request("GET", url, headers=headers, params=querystring).json()
         print(response)
-        print(response["type"])
         jokeType = response["type"]
         jokeCategory = response["category"]
         embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
