@@ -101,19 +101,17 @@ class Fun(commands.Cog, name="Fun"):
             "X-RapidAPI-Key": key
         }
         response = requests.request("GET", url, headers=headers, params=querystring).json()
-        print(response)
-        await interaction.send(response)
-        # jokeType = response["type"]
-        # jokeCategory = response["category"]
-        # embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
-        # if jokeType == "single":
-        #     joke = response["joke"]
-        #     embed.description = joke
-        # else:
-        #     jokeSetup = response["setup"]
-        #     jokeDelivery = response["delivery"]
-        #     embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
-        # await interaction.send(embed=embed)
+        jokeType = response["type"]
+        jokeCategory = response["category"]
+        embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
+        if jokeType == "single":
+            joke = response["joke"]
+            embed.description = joke
+        else:
+            jokeSetup = response["setup"]
+            jokeDelivery = response["delivery"]
+            embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
+        await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def meme(self, interaction: Interaction):
