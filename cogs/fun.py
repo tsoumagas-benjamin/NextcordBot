@@ -97,7 +97,7 @@ class Fun(commands.Cog, name="Fun"):
         querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
         headers = {
             "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
-            "X-RapidAPI-Key": os.getenv("JOKE_KEY")
+            "X-RapidAPI-Key": os.getenv('JOKE_KEY')
         }
         response = requests.request("GET", url, headers=headers, params=querystring).json()
         print(response)
