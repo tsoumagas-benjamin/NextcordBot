@@ -90,7 +90,7 @@ class Fun(commands.Cog, name="Fun"):
             embed.add_field(name=f'Country {country_id}', value=f'Probability: {country_prob}', inline=False)
         await interaction.send(embed=embed)
 
-    @nextcord.slash_command(guild_ids=[686394755009347655])
+    @nextcord.slash_command()
     async def joke(self, interaction: Interaction):
         """Gets a random joke from a joke API"""
         url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
