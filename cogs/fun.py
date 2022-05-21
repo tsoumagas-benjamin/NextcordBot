@@ -14,7 +14,7 @@ class Fun(commands.Cog, name="Fun"):
     def __init__(self, bot):
         self.bot = bot
 
-    @nextcord.slash_command(guild_ids=[686394755009347655])
+    @nextcord.slash_command()
     async def animal(self, interaction: Interaction):
         """Get a random animal picture"""
         choices = ["shibes", "cats", "birds"]
