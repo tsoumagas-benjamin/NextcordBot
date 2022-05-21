@@ -104,16 +104,14 @@ class Fun(commands.Cog, name="Fun"):
         print(response["type"])
         jokeType = response["type"]
         jokeCategory = response["category"]
-        embed = nextcord.Embed(title=f"{jokeCategory}")
+        embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
         if jokeType == "single":
             joke = response["joke"]
             embed.description = joke
-            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
         else:
             jokeSetup = response["setup"]
             jokeDelivery = response["delivery"]
             embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
-            embed.color = nextcord.Colour.from_rgb(225, 0, 255)
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
