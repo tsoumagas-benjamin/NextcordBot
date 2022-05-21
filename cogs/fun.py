@@ -95,13 +95,15 @@ class Fun(commands.Cog, name="Fun"):
         """Gets a random joke from a joke API"""
         url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
         querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
+        key = os.getenv('JOKE_KEY')
         headers = {
             "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
-            "X-RapidAPI-Key": os.getenv('JOKE_KEY')
+            "X-RapidAPI-Key": key
         }
         response = requests.request("GET", url, headers=headers, params=querystring).json()
         print(response)
         print(response["type"])
+        await interaction.send(response["category"])
         # jokeType = response["type"]
         # jokeCategory = response["category"]
         # embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
