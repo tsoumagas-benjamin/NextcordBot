@@ -14,11 +14,18 @@ class Fun(commands.Cog, name="Fun"):
     def __init__(self, bot):
         self.bot = bot
 
+    @nextcord.slash_command(guild_ids=[686394755009347655])
+    async def animal(self, interaction: Interaction):
+        """Get a random animal picture"""
+        choices = ["shibes", "cats", "birds"]
+        choice = random.choice(choices)
+        url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
+        response = requests.get(url)
+        await interaction.send(response.content)
+
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
-        """Get some activity to cure your boredom
-        
-        Example: `$bored`"""
+        """Get some activity to cure your boredom"""
         response = requests.get("http://www.boredapi.com/api/activity/")
         json_data = json.loads(response.text)
         activity = json_data['activity'].title()
@@ -36,7 +43,7 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_emojis=True)
     async def getemoji(self, interaction: Interaction, url: str, *, name: str):
-        """Add an emoji to the server, requires manage emojis permission"""
+        """Add an emoji to the server"""
         async with aiohttp.ClientSession() as ses:
             async with ses.get(url) as r:
                 try:
@@ -65,9 +72,7 @@ class Fun(commands.Cog, name="Fun"):
     
     @nextcord.slash_command()
     async def guessme(self, interaction: Interaction, *, name: str):
-        """The bot will guess user age, gender, and nationality based on their name using various APIs.
-        
-        Example: `$guessme Ben`"""
+        """The bot will guess user age, gender, and nationality based on their name using various APIs."""
         #Create results embed
         embed = nextcord.Embed(title=f'Results for {name.title()}',
         description='',color=nextcord.Colour.from_rgb(225, 0, 255))
