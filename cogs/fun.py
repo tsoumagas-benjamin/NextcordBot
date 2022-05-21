@@ -21,7 +21,8 @@ class Fun(commands.Cog, name="Fun"):
         choice = random.choice(choices)
         url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
         response = requests.get(url)
-        await interaction.send(response.json()["text"][0])
+        result = response.text[1:-1]
+        await interaction.send(result)
 
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
