@@ -194,7 +194,7 @@ class Wave(commands.Cog, name="Wave"):
             return await interaction.send("I am not in a voice channel.")
         elif not interaction.user.voice:
             return await interaction.send("Join a voice channel first.")
-        elif not interaction.user.voice == interaction.guild.me.voice:
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
@@ -238,7 +238,7 @@ class Wave(commands.Cog, name="Wave"):
             return await interaction.send("I am not in a voice channel.")
         elif not interaction.user.voice:
             return await interaction.send("Join a voice channel first.")
-        elif not interaction.user.voice == interaction.guild.me.voice:
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
@@ -286,7 +286,7 @@ class Wave(commands.Cog, name="Wave"):
             return await interaction.send("I am not in a voice channel.")
         elif not interaction.user.voice:
             return await interaction.send("Join a voice channel first.")
-        elif not interaction.user.voice == interaction.guild.me.voice:
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
@@ -320,7 +320,7 @@ class Wave(commands.Cog, name="Wave"):
             return await interaction.send("I am not in a voice channel.")
         elif not interaction.user.voice:
             return await interaction.send("Join a voice channel first.")
-        elif not interaction.user.voice == interaction.guild.me.voice:
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
