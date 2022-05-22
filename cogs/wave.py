@@ -35,7 +35,7 @@ class Wave(commands.Cog, name="Wave"):
             host="lavalink.oops.wtf",
             port=443,
             password="www.freelavalink.ga",
-            secure=True
+            https=True
         )
     
     @commands.Cog.listener()
