@@ -1,7 +1,6 @@
 import nextcord, pymongo, os, re, wavelink, datetime
-from nextcord import Interaction, SlashOption, ChannelType
+from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-from nextcord.abc import GuildChannel
 
 #Set up our mongodb client
 client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -41,16 +40,12 @@ class Wave(commands.Cog, name="Wave"):
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node):
         """Event fired when a node has finished connecting"""
-        print(f"Node: <{node.identifier}> is ready!")
+        print(f"Node: {node.identifier} is ready!")
 
     @commands.Cog.listener()
-    async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track):
-        try:
-            ctx = player.ctx
-            vc: player = ctx.voice_client
-        except nextcord.HTTPException:
-            interaction = player.interaction
-            vc: player = interaction.guild.voice_client
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track):
+        interaction = player.interaction
+        vc: player = interaction.guild.voice_client
         
 
         if vc.loop:
@@ -58,10 +53,7 @@ class Wave(commands.Cog, name="Wave"):
         
         next_song = vc.queue.get()
         await vc.play(next_song)
-        try:
-            await ctx.send(f"Now playing: {next_song.title}")
-        except nextcord.HTTPException:
-            await interaction.send(f"Now playing: {next_song.title}")
+        await interaction.send(f"Now playing: {next_song.title}")
     
     # @commands.command()
     # async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack):
@@ -91,12 +83,12 @@ class Wave(commands.Cog, name="Wave"):
         search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
         if not interaction.guild.voice_client:
             vc: wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
-        elif not interaction.user.voice.channel:
+        elif not getattr(interaction.user.voice, "channel", None):
             return await interaction.send("Join a voice channel first")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
         
-        if vc.queue.is_empty and vc.is_playing():
+        if vc.queue.is_empty and not vc.is_playing():
             await vc.play(search)
             await interaction.send(f"Now playing: {search.title}")
         else:
