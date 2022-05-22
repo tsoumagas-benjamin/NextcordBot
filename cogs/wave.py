@@ -32,10 +32,9 @@ class Wave(commands.Cog, name="Wave"):
         await self.bot.wait_until_ready()
         await wavelink.NodePool.create_node(
             bot=self.bot,
-            host="disbotlistlavalink.ml",
+            host="lavalink.oops.wtf",
             port=443,
-            password="LAVA",
-            https=True
+            password="www.freelavalink.ga"
         )
     
     @commands.Cog.listener()
@@ -44,7 +43,7 @@ class Wave(commands.Cog, name="Wave"):
         print(f"Node: <{node.identifier}> is ready!")
 
     @commands.Cog.listener()
-    async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track, reason):
+    async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track):
         try:
             ctx = player.ctx
             vc: player = ctx.voice_client
@@ -86,7 +85,7 @@ class Wave(commands.Cog, name="Wave"):
         # setattr(vc, "loop", False)
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
-    async def play(self, interaction: Interaction, search: str = SlashOption):
+    async def play(self, interaction: Interaction, search: str):
         """Plays a song in a voice channel."""
         search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
         if not interaction.guild.voice_client:
