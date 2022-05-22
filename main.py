@@ -19,7 +19,7 @@ def main():
             super().__init__()
 
     # Instantiate the bot
-    bot = NextcordBot(intents=intents)
+    bot = NextcordBot(command_prefix=">", intents=intents)
 
     # Define bot behaviour on start up
     @bot.event
