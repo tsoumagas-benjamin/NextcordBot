@@ -14,6 +14,8 @@ collections = db.list_collection_names()
 #Get access to the songs collection
 song_list = db['songs']
 
+default_volume = 5
+
 def title_case(s):
   return re.sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),s)
 
@@ -67,9 +69,9 @@ class Music(commands.Cog, name="Music"):
             vc: wavelink.Player = interaction.guild.voice_client
         
         if vc.queue.is_empty and not vc.is_playing():
-            await vc.set_volume(10)
+            await vc.set_volume(default_volume)
             await vc.play(search)
-            await interaction.send(f"Now playing: {search.title}")
+            await interaction.send(f"Now playing: {search.title} at {default_volume}%")
         else:
             await vc.queue.put_wait(search)
             await interaction.send(f"Added {search.title} to the queue.")
