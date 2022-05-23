@@ -44,10 +44,9 @@ class Information(commands.Cog, name = "Information"):
     async def ping(self, interaction: Interaction):
         """Gets bot ping and API response time"""
         start_time = time.time()
-        msg = await interaction.send("Testing ping...")
         end_time = time.time()
 
-        await msg.edit(content=f"Ping: {round(self.bot.latency * 1000)}ms \nAPI: {round((end_time - start_time) * 1000)}ms")
+        await interaction.send(content=f"Ping: {round(self.bot.latency * 1000)}ms \nAPI: {round((end_time - start_time) * 1000)}ms")
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):

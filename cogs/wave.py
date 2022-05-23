@@ -88,21 +88,6 @@ class Wave(commands.Cog, name="Wave"):
 
         await vc.pause()
         await interaction.send("Music paused.")
-
-    # @commands.command()
-    # async def pause(self, ctx: commands.Context):
-    #     """Play a song with the given search query.
-    #     If not connected, connect to our voice channel.
-    #     """
-    #     if not ctx.voice_client:
-    #         return await ctx.send("Nothing is playing.")
-    #     elif not getattr(ctx.author.voice, "channel", None):
-    #         return await ctx.send("Join a voice channel first")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-
-    #     await vc.pause()
-    #     await ctx.send("Music paused.")
     
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def resume(self, interaction: Interaction):
@@ -116,21 +101,6 @@ class Wave(commands.Cog, name="Wave"):
 
         await vc.resume()
         await interaction.send("Music resumed.")
-    
-    # @commands.command()
-    # async def resume(self, ctx: commands.Context):
-    #     """Play a song with the given search query.
-    #     If not connected, connect to our voice channel.
-    #     """
-    #     if not ctx.voice_client:
-    #         return await ctx.send("Nothing is playing.")
-    #     elif not getattr(ctx.author.voice, "channel", None):
-    #         return await ctx.send("Join a voice channel first")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-
-    #     await vc.pause()
-    #     await ctx.send("Music resumed.")
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def stop(self, interaction: Interaction):
@@ -145,21 +115,6 @@ class Wave(commands.Cog, name="Wave"):
         await vc.stop()
         await interaction.send("Music stopped.")
 
-    # @commands.command()
-    # async def stop(self, ctx: commands.Context):
-    #     """Play a song with the given search query.
-    #     If not connected, connect to our voice channel.
-    #     """
-    #     if not ctx.voice_client:
-    #         return await ctx.send("Nothing is playing.")
-    #     elif not getattr(ctx.author.voice, "channel", None):
-    #         return await ctx.send("Join a voice channel first.")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-
-    #     await vc.stop()
-    #     await ctx.send("Music stopped.")
-
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def disconnect(self, interaction: Interaction):
         """Disconnects the bot from the voice channel."""
@@ -172,20 +127,6 @@ class Wave(commands.Cog, name="Wave"):
 
         await vc.disconnect()
         await interaction.send("Left the voice channel.")
-    
-    # @commands.command()
-    # async def disconnect(self, ctx: commands.Context):
-    #     """Disconnects bot from voice channel."""
-    #     if not ctx.voice_client:
-    #         return await ctx.send("I am not in a voice channel.")
-    #     elif not ctx.author.voice:
-    #         return await ctx.send("Join a voice channel first.")
-    #     elif not ctx.author.voice == ctx.me.voice:
-    #         return await ctx.send("We have to be in the same voice channel.")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-    #     await vc.disconnect()
-    #     await ctx.send("Leaving the voice channel.")
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def loop(self, interaction: Interaction):
@@ -208,28 +149,6 @@ class Wave(commands.Cog, name="Wave"):
             return await interaction.send("Now looping the current song.")
         else:
             return await interaction.send("No longer looping the current song.")
-    
-    # @commands.command()
-    # async def loop(self, ctx: commands.Context):
-    #     """Loops current song."""
-    #     if not ctx.voice_client:
-    #         return await ctx.send("I am not in a voice channel.")
-    #     elif not ctx.author.voice:
-    #         return await ctx.send("Join a voice channel first.")
-    #     elif not ctx.author.voice == ctx.me.voice:
-    #         return await ctx.send("We have to be in the same voice channel.")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-        
-    #     try:
-    #         vc.loop ^= True
-    #     except Exception:
-    #         setattr(vc, "loop", False)
-        
-    #     if vc.loop:
-    #         return await ctx.send("Now looping the current song.")
-    #     else:
-    #         return await ctx.send("No longer looping the current song.")
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def queue(self, interaction: Interaction):
@@ -255,30 +174,6 @@ class Wave(commands.Cog, name="Wave"):
         
         return await interaction.send(embed=embed)
 
-    # @commands.command()
-    # async def queue(self, ctx: commands.Context):
-    #     """Returns songs in the queue."""
-    #     if not ctx.voice_client:
-    #         return await ctx.send("I am not in a voice channel.")
-    #     elif not ctx.author.voice:
-    #         return await ctx.send("Join a voice channel first.")
-    #     elif not ctx.author.voice == ctx.me.voice:
-    #         return await ctx.send("We have to be in the same voice channel.")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-
-    #     if vc.queue.is_empty:
-    #         return await ctx.send("Queue is empty")
-        
-    #     embed = nextcord.Embed(title="Queue", color=nextcord.Colour.from_rgb(225, 0, 255))
-    #     queue = vc.queue.copy()
-    #     song_count = 0
-    #     for song in queue:
-    #         song_count += 1
-    #         embed.add_field(name=f"{song_count}.", value=f"`{song.title}`")
-        
-    #     return await ctx.send(embed=embed)
-
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def volume(self,interaction: Interaction, volume: int):
         """Changes the music volume."""
@@ -295,23 +190,6 @@ class Wave(commands.Cog, name="Wave"):
             return await interaction.send("Volume must be between 0 and 100.")
         await interaction.send(f"Set the volume to {volume}%.")
         return await vc.set_volume(volume)
-    
-    # @commands.command()
-    # async def volume(self, ctx: commands.Context, volume: int):
-    #     """Changes the music volume."""
-    #     if not ctx.voice_client:
-    #         return await ctx.send("I am not in a voice channel.")
-    #     elif not ctx.author.voice:
-    #         return await ctx.send("Join a voice channel first.")
-    #     elif not ctx.author.voice == ctx.me.voice:
-    #         return await ctx.send("We have to be in the same voice channel.")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-
-    #     if volume < 0 or volume > 100:
-    #         return await ctx.send("Volume must be between 0 and 100.")
-    #     await ctx.send(f"Set the volume to {volume}%.")
-    #     return await vc.set_volume(volume)
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def nowplaying(self, interaction: Interaction):
@@ -330,28 +208,9 @@ class Wave(commands.Cog, name="Wave"):
         
         embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author}", color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name="Duration", value = f"{str(datetime.timedelta(seconds=vc.track.length))}")
-        embed.add_field(name="Extra info", value=f"Song URL: [Click Me]({str(vc.track.uri)})")
+        embed.add_field(name="Song URL", value=f"[Click Here]({str(vc.track.uri)})")
 
         return await interaction.send(embed=embed)
-    
-    # @commands.command()
-    # async def nowplaying(self, ctx: commands.Context):
-    #     """Returns the currently playing song"""
-    #     if not ctx.voice_client:
-    #         return await ctx.send("I am not in a voice channel.")
-    #     elif not ctx.author.voice:
-    #         return await ctx.send("Join a voice channel first.")
-    #     elif not ctx.author.voice == ctx.me.voice:
-    #         return await ctx.send("We have to be in the same voice channel.")
-    #     else:
-    #         vc: wavelink.Player = ctx.voice_client
-        
-    #     if not vc.is_playing():
-    #         return await ctx.send("Nothing is playing.")
-        
-    #     embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author}", color=nextcord.Colour.from_rgb(225, 0, 255))
-    #     embed.add_field(name="Duration", value = f"{str(datetime.timedelta(seconds=vc.track.length))}")
-    #     embed.add_field(name="Extra info", value=f"Song URL: [Click Me]({str(vc.track.uri)})")
     
 def setup(bot):
     bot.add_cog(Wave(bot))
