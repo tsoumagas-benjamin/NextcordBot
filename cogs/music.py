@@ -1,10 +1,6 @@
-import nextcord, NextcordUtils, pymongo, os, re, random, asyncio
+import nextcord, pymongo, os, re, wavelink, datetime
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-# from fuzzywuzzy import fuzz
-
-#Name our access to the music library
-music = NextcordUtils.Music()
 
 #Set up our mongodb client
 client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -18,46 +14,8 @@ collections = db.list_collection_names()
 #Get access to the songs collection
 song_list = db['songs']
 
-#Music Quiz Variables
-mq_rounds = 10
-mq_duration = 30
-mq_vol = 25
-mq_leniency = 90
-
 def title_case(s):
   return re.sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),s)
-
-# Modified version of play for music quiz
-async def mq_play(ctx, *, url):
-    player = music.get_player(guild_id=ctx.guild.id)
-    if not player:
-        player = music.create_player(ctx, ffmpeg_error_betterfix=True)
-    if not ctx.voice_client.is_playing():
-        await player.queue(url, search=True)
-        await player.play()
-    else:
-        await player.queue(url, search=True)   
-
-# Modified version of skip for music quiz
-async def mq_skip(ctx):
-    player = music.get_player(guild_id=ctx.guild.id)
-    await player.skip(force=True)
-
-# Modified version of volume for music quiz
-async def mq_volume(ctx, vol):
-    player = music.get_player(guild_id=ctx.guild.id)
-    await player.change_volume(float(vol) / 100) # volume should be a float between 0 to 1
-
-# Modified version of pause for music quiz
-async def mq_pause(ctx):
-    player = music.get_player(guild_id=ctx.guild.id)
-    await player.pause()
-    
-# Modified version of stop for music quiz
-async def mq_stop(ctx):
-    player = music.get_player(guild_id=ctx.guild.id)
-    await player.stop()
-
 
 class Music(commands.Cog, name="Music"):
     """Commands for playing music in voice channels"""
@@ -66,265 +24,195 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
-        
-    # @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
-    # @application_checks.has_permissions(administrator=True)
-    # async def addsong(self, interaction: Interaction, *, song):
-    #     """Adds a song to the music quiz playlist"""
-    #     title, artist = song.split(", ",2)
-    #     title = title_case(title)
-    #     artist = title_case(artist)
-    #     input = {"title":title, "artist":artist}
-    #     song_list.insert_one(input)
-    #     await interaction.send(f"Added {title} by {artist}")
+        bot.loop.create_task(self.connect_nodes())
 
-    # @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
-    # @application_checks.has_permissions(administrator=True)
-    # async def deletesong(self, interaction: Interaction, *, song):
-    #     """Deletes a song from the music quiz playlist"""
-    #     title, artist = song.split(", ",2)
-    #     title = title_case(title)
-    #     artist = title_case(artist)
-    #     input = {"title":title, "artist":artist}
-    #     song_list.delete_one(input)
-    #     await interaction.send(f"Deleted {title} by {artist}")
-
-    # @nextcord.slash_command()
-    # async def songs(self, interaction: Interaction):
-    #     """Gets all songs available for music quiz"""
-    #     embed = nextcord.Embed(title="Songs", description="Songs that will appear in music quiz.", color=nextcord.Colour.from_rgb(225, 0, 255))
-    #     song_cursor = song_list.find({}, {"_id":0, "title":1, "artist":1})
-    #     for song in song_cursor:
-    #         embed.add_field(name=f"{song['title']}", value=f"{song['artist']}")
-    #     await interaction.send(embed=embed)
-
-    # @nextcord.slash_command()
-    # async def randomsong(self, interaction: Interaction):
-    #     """Gets a random song from the music quiz playlist"""
-    #     object = song_list.aggregate([{ "$sample": { "size": 1 }}])
-    #     for x in object:
-    #         title, artist = x['title'], x['artist']
-    #     await interaction.send(f"{title} by {artist}")
-        
-    # @nextcord.slash_command()
-    # async def join(self, interaction: Interaction):
-    #     """Get the bot to join a voice channel"""
-    #     await interaction.user.voice.channel.connect() #Joins author's voice channel
-    #     await interaction.send(f"Joined {interaction.user.voice.channel}")
-        
-    # @nextcord.slash_command()
-    # async def leave(self, interaction: Interaction):
-    #     """Get the bot to leave a voice channel"""
-    #     await interaction.guild.voice_client.disconnect()
-    #     await interaction.send(f"Left voice channel")
-        
-    # @nextcord.slash_command()
-    # async def play(self, interaction: Interaction, *, url):
-    #     """Get the bot to play a song from a url"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     if not player:
-    #         player = music.create_player(interaction, ffmpeg_error_betterfix=True)
-    #     if not interaction.guild.voice_client.is_playing():
-    #         await player.queue(url, search=True)
-    #         song = await player.play()
-    #         await interaction.send(f"Playing {song.name}")
-    #     else:
-    #         song = await player.queue(url, search=True)
-    #         await interaction.send(f"Queued {song.name}")     
-
-    # @nextcord.slash_command()
-    # async def pause(self, interaction: Interaction):
-    #     """Get the bot to pause the music"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     song = await player.pause()
-    #     await interaction.send(f"Paused {song.name}")
-        
-    # @nextcord.slash_command()
-    # async def resume(self, interaction: Interaction):
-    #     """Get the bot to resume the music"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     song = await player.resume()
-    #     await interaction.send(f"Resumed {song.name}")
-        
-    # @nextcord.slash_command()
-    # async def stop(self, interaction: Interaction):
-    #     """Get the bot to stop the music and leave the voice channel"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     await player.stop()
-    #     await interaction.send("Stopped")
-        
-    # @nextcord.slash_command()
-    # async def loop(self, interaction: Interaction):
-    #     """Get the bot to loop the current song"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     song = await player.toggle_song_loop()
-    #     if song.is_looping:
-    #         await interaction.send(f"Enabled loop for {song.name}")
-    #     else:
-    #         await interaction.send(f"Disabled loop for {song.name}")
-        
-    # @nextcord.slash_command()
-    # async def queue(self, interaction: Interaction):
-    #     """Show all the songs currently queued to play in open"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     await interaction.send(f"{', '.join([song.name for song in player.current_queue()])}")
-        
-    # @nextcord.slash_command()
-    # async def np(self, interaction: Interaction):
-    #     """Get information on the song currently playing"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     song = player.now_playing()
-    #     await interaction.send(song.name)
-        
-    # @nextcord.slash_command()
-    # async def skip(self, interaction: Interaction):
-    #     """Skip the currently playing song"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     data = await player.skip(force=True)
-    #     if len(data) == 2:
-    #         await interaction.send(f"Skipped from {data[0].name} to {data[1].name}")
-    #     else:
-    #         await interaction.send(f"Skipped {data[0].name}")
-
-    # @nextcord.slash_command()
-    # async def volume(self, interaction: Interaction, vol):
-    #     """Changes the bot's volume (0-100)"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     song, volume = await player.change_volume(float(vol) / 100) # volume should be a float between 0 to 1
-    #     await interaction.send(f"Changed volume for {song.name} to {volume*100}%")
-        
-    # @nextcord.slash_command()
-    # async def remove(self, interaction: Interaction, index):
-    #     """Removes a song at a specified index"""
-    #     player = music.get_player(guild_id=interaction.guild.id)
-    #     song = await player.remove_from_queue(int(index))
-    #     await interaction.send(f"Removed {song.name} from queue")
+    async def connect_nodes(self):
+        """Connect to our lavalink nodes"""
+        await self.bot.wait_until_ready()
+        await wavelink.NodePool.create_node(
+            bot=self.bot,
+            host="lavalink.oops.wtf",
+            port=443,
+            password="www.freelavalink.ga",
+            https=True
+        )
     
-    # TODO: Implement music quiz functionality
-    # @commands.listen('on_message')
-    # async def mq(self, message):
-    #     # If the message is from a bot, don't react
-    #     if message.author.bot:
-    #         return
+    @commands.Cog.listener()
+    async def on_wavelink_node_ready(self, node: wavelink.Node):
+        """Event fired when a node has finished connecting"""
+        print(f"Node: {node.identifier} is ready!")
 
-    #     prefix = str(db.guilds.find_one({"_id": message.guild.id})['prefix'] + "mq")
-    #     if message.content == prefix:
-    #         # Initialize variables
-    #         channel = message.channel
-    #         ctx = await self.bot.get_context(message)
-    #         title_flag = ''
-    #         artist_flag = ''
-    #         # Game start
-    #         await channel.send(f"Music quiz, {mq_rounds} rounds, {mq_duration} each.")
-    #         #If bot isn't in a voice channel, join the user's
-    #         if self.bot.voice_clients == []:
-    #             await ctx.author.voice.channel.connect()
-    #         #Initialize dictionary to store player score
-    #         player_dict = {}
-    #         #Setup the embed to store game results
-    #         embed = nextcord.Embed(title = "Music Quiz", description = "Results", color = nextcord.Colour.blurple())
-    #         embed.set_footer(icon_url = ctx.guild.icon_url, text = ctx.guild.name)
-    #         #Make a list from available titles and artists
-    #         title_list = []
-    #         artist_list = []
-    #         song_cursor = song_list.find({}, {"_id":0, "title":1, "artist":1})
-    #         for song in song_cursor:
-    #             title_list.append(song['title'])
-    #             artist_list.append(song['artist'])
-    #         #Randomize songs for as many rounds as needed
-    #         index_list = range(0,len(title_list))
-    #         randomized_indices = random.sample(index_list,mq_rounds)
+    @commands.Cog.listener()
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track):
+        interaction = player.interaction
+        vc: player = interaction.guild.voice_client
 
-    #         #Function to increment player score
-    #         def increment_score(name):
-    #             if name in player_dict:
-    #                 player_dict[str(name)] += 1
-    #             else:
-    #                 player_dict[str(name)] = 1
+        if vc.loop:
+            return await vc.play(track)
+        
+        next_song = vc.queue.get()
+        await vc.play(next_song)
+        await interaction.send(f"Now playing: {next_song.title}")
 
-    #         #Check if user response matches the correct title
-    #         def title_check(m, ans):
-    #             s1 = ''.join(e for e in m.content.lower() if e.isalnum())
-    #             s2 = ''.join(e for e in ans.lower() if e.isalnum())
-    #             percent_correct = fuzz.token_set_ratio(s1,s2)
-    #             if percent_correct >= mq_leniency:
-    #                 increment_score(m.author.name)
-    #                 return str(m.author.name)
-    #             return ''
-            
-    #         #Check if user response matches the correct artist
-    #         def artist_check(m, ans):
-    #             s1 = ''.join(e for e in m.content.lower() if e.isalnum())
-    #             s2 = ''.join(e for e in ans.lower() if e.isalnum())
-    #             percent_correct = fuzz.token_set_ratio(s1,s2)
-    #             if percent_correct >= mq_leniency:
-    #                 increment_score(m.author.name)
-    #                 return str(m.author.name)
-    #             return ''
-            
-    #         #Check if title and artist have been guessed
-    #         def mq_check(m):
-    #             return ((title_flag != '') and (artist_flag != ''))
-            
-    #         for i in range(mq_rounds):
-    #             #Start of round
-    #             await asyncio.sleep(3)
-    #             await channel.send(f"Starting round {i+1}")
-    #             #Set guess flags to false at round start
-    #             title_flag = ''
-    #             artist_flag = ''
-    #             #Make the correct song the first one from our random list
-    #             index = randomized_indices[i]
-    #             correct_title = title_list[index]
-    #             correct_artist = artist_list[index]
-    #             #Play the song at volume
-    #             print("Playing " + title_list[index] + " by " + artist_list[index])
-    #             await mq_play(ctx,title_list[index]+" by "+artist_list[index])
-    #             await mq_volume(ctx, mq_vol)
-    #             try:
-    #                 #If title isn't guessed compare guess to the title
-    #                 if title_flag == '':
-    #                     title_flag = await client.wait_for('message',check=title_check)
-    #                 #If artist isn't guessed compare guess to the artist
-    #                 if artist_flag == '':
-    #                     artist_flag = await client.wait_for('message',check=artist_check)
-    #                 #End round when title and artist are guessed
-    #                 guess = await client.wait_for('message',check=mq_check,timeout=mq_duration)
-    #             except asyncio.TimeoutError:
-    #                 #Stop the round if users don't guess in time
-    #                 await mq_skip(ctx)
-    #                 await mq_pause(ctx)
-    #                 await channel.send(f"Round over.\n Title: {title_case(correct_title)}\nArtist: {title_case(correct_artist)}.")
-    #             else:
-    #                 #Stop the round and announce the round winner
-    #                 await mq_skip(ctx)
-    #                 await mq_pause(ctx)
-    #                 await channel.send(f"Successfully guessed {title_case(correct_title)} by {title_case(correct_artist)}")
-    #             #Sort player score dictionary from highest to lowest
-    #             sorted_list = sorted(player_dict.items(), key = lambda x:x[1], reverse=True)
-    #             sorted_dict = dict(sorted_list)
-    #             #Add each player and their score to game results embed
-    #             for key, value in sorted_dict.items():
-    #                 score = str(value) + " pts"
-    #                 embed.add_field(name=key, value=score)
-    #             #Send game results embed
-    #             await ctx.send(embed=embed)
-    #             for key, value in sorted_dict.items():
-    #                 embed.remove_field(0)
-    #         #Announce end of the game
-    #         await channel.send("Music quiz is done.")
-    #         #Sort player score dictionary from highest to lowest
-    #         sorted_list = sorted(player_dict.items(), key = lambda x:x[1], reverse=True)
-    #         sorted_dict = dict(sorted_list)
-    #         #Add each player and their score to game results embed
-    #         for key, value in sorted_dict.items():
-    #             score = str(value) + " pts"
-    #             embed.add_field(name=key, value=score)
-    #         #Send game results embed and leave voice channel
-    #         await ctx.send(embed=embed)
-    #         await mq_stop(ctx)
-    #         return
+    @nextcord.slash_command()
+    async def play(self, interaction: Interaction, search: str):
+        """Plays a song in a voice channel."""
+        search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
+        if not interaction.guild.voice_client:
+            vc: wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
+        elif not getattr(interaction.user.voice, "channel", None):
+            return await interaction.send("Join a voice channel first")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+        
+        if vc.queue.is_empty and not vc.is_playing():
+            await vc.play(search)
+            await interaction.send(f"Now playing: {search.title}")
+        else:
+            await vc.queue.put_wait(search)
+            await interaction.send(f"Added {search.title} to the queue.")
+        
+        vc.interaction = interaction
+        try:
+            if vc.loop: return
+        except Exception:
+            setattr(vc, "loop", False)
+
+    @nextcord.slash_command()
+    async def pause(self, interaction: Interaction):
+        """Pauses the current song."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("Nothing is playing.")
+        elif not getattr(interaction.user.voice, "channel", None):
+            return await interaction.send("Join a voice channel first")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+
+        await vc.pause()
+        await interaction.send("Music paused.")
     
+    @nextcord.slash_command()
+    async def resume(self, interaction: Interaction):
+        """Resumes the current song."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("Nothing is playing.")
+        elif not getattr(interaction.user.voice, "channel", None):
+            return await interaction.send("Join a voice channel first")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
 
+        await vc.resume()
+        await interaction.send("Music resumed.")
+
+    @nextcord.slash_command()
+    async def stop(self, interaction: Interaction):
+        """Stops the current song."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("Nothing is playing.")
+        elif not getattr(interaction.user.voice, "channel", None):
+            return await interaction.send("Join a voice channel first.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+
+        await vc.stop()
+        await interaction.send("Music stopped.")
+
+    @nextcord.slash_command()
+    async def disconnect(self, interaction: Interaction):
+        """Disconnects the bot from the voice channel."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("Nothing is playing.")
+        elif not getattr(interaction.user.voice, "channel", None):
+            return await interaction.send("Join a voice channel first.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+
+        await vc.disconnect()
+        await interaction.send("Left the voice channel.")
+
+    @nextcord.slash_command()
+    async def loop(self, interaction: Interaction):
+        """Loops current song."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("I am not in a voice channel.")
+        elif not interaction.user.voice:
+            return await interaction.send("Join a voice channel first.")
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
+            return await interaction.send("We have to be in the same voice channel.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+        
+        try:
+            vc.loop ^= True
+        except Exception:
+            setattr(vc, "loop", False)
+        
+        if vc.loop:
+            return await interaction.send("Now looping the current song.")
+        else:
+            return await interaction.send("No longer looping the current song.")
+
+    @nextcord.slash_command()
+    async def queue(self, interaction: Interaction):
+        """Returns songs in the queue."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("I am not in a voice channel.")
+        elif not interaction.user.voice:
+            return await interaction.send("Join a voice channel first.")
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
+            return await interaction.send("We have to be in the same voice channel.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+
+        if vc.queue.is_empty:
+            return await interaction.send("Queue is empty")
+        
+        embed = nextcord.Embed(title="Queue", color=nextcord.Colour.from_rgb(225, 0, 255))
+        queue = vc.queue.copy()
+        song_count = 0
+        for song in queue:
+            song_count += 1
+            embed.add_field(name=f"{song_count}.", value=f"`{song.title}`")
+        
+        return await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
+    async def volume(self,interaction: Interaction, volume: int):
+        """Changes the music volume."""
+        if not interaction.guild.voice_client:
+            return await interaction.send("I am not in a voice channel.")
+        elif not interaction.user.voice:
+            return await interaction.send("Join a voice channel first.")
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
+            return await interaction.send("We have to be in the same voice channel.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+
+        if volume < 0 or volume > 100:
+            return await interaction.send("Volume must be between 0 and 100.")
+        await interaction.send(f"Set the volume to {volume}%.")
+        return await vc.set_volume(volume)
+
+    @nextcord.slash_command()
+    async def nowplaying(self, interaction: Interaction):
+        """Returns the currently playing song"""
+        if not interaction.guild.voice_client:
+            return await interaction.send("I am not in a voice channel.")
+        elif not interaction.user.voice:
+            return await interaction.send("Join a voice channel first.")
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
+            return await interaction.send("We have to be in the same voice channel.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
+        
+        if not vc.is_playing():
+            return await interaction.send("Nothing is playing.")
+        
+        embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author}", color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed.add_field(name="Duration", value = f"{str(datetime.timedelta(seconds=vc.track.length))}")
+        embed.add_field(name="Song URL", value=f"[Click Here]({str(vc.track.uri)})")
+
+        return await interaction.send(embed=embed)
+    
 def setup(bot):
     bot.add_cog(Music(bot))
