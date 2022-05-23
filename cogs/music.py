@@ -1,6 +1,7 @@
 import nextcord, pymongo, os, re, wavelink, datetime
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
+from typing import Union
 
 #Set up our mongodb client
 client = pymongo.MongoClient(os.getenv('CONN_STRING'))
@@ -57,7 +58,7 @@ class Music(commands.Cog, name="Music"):
         await interaction.send(f"Now playing: {next_song.title}")
 
     @nextcord.slash_command()
-    async def play(self, interaction: Interaction, search: wavelink.YouTubeTrack | wavelink.YouTubePlaylist):
+    async def play(self, interaction: Interaction, search: wavelink.YouTubeTrack):
         """Plays a song in a voice channel."""
         search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
         if not interaction.guild.voice_client:
