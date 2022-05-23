@@ -47,7 +47,6 @@ class Music(commands.Cog, name="Music"):
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.YouTubeTrack, reason):
         interaction = player.interaction
-        print(player.interaction)
         vc: player = interaction.guild.voice_client
 
         if vc.loop:
@@ -58,7 +57,7 @@ class Music(commands.Cog, name="Music"):
         await interaction.send(f"Now playing: {next_song.title}")
 
     @nextcord.slash_command()
-    async def play(self, interaction: Interaction, search: str):
+    async def play(self, interaction: Interaction, search: wavelink.YouTubeTrack | wavelink.YouTubePlaylist):
         """Plays a song in a voice channel."""
         search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
         if not interaction.guild.voice_client:
