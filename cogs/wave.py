@@ -73,7 +73,9 @@ class Wave(commands.Cog, name="Wave"):
             await interaction.send(f"Added {search.title} to the queue.")
         
         vc.interaction = interaction
-        if vc.loop: return
+        if vc.loop is None:
+            vc.loop = False
+        elif vc.loop: return
         setattr(vc, "loop", False)
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
