@@ -43,7 +43,7 @@ class Music(commands.Cog, name="Music"):
         print(f"Node: {node.identifier} is ready!")
 
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track):
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.YouTubeTrack, reason):
         interaction = player.interaction
         print(player.interaction)
         vc: player = interaction.guild.voice_client
@@ -153,22 +153,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Now looping the current song.")
         else:
             return await interaction.send("No longer looping the current song.")
-
-    @nextcord.slash_command()
-    async def skip(self, interaction: Interaction):
-        """Skips the current song"""
-        if not interaction.guild.voice_client:
-            return await interaction.send("I am not in a voice channel.")
-        elif not interaction.user.voice:
-            return await interaction.send("Join a voice channel first.")
-        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
-            return await interaction.send("We have to be in the same voice channel.")
-        else:
-            vc: wavelink.Player = interaction.guild.voice_client
-        
-        if vc.queue.is_empty:
-            return await interaction.send("Queue is empty")
-
 
     @nextcord.slash_command()
     async def queue(self, interaction: Interaction):
