@@ -70,7 +70,7 @@ class Music(commands.Cog, name="Music"):
         if vc.queue.is_empty and not vc.is_playing():
             await vc.set_volume(default_volume)
             await vc.play(search)
-            await interaction.send(f"Now playing: {search.title} at {default_volume}%")
+            await interaction.send(f"Now playing: {search.title}")
         else:
             await vc.queue.put_wait(search)
             await interaction.send(f"Added {search.title} to the queue.")
@@ -212,7 +212,9 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Nothing is playing.")
         
         embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author}", color=nextcord.Colour.from_rgb(225, 0, 255))
-        embed.add_field(name="Timestamp", value=f"{str(datetime.timedelta(seconds=vc.position))}")
+        full_time = datetime.timedelta(seconds=vc.position)
+        timestamp = full_time.split(".", 1)[0]
+        embed.add_field(name="Timestamp", value=f"{str(timestamp)}")
         embed.add_field(name="Duration", value = f"{str(datetime.timedelta(seconds=vc.track.length))}")
         embed.add_field(name="Song URL", value=f"[Click Here]({str(vc.track.uri)})")
 
