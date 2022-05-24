@@ -32,7 +32,7 @@ class Information(commands.Cog, name = "Information"):
         """Calculates user input and returns the output"""
         equation = equation.replace(" ", "")
         evaluator = InfixParser.Evaluator()
-        await interaction.send(f' Result is {evaluator.eval(equation)}')
+        await interaction.send(f' Result of {equation} is {evaluator.eval(equation)}')
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def date(self, interaction: Interaction):
@@ -44,9 +44,13 @@ class Information(commands.Cog, name = "Information"):
     async def ping(self, interaction: Interaction):
         """Gets bot ping and API response time"""
         start_time = time.time()
+        embed = nextcord.Embed(title="Response Times", color=nextcord.Colour.from_rgb(225, 0, 255))
         end_time = time.time()
 
-        await interaction.send(content=f"Ping: {round(self.bot.latency * 1000)}ms \nAPI: {round((end_time - start_time) * 1000)}ms")
+        embed.add_field(name=f"Ping:", value=f"{round(self.bot.latency * 1000)}ms")
+        embed.add_field(name=f"API:", value=f"{round((end_time - start_time) * 1000)}ms")
+
+        await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):
