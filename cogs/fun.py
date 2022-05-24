@@ -12,15 +12,15 @@ client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 #Name our access to our client database
 db = client.NextcordBot
 
-async def animal_task(interaction: Interaction):
+def animal_task():
     choices = ["shibes", "cats", "birds"]
     choice = random.choice(choices)
     url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
     response = requests.get(url)
     result = response.text[2:-2]
-    await interaction.send(result)
+    return result
 
-async def joke_task(interaction: Interaction):
+def joke_task():
     url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
     querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
     key = os.getenv('JOKE_KEY')
@@ -39,9 +39,9 @@ async def joke_task(interaction: Interaction):
         jokeSetup = response["setup"]
         jokeDelivery = response["delivery"]
         embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
-    await interaction.send(embed=embed)
+    return embed
 
-async def meme_task(interaction: Interaction):
+def meme_task():
     memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
     memeData = json.load(memeAPI)
 
@@ -61,7 +61,8 @@ async def meme_task(interaction: Interaction):
     embed.set_footer(
         text=f"{memeVotes}🔺 • Original post at: {memeLink}"
     )
-    await interaction.send(embed=embed)
+    return embed
+    
 
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
@@ -89,22 +90,23 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
-        print("Got animal")
+        print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        print("Got joke")
+        print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
-        print("Got meme")
+        print(meme_task())
 
     @nextcord.slash_command()
     async def animal(self, interaction: Interaction):
         """Get a random animal picture"""
-        await animal_task(interaction)
+        result = animal_task()
+        await interaction.send(result)
 
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
     @application_checks.has_permissions(administrator=True)
@@ -201,12 +203,14 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def joke(self, interaction: Interaction):
         """Gets a random joke from a joke API"""
-        await joke_task(interaction)
+        result = joke_task()
+        await interaction.send(embed=result)
 
     @nextcord.slash_command()
     async def meme(self, interaction: Interaction):
         """Gets a random meme from Heroku's meme API"""
-        await meme_task(interaction)
+        result = meme_task()
+        await interaction.send(embed=result)
 
     @nextcord.slash_command()
     async def velkoz(self, interaction: Interaction):
