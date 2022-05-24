@@ -43,7 +43,13 @@ def main():
     async def on_guild_join(guild):
         # Add an entry for starter keywords
         if db.keywords.find_one({"_id": guild.id}) == None:
-            db.keywords.insert_one({"_id": guild.id, "sad": config.sad_words, "filter": config.filter_words, "encouragements": config.encouragements, "status": False})
+            db.keywords.insert_one({
+                "_id": guild.id, 
+                "sad": config.sad_words, 
+                "filter": config.filter_words, 
+                "encouragements": config.encouragements, 
+                "velkoz": config.velkoz,
+                "status": False})
     
     # Defining bot behaviour on leaving server
     @bot.event
