@@ -47,8 +47,7 @@ def main():
                 "_id": guild.id, 
                 "sad": config.sad_words, 
                 "filter": config.filter_words, 
-                "encouragements": config.encouragements, 
-                "velkoz": config.velkoz,
+                "encouragements": config.encouragements,
                 "status": False})
     
     # Defining bot behaviour on leaving server

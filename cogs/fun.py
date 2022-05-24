@@ -209,6 +209,15 @@ class Fun(commands.Cog, name="Fun"):
         await meme_task(interaction)
 
     @nextcord.slash_command()
+    async def velkoz(self, interaction: Interaction):
+        """Gets a random Vel'Koz quote."""
+        object = db['velkoz'].aggregate([{ "$sample": { "size": 1 }}])
+        for x in object:
+            quote = x['quote']
+        embed = nextcord.Embed(title="Vel'Koz:", description=f"*{quote}*", color=nextcord.Colour.from_rgb(225, 0, 255))
+        await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
     async def youtube(self, interaction: Interaction, *, message: str):
         """Search youtube for a video"""
         query_string = parse.urlencode({'search_query': message})
