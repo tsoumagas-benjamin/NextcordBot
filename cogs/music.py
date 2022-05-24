@@ -211,7 +211,7 @@ class Music(commands.Cog, name="Music"):
         if not vc.is_playing():
             return await interaction.send("Nothing is playing.")
         
-        embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author}", color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author} - {str(vc.position)}", color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name="Duration", value = f"{str(datetime.timedelta(seconds=vc.track.length))}")
         embed.add_field(name="Song URL", value=f"[Click Here]({str(vc.track.uri)})")
 
