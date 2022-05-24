@@ -1,6 +1,6 @@
 import nextcord, pymongo, os
-from nextcord import Interaction, application_checks
-from nextcord.ext import commands, tasks
+from nextcord import Interaction
+from nextcord.ext import commands, application_checks
 import asyncio, InfixParser, time
 from datetime import datetime
 
