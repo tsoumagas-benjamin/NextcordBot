@@ -96,7 +96,7 @@ class Fun(commands.Cog, name="Fun"):
         # Gets daily joke
         print("Got joke")
     
-    @tasks.loop(time=datetime.time(24))
+    @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
         print("Got meme")
