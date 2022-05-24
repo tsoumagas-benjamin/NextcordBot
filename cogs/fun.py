@@ -1,9 +1,9 @@
 import nextcord
 from nextcord import Interaction
-from nextcord.ext import commands, application_checks
+from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
 import urllib.request as request
-import random, aiohttp, os, re, requests, json, pymongo
+import random, aiohttp, os, re, requests, json, pymongo, datetime
 from io import BytesIO
 
 #Set up our mongodb client
@@ -12,6 +12,57 @@ client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 #Name our access to our client database
 db = client.NextcordBot
 
+async def animal_task(interaction: Interaction):
+    choices = ["shibes", "cats", "birds"]
+    choice = random.choice(choices)
+    url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
+    response = requests.get(url)
+    result = response.text[2:-2]
+    await interaction.send(result)
+
+async def joke_task(interaction: Interaction):
+    url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
+    querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
+    key = os.getenv('JOKE_KEY')
+    headers = {
+        "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
+        "X-RapidAPI-Key": key
+    }
+    response = requests.request("GET", url, headers=headers, params=querystring).json()
+    jokeType = response["type"]
+    jokeCategory = response["category"]
+    embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
+    if jokeType == "single":
+        joke = response["joke"]
+        embed.description = joke
+    else:
+        jokeSetup = response["setup"]
+        jokeDelivery = response["delivery"]
+        embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
+    await interaction.send(embed=embed)
+
+async def meme_task(interaction: Interaction):
+    memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
+    memeData = json.load(memeAPI)
+
+    memeURL = memeData['url']
+    memeName = memeData['title']
+    memePoster = memeData['author']
+    memeSub = memeData['subreddit']
+    memeLink = memeData['postLink']
+    memeVotes = memeData['ups']
+
+    embed = nextcord.Embed(
+        title=memeName, 
+        description=f"r/{memeSub} • Posted by u/{memePoster}", 
+        color=nextcord.Colour.orange()
+    )
+    embed.set_image(url=memeURL)
+    embed.set_footer(
+        text=f"{memeVotes}🔺 • Original post at: {memeLink}"
+    )
+    await interaction.send(embed=embed)
+
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
 
@@ -19,16 +70,41 @@ class Fun(commands.Cog, name="Fun"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.daily_birthday.start()
+        self.daily_animal.start()
+        self.daily_joke.start()
+        self.daily_meme.start()
+    
+    def cog_unload(self):
+        self.daily_birthday.cancel()
+        self.daily_animal.cancel()
+        self.daily_joke.cancel()
+        self.daily_meme.cancel()
+
+    @tasks.loop(time=datetime.time(4))
+    async def daily_birthday(self):
+        # Gets daily birthdays, if any
+        print("Got birthday")
+    
+    @tasks.loop(time=datetime.time(16))
+    async def daily_animal(self):
+        # Gets daily animal
+        print("Got animal")
+    
+    @tasks.loop(time=datetime.time(20))
+    async def daily_joke(self):
+        # Gets daily joke
+        print("Got joke")
+    
+    @tasks.loop(time=datetime.time(24))
+    async def daily_meme(self):
+        # Gets daily meme
+        print("Got meme")
 
     @nextcord.slash_command()
     async def animal(self, interaction: Interaction):
         """Get a random animal picture"""
-        choices = ["shibes", "cats", "birds"]
-        choice = random.choice(choices)
-        url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
-        response = requests.get(url)
-        result = response.text[2:-2]
-        await interaction.send(result)
+        await animal_task(interaction)
 
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
     @application_checks.has_permissions(administrator=True)
@@ -125,49 +201,12 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def joke(self, interaction: Interaction):
         """Gets a random joke from a joke API"""
-        url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
-        querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
-        key = os.getenv('JOKE_KEY')
-        headers = {
-            "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
-            "X-RapidAPI-Key": key
-        }
-        response = requests.request("GET", url, headers=headers, params=querystring).json()
-        jokeType = response["type"]
-        jokeCategory = response["category"]
-        embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(225, 0, 255))
-        if jokeType == "single":
-            joke = response["joke"]
-            embed.description = joke
-        else:
-            jokeSetup = response["setup"]
-            jokeDelivery = response["delivery"]
-            embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
-        await interaction.send(embed=embed)
+        await joke_task(interaction)
 
     @nextcord.slash_command()
     async def meme(self, interaction: Interaction):
         """Gets a random meme from Heroku's meme API"""
-        memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
-        memeData = json.load(memeAPI)
-
-        memeURL = memeData['url']
-        memeName = memeData['title']
-        memePoster = memeData['author']
-        memeSub = memeData['subreddit']
-        memeLink = memeData['postLink']
-        memeVotes = memeData['ups']
-
-        embed = nextcord.Embed(
-            title=memeName, 
-            description=f"r/{memeSub} • Posted by u/{memePoster}", 
-            color=nextcord.Colour.orange()
-        )
-        embed.set_image(url=memeURL)
-        embed.set_footer(
-            text=f"{memeVotes}🔺 • Original post at: {memeLink}"
-        )
-        await interaction.send(embed=embed)
+        await meme_task(interaction)
 
     @nextcord.slash_command()
     async def youtube(self, interaction: Interaction, *, message: str):
