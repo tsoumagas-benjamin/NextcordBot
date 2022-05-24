@@ -212,7 +212,7 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Nothing is playing.")
         
         embed = nextcord.Embed(title=f"Now playing {vc.track.title}", description=f"Artist {vc.track.author}", color=nextcord.Colour.from_rgb(225, 0, 255))
-        full_time = datetime.timedelta(seconds=vc.position)
+        full_time = str(datetime.timedelta(seconds=vc.position))
         timestamp = full_time.split(".", 1)[0]
         embed.add_field(name="Timestamp", value=f"{str(timestamp)}")
         embed.add_field(name="Duration", value = f"{str(datetime.timedelta(seconds=vc.track.length))}")
