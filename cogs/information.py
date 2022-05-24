@@ -1,5 +1,5 @@
 import nextcord, pymongo, os
-from nextcord import Interaction
+from nextcord import Interaction, application_checks
 from nextcord.ext import commands, tasks
 import asyncio, InfixParser, time
 from datetime import datetime
@@ -80,6 +80,17 @@ class Information(commands.Cog, name = "Information"):
             await interaction.send(embed=embed)
         else:
             await interaction.send("You must first set your rules with $setrules!")
+
+    @nextcord.slash_command()
+    @application_checks.has_permissions(administrator=True)
+    async def setrules(self, interaction: Interaction, *, rules: str):
+        """Takes the given string as rules for the bot to read. Each rule is punctuated by a semicolon `;`."""
+        rule_arr = rules.split("; ")
+        db.rules.replace_one({"_id": interaction.guild.id},{"_id": interaction.guild.id, "rules": rule_arr}, upsert=True)
+        rule_body = rules.replace("; ", "\n")
+        embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=rule_body, color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
+        await interaction.send(embed=embed)
 
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096])
     async def socials(self, interaction: Interaction):

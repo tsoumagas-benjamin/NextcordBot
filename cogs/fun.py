@@ -3,8 +3,14 @@ from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 import urllib.parse as parse
 import urllib.request as request
-import random, aiohttp, os, re, requests, json
+import random, aiohttp, os, re, requests, json, pymongo
 from io import BytesIO
+
+#Set up our mongodb client
+client = pymongo.MongoClient(os.getenv('CONN_STRING'))
+
+#Name our access to our client database
+db = client.NextcordBot
 
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
@@ -23,6 +29,26 @@ class Fun(commands.Cog, name="Fun"):
         response = requests.get(url)
         result = response.text[2:-2]
         await interaction.send(result)
+
+    @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
+    @application_checks.has_permissions(administrator=True)
+    async def birthday(self, interaction: Interaction, member: nextcord.Member, month: int, day: int):
+        """Allows you to store a person's birthdate for this server."""
+        if month < 1 or month > 12:
+            await interaction.send("Invalid month.")
+        elif day < 1 or day > 31:
+            await interaction.send("Invalid day.")
+        elif re.findall("[0-9]{4}", member.discriminator):
+            username = member.name + "#" + member.discriminator
+            input = {"member":username, "month":month, "day":day}
+            if db.birthdays.find_one({"member": username}):
+                db['birthdays'].delete_one({"member": username})
+                await interaction.send(f"Removed birthday for {member.name}.")
+            else:
+                db['birthdays'].insert_one(input)
+                await interaction.send(f"Added birthday for {member.name}.")
+        else:
+            await interaction.send(f"Invalid discriminator.")
 
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
