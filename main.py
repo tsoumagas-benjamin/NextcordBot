@@ -86,7 +86,7 @@ def main():
 
         if bot.user.mentioned_in(message):
             commands_list = list(dict.fromkeys(bot.commands))
-            bot_commands = ", ".join(commands_list)
+            bot_commands = ", ".join(map(str, commands_list))
             await message.channel.send(bot_commands)
 
     # Add functionality from cogs

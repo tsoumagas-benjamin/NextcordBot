@@ -61,7 +61,7 @@ class Information(commands.Cog, name = "Information"):
                 role_list.append(role.mention)
             role_list.reverse()
         embed.add_field(name="Roles", value=', '.join(role_list), inline=False)
-        flags = ", ".join(member.public_flags.all())
+        flags = ", ".join(map(str, member.public_flags.all()))
         embed.add_field(name="Public Flags", value=flags, inline=False)
         if member.activity != None:
             embed.add_field(name="Activity",
@@ -157,7 +157,7 @@ class Information(commands.Cog, name = "Information"):
         server_count = len(self.bot.guilds)
         total_members = len(self.bot.users)
         commands_list = list(dict.fromkeys(self.bot.commands))
-        bot_commands = ", ".join(commands_list)
+        bot_commands = ", ".join(map(str, commands_list))
         print(bot_commands)
         humans = 0
         for u in self.bot.users:
