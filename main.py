@@ -85,7 +85,7 @@ def main():
                     break
 
         if bot.user.mentioned_in(message):
-            commands_list = bot.get_application_commands()
+            commands_list = bot.get_application_commands().sort()
             bot_commands = ", ".join(map(str, commands_list))
             await message.channel.send(bot_commands)
 

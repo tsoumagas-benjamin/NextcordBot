@@ -156,7 +156,7 @@ class Information(commands.Cog, name = "Information"):
         total_members = 0
         for guild in self.bot.guilds:
             total_members += guild.member_count
-        commands_list = self.bot.get_application_commands()
+        commands_list = self.bot.get_application_commands().sort()
         bot_commands = ", ".join(map(str, commands_list))
         print(bot_commands)
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
