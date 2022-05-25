@@ -85,7 +85,7 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         #Gets daily birthdays, if any
-        date = datetime.date.today().split("-")
+        date = str(datetime.date.today()).split("-")
         month = date[1]
         day = date[2]
         print(f"{month}-{day}")
