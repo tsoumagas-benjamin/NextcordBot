@@ -156,7 +156,7 @@ class Information(commands.Cog, name = "Information"):
         """Returns statistics about the bot"""
         server_count = len(self.bot.guilds)
         total_members = len(self.bot.users)
-        commands_list = self.bot.commands
+        commands_list = list(dict.fromkeys(self.bot.commands))
         bot_commands = ", ".join(commands_list)
         humans = 0
         for u in self.bot.users:
