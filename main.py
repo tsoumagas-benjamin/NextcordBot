@@ -26,7 +26,7 @@ def main():
     async def on_ready():
         """When discord is connected"""
         collections = db.list_collection_names()
-        for c in ['birthdays', 'rules', 'keywords', 'songs']:
+        for c in ['birthdays', 'rules', 'keywords', 'songs', 'velkoz']:
             if c not in collections:
                 db.create_collection(c)
 

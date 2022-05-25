@@ -62,7 +62,6 @@ def meme_task():
         text=f"{memeVotes}🔺 • Original post at: {memeLink}"
     )
     return embed
-    
 
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
@@ -81,25 +80,43 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_animal.cancel()
         self.daily_joke.cancel()
         self.daily_meme.cancel()
+    
 
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
-        # Gets daily birthdays, if any
+        #Gets daily birthdays, if any
+        date = datetime.date.today().split("-")
+        month = date[1]
+        day = date[2]
+        print(f"{month}-{day}")
+        #TODO: Checks if this day/month combo has a match in the database
+        if db.birthdays.find_one({"month": month, "day": day}):
+            bday = db.birthdays.find_one({"month": month, "day": day})
+            member_name = (bday['member'].split("#"))[0]
+            embed = nextcord.Embed(title=f"Happy Birthday {member_name}", color=nextcord.Colour.from_rgb(225, 0, 255))
+            daily_channel = self.bot.get_channel(809892274980257812)
+            daily_channel.send(embed=embed)
         print("Got birthday")
     
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
+        daily_channel = self.bot.get_channel(809892274980257812)
+        daily_channel.send(animal_task())
         print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
+        daily_channel = self.bot.get_channel(809892274980257812)
+        daily_channel.send(embed=joke_task())
         print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
+        daily_channel = self.bot.get_channel(809892274980257812)
+        daily_channel.send(embed=meme_task())
         print(meme_task())
 
     @nextcord.slash_command()
