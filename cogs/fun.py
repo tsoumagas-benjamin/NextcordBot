@@ -95,28 +95,28 @@ class Fun(commands.Cog, name="Fun"):
             member_name = (bday['member'].split("#"))[0]
             embed = nextcord.Embed(title=f"Happy Birthday {member_name}", color=nextcord.Colour.from_rgb(225, 0, 255))
             daily_channel = self.bot.get_channel(809892274980257812)
-            daily_channel.send(embed=embed)
+            await daily_channel.send(embed=embed)
         print("Got birthday")
     
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
         daily_channel = self.bot.get_channel(809892274980257812)
-        daily_channel.send(animal_task())
+        await daily_channel.send(animal_task())
         print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
         daily_channel = self.bot.get_channel(809892274980257812)
-        daily_channel.send(embed=joke_task())
+        await daily_channel.send(embed=joke_task())
         print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
         daily_channel = self.bot.get_channel(809892274980257812)
-        daily_channel.send(embed=meme_task())
+        await daily_channel.send(embed=meme_task())
         print(meme_task())
 
     @nextcord.slash_command()
