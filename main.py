@@ -87,7 +87,11 @@ def main():
         if bot.user.mentioned_in(message):
             commands_list = bot.get_application_commands().sort()
             bot_commands = ", ".join(map(str, commands_list))
-            await message.channel.send(bot_commands)
+            embed = nextcord.Embed(
+                title=f"{bot.user.name} Commands",
+                description=bot_commands,
+                color=nextcord.Colour.from_rgb(225, 0, 255))
+            await message.channel.send(embed=embed)
 
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):
