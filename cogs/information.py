@@ -41,6 +41,38 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(f"Today is: {date_time}")
 
     @nextcord.slash_command()
+    async def info(self, interaction: Interaction, member: nextcord.Member):
+        """Get information on a user"""
+        embed = nextcord.Embed(title=member.display_name,
+                               description=member.mention,
+                               color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed.add_field(name="ID", value=member.id, inline=False)
+        embed.add_field(
+            name="Created at",
+            value=member.created_at.strftime("%A, %B %d %Y @ %H:%M:%S %p"),
+            inline=False)
+        embed.add_field(
+            name="Joined at",
+            value=member.joined_at.strftime("%A, %B %d %Y @ %H:%M:%S %p"),
+            inline=False)
+        role_list = []
+        for role in member.roles:
+            if role.name != "@everyone":
+                role_list.append(role.mention)
+            role_list.reverse()
+        embed.add_field(name="Roles", value=', '.join(role_list), inline=False)
+        flags = ", ".join(member.public_flags.all())
+        embed.add_field(name="Public Flags", value=flags, inline=False)
+        if member.activity != None:
+            embed.add_field(name="Activity",
+                            value=member.activity.name,
+                            inline=False)
+        embed.set_thumbnail(url=member.display_avatar)
+        embed.set_footer(icon_url=interaction.user.display_avatar,
+                         text=f'Requested by {interaction.user.name}')
+        await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
     async def ping(self, interaction: Interaction):
         """Gets bot ping and API response time"""
         start_time = time.time()
@@ -123,16 +155,23 @@ class Information(commands.Cog, name = "Information"):
     async def statistics(self, interaction: Interaction):
         """Returns statistics about the bot"""
         server_count = len(self.bot.guilds)
-        total_members = 0
-        for guild in self.bot.guilds:
-            total_members += guild.member_count
+        total_members = len(self.bot.users)
+        commands_list = self.bot.commands
+        bot_commands = ", ".join(commands_list)
+        humans = 0
+        for u in self.bot.users:
+            if not u.bot:
+                humans += 1
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
                                color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
                         value=server_count,
                         inline=False)
         embed.add_field(name=f"{self.bot.user.name} serving: ",
-                        value=total_members,
+                        value=f"{total_members} users\n{humans} humans\n{total_members-humans} bots",
+                        inline=False)
+        embed.add_field(name=f"{len(commands_list)} commands: ",
+                        value=f"{bot_commands}",
                         inline=False)
         embed.set_footer(icon_url=interaction.guild.icon.url, text=interaction.guild.name)
         await interaction.send(embed=embed)
@@ -161,36 +200,6 @@ class Information(commands.Cog, name = "Information"):
             await interaction.followup.send(f"Timer {description}is done.")
         else:
             await interaction.followup.send("Please enter a valid unit of time.")
-
-    @nextcord.slash_command()
-    async def info(self, interaction: Interaction, member: nextcord.Member):
-        """Get information on a user"""
-        embed = nextcord.Embed(title=member.display_name,
-                               description=member.mention,
-                               color=nextcord.Colour.from_rgb(225, 0, 255))
-        embed.add_field(name="ID", value=member.id, inline=False)
-        embed.add_field(
-            name="Created at",
-            value=member.created_at.strftime("%A, %B %d %Y @ %H:%M:%S %p"),
-            inline=False)
-        embed.add_field(
-            name="Joined at",
-            value=member.joined_at.strftime("%A, %B %d %Y @ %H:%M:%S %p"),
-            inline=False)
-        role_list = []
-        for role in member.roles:
-            if role.name != "@everyone":
-                role_list.append(role.mention)
-            role_list.reverse()
-        embed.add_field(name="Roles", value=', '.join(role_list), inline=False)
-        if member.activity != None:
-            embed.add_field(name="Activity",
-                            value=member.activity,
-                            inline=False)
-        embed.set_thumbnail(url=member.display_avatar)
-        embed.set_footer(icon_url=interaction.user.display_avatar,
-                         text=f'Requested by {interaction.user.name}')
-        await interaction.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Information(bot))
