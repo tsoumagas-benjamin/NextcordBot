@@ -87,8 +87,7 @@ def main():
         if bot.user.mentioned_in(message):
             commands_list = list(dict.fromkeys(bot.commands))
             bot_commands = ", ".join(commands_list)
-            embed = nextcord.Embed(title="My commands use a / prefix", description=f"{bot_commands}", color=nextcord.Colour.from_rgb(225, 0, 255))
-            await message.channel.send(embed=embed)
+            await message.channel.send(bot_commands)
 
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):

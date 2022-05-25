@@ -158,6 +158,7 @@ class Information(commands.Cog, name = "Information"):
         total_members = len(self.bot.users)
         commands_list = list(dict.fromkeys(self.bot.commands))
         bot_commands = ", ".join(commands_list)
+        print(bot_commands)
         humans = 0
         for u in self.bot.users:
             if not u.bot:
