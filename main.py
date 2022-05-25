@@ -85,8 +85,8 @@ def main():
                     break
 
         if bot.user.mentioned_in(message):
-            commands_list = bot.get_application_commands().sort()
-            bot_commands = ", ".join(map(str, commands_list))
+            commands_list = bot.get_application_commands()
+            bot_commands = ", ".join(map(str, commands_list).sort())
             embed = nextcord.Embed(
                 title=f"{bot.user.name} Commands",
                 description=bot_commands,
