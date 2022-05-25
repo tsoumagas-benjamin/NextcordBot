@@ -61,8 +61,6 @@ class Information(commands.Cog, name = "Information"):
                 role_list.append(role.mention)
             role_list.reverse()
         embed.add_field(name="Roles", value=', '.join(role_list), inline=False)
-        flags = ", ".join(map(str, member.public_flags.all()))
-        embed.add_field(name="Public Flags", value=flags, inline=False)
         if member.activity != None:
             embed.add_field(name="Activity",
                             value=member.activity.name,
@@ -155,21 +153,19 @@ class Information(commands.Cog, name = "Information"):
     async def statistics(self, interaction: Interaction):
         """Returns statistics about the bot"""
         server_count = len(self.bot.guilds)
-        total_members = len(self.bot.users)
-        commands_list = list(dict.fromkeys(self.bot.commands))
+        total_members = 0
+        for guild in self.bot.guilds:
+            total_members += guild.member_count
+        commands_list = self.bot.get_application_commands()
         bot_commands = ", ".join(map(str, commands_list))
         print(bot_commands)
-        humans = 0
-        for u in self.bot.users:
-            if not u.bot:
-                humans += 1
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
                                color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
                         value=server_count,
                         inline=False)
         embed.add_field(name=f"{self.bot.user.name} serving: ",
-                        value=f"{total_members} users\n{humans} humans\n{total_members-humans} bots",
+                        value=f"{total_members} users",
                         inline=False)
         embed.add_field(name=f"{len(commands_list)} commands: ",
                         value=f"{bot_commands}",
