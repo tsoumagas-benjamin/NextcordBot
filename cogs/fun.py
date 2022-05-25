@@ -89,7 +89,7 @@ class Fun(commands.Cog, name="Fun"):
         month = date[1]
         day = date[2]
         print(f"{month}-{day}")
-        #TODO: Checks if this day/month combo has a match in the database
+        #Checks if this day/month combo has a match in the database
         if db.birthdays.find_one({"month": month, "day": day}):
             bday = db.birthdays.find_one({"month": month, "day": day})
             member_name = (bday['member'].split("#"))[0]
