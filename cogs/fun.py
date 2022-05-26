@@ -104,6 +104,7 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_birthday(self):
         # Gets daily birthday, if any
         daily_channel = self.bot.get_channel(809892274980257812)
+        print(daily_channel)
         result = birthday_task()
         if result is not None:
             await daily_channel.send(embed=result)
