@@ -87,13 +87,13 @@ class Fun(commands.Cog, name="Fun"):
 
     COG_EMOJI = "😃"
 
-    def __init__(self, bot):
+    async def __init__(self, bot):
         self.bot = bot
         self.daily_birthday.start()
         self.daily_animal.start()
         self.daily_joke.start()
         self.daily_meme.start()
-        self.daily_channel = bot.get_channel(809892274980257812)
+        self.daily_channel = await bot.fetch_channel(809892274980257812)
     
     def cog_unload(self):
         self.daily_birthday.cancel()
