@@ -31,10 +31,11 @@ def birthday_task():
         print(bday)
         member_list = []
         for member in bday:
-            print(str(member['member']))
             print(str(member['member'].split("#")))
-            member_list.append(str(member['member'].split("#"))[0])
-            print(str(member['member'].split("#"))[0])
+            member_full = str(member['member'].split("#"))
+            member_name = member_full[0]
+            print(member_name)
+            member_list.append(member_name)
         member_list.sort()
         print(member_list)
         birthday_people = ", ".join(member_list)
