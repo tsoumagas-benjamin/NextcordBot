@@ -82,12 +82,6 @@ def meme_task():
     )
     return embed
 
-async def daily_channel(bot):
-    task_channel = None
-    while task_channel is None:
-        task_channel = bot.get_channel(809892274980257812)
-    return task_channel
-
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
 
@@ -99,15 +93,22 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_animal.start()
         self.daily_joke.start()
         self.daily_meme.start()
-        self.daily_channel = daily_channel(bot)
+        self.daily_channel = ""
     
     def cog_unload(self):
         self.daily_birthday.cancel()
         self.daily_animal.cancel()
         self.daily_joke.cancel()
         self.daily_meme.cancel()
+    
+    async def set_task_channel(self):
+        if self.daily_channel is "":
+            self.daily_channel = await self.bot.fetch_channel(809892274980257812)
+            return self.daily_channel
+        else:
+            return self.daily_channel
 
-    @tasks.loop(minutes=2)#time=datetime.time(4)
+    @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
         #daily_channel = await self.bot.fetch_channel(809892274980257812)
