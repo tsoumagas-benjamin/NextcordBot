@@ -32,7 +32,7 @@ def birthday_task():
         member_list = []
         for member in bday:
             print(member['member'].split("#"))
-            member_full = str(member['member'].split("#"))
+            member_full = (member['member'].split("#"))
             member_name = member_full[0]
             print(member_name)
             member_list.append(member_name)
