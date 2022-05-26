@@ -27,10 +27,16 @@ def birthday_task():
     print(f"{month}-{day}")
     #Checks if this day/month combo has a match in the database
     if db.birthdays.find_one({"month": month, "day": day}):
-        bday = db.birthdays.find_one({"month": month, "day": day})
-        member_name = (bday['member'].split("#"))[0]
-        embed = nextcord.Embed(title=f"Happy Birthday {member_name}", color=nextcord.Colour.from_rgb(225, 0, 255))
+        bday = db.birthdays.find({"month": month, "day": day})
+        member_list = []
+        for member in bday:
+            member_list.append(str(member['member'].split("#"))[0])
+        member_list.sort()
+        birthday_people = ", ".join(member_list)
+        embed = nextcord.Embed(title="Happy Birthday", description=f"{birthday_people}", color=nextcord.Colour.from_rgb(225, 0, 255))
         return embed
+    else:
+        return None
 
 def joke_task():
     url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
@@ -98,8 +104,11 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_birthday(self):
         # Gets daily birthday, if any
         daily_channel = self.bot.get_channel(809892274980257812)
-        await daily_channel.send(embed=birthday_task())
-        print(birthday_task())
+        if birthday_task is not None:
+            await daily_channel.send(embed=birthday_task())
+            print(birthday_task())
+        else:
+            print("No birthdays")
 
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
