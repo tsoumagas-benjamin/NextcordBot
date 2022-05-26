@@ -24,22 +24,16 @@ def birthday_task():
     date = str(datetime.date.today()).split("-")
     month = int(date[1].lstrip("0"))
     day = int(date[2].lstrip("0"))
-    print(f"{month}-{day}")
     #Checks if this day/month combo has a match in the database
     if db.birthdays.find_one({"month": month, "day": day}):
         bday = db.birthdays.find({"month": month, "day": day})
-        print(bday)
         member_list = []
         for member in bday:
-            print(member['member'].split("#"))
             member_full = (member['member'].split("#"))
             member_name = member_full[0]
-            print(member_name)
             member_list.append(member_name)
         member_list.sort()
-        print(member_list)
         birthday_people = ", ".join(member_list)
-        print(birthday_people)
         embed = nextcord.Embed(title="Happy Birthday", description=f"{birthday_people}", color=nextcord.Colour.from_rgb(225, 0, 255))
         return embed
     else:
@@ -106,7 +100,7 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_joke.cancel()
         self.daily_meme.cancel()
 
-    @tasks.loop(minutes=5) #time=datetime.time(4)
+    @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
         daily_channel = await self.bot.fetch_channel(809892274980257812)
