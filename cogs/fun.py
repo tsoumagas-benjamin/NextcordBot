@@ -91,11 +91,14 @@ class Fun(commands.Cog, name="Fun"):
         print(f"{month}-{day}")
         #Checks if this day/month combo has a match in the database
         if db.birthdays.find_one({"month": month, "day": day}):
+            print("Found one")
             bday = db.birthdays.find_one({"month": month, "day": day})
+            print(bday)
             member_name = (bday['member'].split("#"))[0]
+            print(member_name)
             embed = nextcord.Embed(title=f"Happy Birthday {member_name}", color=nextcord.Colour.from_rgb(225, 0, 255))
             daily_channel = self.bot.get_channel(809892274980257812)
-            print(member_name)
+            print(embed)
             await daily_channel.send(embed=embed)
         print("Got birthday")
     
