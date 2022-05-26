@@ -82,18 +82,21 @@ def meme_task():
     )
     return embed
 
+async def daily_channel(bot):
+    return await bot.fetch_channel(809892274980257812)
+
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
 
     COG_EMOJI = "😃"
 
-    async def __init__(self, bot):
+    def __init__(self, bot):
         self.bot = bot
         self.daily_birthday.start()
         self.daily_animal.start()
         self.daily_joke.start()
         self.daily_meme.start()
-        self.daily_channel = await bot.fetch_channel(809892274980257812)
+        self.daily_channel = daily_channel(bot)
     
     def cog_unload(self):
         self.daily_birthday.cancel()
@@ -101,10 +104,10 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_joke.cancel()
         self.daily_meme.cancel()
 
-    @tasks.loop(minutes=2) #time=datetime.time(4)
+    @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
-        # daily_channel = await self.bot.fetch_channel(809892274980257812)
+        #daily_channel = await self.bot.fetch_channel(809892274980257812)
         result = birthday_task()
         if result is not None:
             await self.daily_channel.send(embed=result)
@@ -115,21 +118,21 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
-        # daily_channel = await self.bot.fetch_channel(809892274980257812)
+        #daily_channel = await self.bot.fetch_channel(809892274980257812)
         await self.daily_channel.send(animal_task())
         print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        # daily_channel = await self.bot.fetch_channel(809892274980257812)
+        #daily_channel = await self.bot.fetch_channel(809892274980257812)
         await self.daily_channel.send(embed=joke_task())
         print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
-        # daily_channel = await self.bot.fetch_channel(809892274980257812)
+        #daily_channel = await self.bot.fetch_channel(809892274980257812)
         await self.daily_channel.send(embed=meme_task())
         print(meme_task())
 
