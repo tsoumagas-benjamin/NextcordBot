@@ -100,7 +100,7 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_joke.cancel()
         self.daily_meme.cancel()
 
-    @tasks.loop(minutes=5) #time=datetime.time(4)
+    @tasks.loop(time=datetime.time(20, 15)) #time=datetime.time(4)
     async def daily_birthday(self):
         # Gets daily birthday, if any
         print(self.daily_channel)
