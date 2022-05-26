@@ -83,7 +83,10 @@ def meme_task():
     return embed
 
 async def daily_channel(bot):
-    return await bot.fetch_channel(809892274980257812)
+    task_channel = None
+    while task_channel is None:
+        task_channel = bot.get_channel(809892274980257812)
+    return task_channel
 
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
