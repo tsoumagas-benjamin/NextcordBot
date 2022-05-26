@@ -20,6 +20,18 @@ def animal_task():
     result = response.text[2:-2]
     return result
 
+def birthday_task():
+    date = str(datetime.date.today()).split("-")
+    month = int(date[1].lstrip("0"))
+    day = int(date[2].lstrip("0"))
+    print(f"{month}-{day}")
+    #Checks if this day/month combo has a match in the database
+    if db.birthdays.find_one({"month": month, "day": day}):
+        bday = db.birthdays.find_one({"month": month, "day": day})
+        member_name = (bday['member'].split("#"))[0]
+        embed = nextcord.Embed(title=f"Happy Birthday {member_name}", color=nextcord.Colour.from_rgb(225, 0, 255))
+        return embed
+
 def joke_task():
     url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
     querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
@@ -84,24 +96,11 @@ class Fun(commands.Cog, name="Fun"):
 
     @tasks.loop(minutes=5) #time=datetime.time(4)
     async def daily_birthday(self):
-        #Gets daily birthdays, if any
-        date = str(datetime.date.today()).split("-")
-        month = int(date[1].lstrip("0"))
-        day = int(date[2].lstrip("0"))
-        print(f"{month}-{day}")
-        #Checks if this day/month combo has a match in the database
-        if db.birthdays.find_one({"month": month, "day": day}):
-            print("Found one")
-            bday = db.birthdays.find_one({"month": month, "day": day})
-            print(bday)
-            member_name = (bday['member'].split("#"))[0]
-            print(member_name)
-            embed = nextcord.Embed(title=f"Happy Birthday {member_name}", color=nextcord.Colour.from_rgb(225, 0, 255))
-            daily_channel = self.bot.get_channel(809892274980257812)
-            print(embed)
-            await daily_channel.send(embed=embed)
-        print("Got birthday")
-    
+        # Gets daily birthday, if any
+        daily_channel = self.bot.get_channel(809892274980257812)
+        await daily_channel.send(embed=birthday_task())
+        print(birthday_task())
+
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
