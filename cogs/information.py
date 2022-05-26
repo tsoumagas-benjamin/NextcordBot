@@ -162,7 +162,6 @@ class Information(commands.Cog, name = "Information"):
             cmds.append(str(cmd))
         cmds.sort()
         bot_commands = ", ".join(cmds)
-        print(bot_commands)
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
                                color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
