@@ -31,6 +31,8 @@ def birthday_task():
         print(bday)
         member_list = []
         for member in bday:
+            print(str(member['member']))
+            print(str(member['member'].split("#")))
             member_list.append(str(member['member'].split("#"))[0])
             print(str(member['member'].split("#"))[0])
         member_list.sort()
