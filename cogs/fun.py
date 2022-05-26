@@ -92,7 +92,6 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_animal.start()
         self.daily_joke.start()
         self.daily_meme.start()
-        self.daily_channel = bot.get_channel(809892274980257812)
     
     def cog_unload(self):
         self.daily_birthday.cancel()
@@ -100,13 +99,14 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_joke.cancel()
         self.daily_meme.cancel()
 
-    @tasks.loop(time=datetime.time(20, 15)) #time=datetime.time(4)
+    @tasks.loop(minutes=5) #time=datetime.time(4)
     async def daily_birthday(self):
         # Gets daily birthday, if any
-        print(self.daily_channel)
+        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        print(daily_channel)
         result = birthday_task()
         if result is not None:
-            await self.daily_channel.send(embed=result)
+            await daily_channel.send(embed=result)
             print(result)
         else:
             print("No birthdays")
@@ -114,19 +114,22 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
-        await self.daily_channel.send(animal_task())
+        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        await daily_channel.send(animal_task())
         print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        await self.daily_channel.send(embed=joke_task())
+        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        await daily_channel.send(embed=joke_task())
         print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
-        await self.daily_channel.send(embed=meme_task())
+        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        await daily_channel.send(embed=meme_task())
         print(meme_task())
 
     @nextcord.slash_command()
