@@ -82,12 +82,12 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_meme.cancel()
     
 
-    @tasks.loop(hours=1) #time=datetime.time(4)
+    @tasks.loop(minutes=5) #time=datetime.time(4)
     async def daily_birthday(self):
         #Gets daily birthdays, if any
         date = str(datetime.date.today()).split("-")
-        month = date[1].lstrip("0")
-        day = date[2].lstrip("0")
+        month = int(date[1].lstrip("0"))
+        day = int(date[2].lstrip("0"))
         print(f"{month}-{day}")
         #Checks if this day/month combo has a match in the database
         if db.birthdays.find_one({"month": month, "day": day}):
