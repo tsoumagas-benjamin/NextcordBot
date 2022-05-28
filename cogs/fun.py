@@ -150,7 +150,7 @@ class Fun(commands.Cog, name="Fun"):
             username = member.name + "#" + member.discriminator
             input = {"member":username, "month":month, "day":day}
             if db.birthdays.find_one({"member": username}):
-                db['birthdays'].replace_one({"member": username})
+                db['birthdays'].replace_one({"member": username}, input)
                 await interaction.send(f"Replaced birthday for {member.name}.")
             else:
                 db['birthdays'].insert_one(input)
