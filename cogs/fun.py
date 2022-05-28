@@ -29,13 +29,9 @@ def birthday_task():
         bday = db.birthdays.find({"month": month, "day": day})
         member_list = []
         for member in bday:
-            member_full = (member['member'].split("#"))
-            member_name = member_full[0]
-            member_list.append(member_name)
-        member_list.sort()
-        birthday_people = ", ".join(member_list)
-        embed = nextcord.Embed(title="Happy Birthday", description=f"{birthday_people}", color=nextcord.Colour.from_rgb(225, 0, 255))
-        return embed
+            member_list.append(member['_id'])
+        embed = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉", description=f"{month}/{day}", color=nextcord.Colour.from_rgb(225, 0, 255))
+        return embed, member_list
     else:
         return None
 
@@ -104,8 +100,11 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_birthday(self):
         # Gets daily birthday, if any
         daily_channel = await self.bot.fetch_channel(809892274980257812)
-        result = birthday_task()
+        result, user_list = birthday_task()
         if result is not None:
+            for user_id in user_list:
+                user = self.bot.get_user(user_id)
+                result.add_field(name=f"{user.name}", value=f"{user.mention}")
             await daily_channel.send(embed=result)
             print(result)
         else:
@@ -146,17 +145,14 @@ class Fun(commands.Cog, name="Fun"):
             await interaction.send("Invalid month.")
         elif day < 1 or day > 31:
             await interaction.send("Invalid day.")
-        elif re.findall("[0-9]{4}", member.discriminator):
-            username = member.name + "#" + member.discriminator
-            input = {"member":username, "month":month, "day":day}
-            if db.birthdays.find_one({"member": username}):
-                db['birthdays'].replace_one({"member": username}, input)
+        else:
+            input = {"_id": member.id, "month":month, "day":day}
+            if db.birthdays.find_one({"_id": member.id}):
+                db['birthdays'].replace_one({"_id": member.id}, input)
                 await interaction.send(f"Replaced birthday for {member.name}.")
             else:
                 db['birthdays'].insert_one(input)
                 await interaction.send(f"Added birthday for {member.name}.")
-        else:
-            await interaction.send(f"Invalid discriminator.")
 
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
