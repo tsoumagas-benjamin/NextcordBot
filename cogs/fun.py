@@ -12,6 +12,8 @@ client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 #Name our access to our client database
 db = client.NextcordBot
 
+daily_channel_id = 809892274980257812
+
 def animal_task():
     choices = ["shibes", "cats", "birds"]
     choice = random.choice(choices)
@@ -28,10 +30,10 @@ def birthday_task():
     if db.birthdays.find_one({"month": month, "day": day}):
         bday = db.birthdays.find({"month": month, "day": day})
         member_list = []
+        # Gets all birthday users ID's
         for member in bday:
             member_list.append(member['_id'])
-        embed = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉", description=f"{month}/{day}", color=nextcord.Colour.from_rgb(225, 0, 255))
-        return embed, member_list
+        return member_list
     else:
         return None
 
@@ -99,35 +101,39 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
-        daily_channel = await self.bot.fetch_channel(809892274980257812)
-        result, user_list = birthday_task()
-        if result is not None:
+        daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        user_list = birthday_task()
+        bday_message = f"🥳\tHappy birthday\t🎉\n"
+        # Get all user names and mentions formatted
+        bday_list = []
+        if user_list is not None:
             for user_id in user_list:
                 user = self.bot.get_user(user_id)
-                result.add_field(name=f"{user.name}", value=f"{user.mention}")
-            await daily_channel.send(embed=result)
-            print(result)
+                bday_list.append(f"{user.name}: {user.mention}")
+            bday_message.append("\n".join(bday_list))
+            await daily_channel.send(bday_message)
+            print(bday_message)
         else:
             print("No birthdays")
 
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
-        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(animal_task())
         print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(embed=joke_task())
         print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
-        daily_channel = await self.bot.fetch_channel(809892274980257812)
+        daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(embed=meme_task())
         print(meme_task())
 
