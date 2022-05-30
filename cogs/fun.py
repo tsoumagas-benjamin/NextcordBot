@@ -131,7 +131,7 @@ class Fun(commands.Cog, name="Fun"):
                 if user is not None:
                     print(user.name + user.mention)
                     bday_list.append(f"{user.name}: {user.mention}")
-            bday_message.append("\n".join(bday_list))
+            bday_message += ("\n".join(bday_list))
             await interaction.send(bday_message)
             print(bday_message)
         else:
