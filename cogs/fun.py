@@ -126,7 +126,7 @@ class Fun(commands.Cog, name="Fun"):
         if user_list is not None:
             for user_id in user_list:
                 print(user_id)
-                user = self.bot.get_user(user_id)
+                user = await self.bot.fetch_user(user_id)
                 print(user)
                 if user is not None:
                     print(user.name + user.mention)
