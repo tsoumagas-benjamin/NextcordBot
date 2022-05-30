@@ -125,8 +125,12 @@ class Fun(commands.Cog, name="Fun"):
         bday_list = []
         if user_list is not None:
             for user_id in user_list:
+                print(user_id)
                 user = self.bot.get_user(user_id)
-                bday_list.append(f"{user.name}: {user.mention}")
+                print(user)
+                if user is not None:
+                    print(user.name + user.mention)
+                    bday_list.append(f"{user.name}: {user.mention}")
             bday_message.append("\n".join(bday_list))
             await interaction.send(bday_message)
             print(bday_message)
