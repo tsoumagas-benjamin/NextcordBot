@@ -103,36 +103,15 @@ class Fun(commands.Cog, name="Fun"):
         # Gets daily birthday, if any
         daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
-        bday_message = f"🥳\tHappy birthday\t🎉\n"
+        bday_message = f"🥳\tHappy Birthday!\t🎉\n"
         # Get all user names and mentions formatted
         bday_list = []
         if user_list is not None:
             for user_id in user_list:
-                user = self.bot.get_user(user_id)
+                user = await self.bot.fecth_user(user_id)
                 bday_list.append(f"{user.name}: {user.mention}")
-            bday_message.append("\n".join(bday_list))
-            await daily_channel.send(bday_message)
-            print(bday_message)
-        else:
-            print("No birthdays")
-    
-    @nextcord.slash_command(guild_ids=[686394755009347655])
-    async def bday(self, interaction: Interaction):
-        # Gets daily birthday, if any
-        user_list = birthday_task()
-        bday_message = f"🥳\tHappy birthday\t🎉\n"
-        # Get all user names and mentions formatted
-        bday_list = []
-        if user_list is not None:
-            for user_id in user_list:
-                print(user_id)
-                user = await self.bot.fetch_user(user_id)
-                print(user)
-                if user is not None:
-                    print(user.name + user.mention)
-                    bday_list.append(f"{user.name}: {user.mention}")
             bday_message += ("\n".join(bday_list))
-            await interaction.send(bday_message)
+            await daily_channel.send(bday_message)
             print(bday_message)
         else:
             print("No birthdays")
