@@ -108,7 +108,7 @@ class Fun(commands.Cog, name="Fun"):
         bday_list = []
         if user_list is not None:
             for user_id in user_list:
-                user = await self.bot.fecth_user(user_id)
+                user = await self.bot.fetch_user(user_id)
                 bday_list.append(f"{user.name}: {user.mention}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
