@@ -12,7 +12,7 @@ client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 #Name our access to our client database
 db = client.NextcordBot
 
-daily_channel_id = 809892274980257812
+daily_channel_id = 579555794933252098
 
 def animal_task():
     choices = ["shibes", "cats", "birds"]
