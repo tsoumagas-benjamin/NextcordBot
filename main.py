@@ -19,7 +19,7 @@ def main():
             super().__init__()
 
     # Instantiate the bot
-    bot = NextcordBot(command_prefix=">", intents=intents)
+    bot = NextcordBot(intents=intents)
 
     # Define bot behaviour on start up
     @bot.event
@@ -106,7 +106,7 @@ def main():
     log()
 
     # Run Discord bot
-    bot.run(config.DISCORD_TOKEN)
+    bot.run(os.getenv('DISCORD_TOKEN'))
 
 
 if __name__ == "__main__":

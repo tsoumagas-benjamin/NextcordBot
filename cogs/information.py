@@ -21,11 +21,6 @@ class Information(commands.Cog, name = "Information"):
 
     def __init__(self, bot):
         self.bot = bot
-
-    #Stores last deleted message
-    @commands.Cog.listener()
-    async def on_message_delete(self, message):
-        self.last_msg = message
     
     @nextcord.slash_command()
     async def calculate(self, interaction: Interaction, *, equation: str):
