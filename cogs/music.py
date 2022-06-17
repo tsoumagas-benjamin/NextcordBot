@@ -199,7 +199,7 @@ class Music(commands.Cog, name="Music"):
             correct_artist = artist_list[index]
             #Play the song at volume
             print(f"Playing {title_list[index]} by {artist_list[index]}")
-            #TODO: Make subfunctions that are shared with main music (play/volume/stop/disconnect)
+            #Instantiate our player
             vc: wavelink.Player = interaction.guild.voice_client
             search = await wavelink.YouTubeTrack.search(
                 query=f"{title_list[index]} by {artist_list[index]}", 

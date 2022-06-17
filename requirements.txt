@@ -10,3 +10,4 @@ cffi==1.15.0
 pycparser==2.21
 six==1.16.0
 wavelink==1.2.5
+fuzzywuzzy==0.18.0
