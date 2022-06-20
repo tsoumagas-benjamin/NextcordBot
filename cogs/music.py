@@ -143,7 +143,7 @@ class Music(commands.Cog, name="Music"):
         title_list = db["titles"]
         artist_list = db["artists"]
         #Randomize songs for as many rounds as needed
-        index_list = range(0,int(title_list.count_documents()))
+        index_list = range(0,int(title_list.count_documents({})))
         song_indices = random.sample(index_list, mq_rounds)
 
         #Initialize guess flags to empty strings
