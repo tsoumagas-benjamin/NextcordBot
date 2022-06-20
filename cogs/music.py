@@ -138,7 +138,7 @@ class Music(commands.Cog, name="Music"):
         #Clear dictionary that stores player score
         player_dict = {}
         #Setup the embed to store game results
-        score_embed.set_footer(icon_url = interaction.guild.icon_url, text = interaction.guild.name)
+        score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
         #Make a list from available titles
         title_list = db["titles"]
         artist_list = db["artists"]
