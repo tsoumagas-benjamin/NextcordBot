@@ -84,7 +84,7 @@ def main():
                     await message.channel.send(random.choice(options))
                     break
 
-        if bot.user.mentioned_in(message):
+        if bot.user.mentioned_in(message) and not message.mention_everyone:
             commands_list = bot.get_application_commands()
             cmds = []
             for cmd in commands_list:

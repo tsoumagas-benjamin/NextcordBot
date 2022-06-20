@@ -19,10 +19,9 @@ song_list = db['songs']
 default_volume = 5
 
 #Music quiz variables
-mq_status = False
+
 mq_rounds = 10
 mq_duration = 30
-# mq_vol = 25
 mq_leniency = 90
 player_score = {}
 score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))
@@ -86,8 +85,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first.")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
@@ -103,8 +100,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first.")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
         
@@ -121,9 +116,6 @@ class Music(commands.Cog, name="Music"):
     @nextcord.slash_command()
     async def music_quiz(self, interaction: Interaction):
         """Starts music quiz."""
-        if mq_status is True:
-            return
-        mq_status = True
         #Start of game message
         await interaction.send(f"Music quiz, {mq_rounds} rounds, {mq_duration} seconds each.")
         #Join user's voice channel
@@ -133,8 +125,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
         
@@ -161,23 +151,23 @@ class Music(commands.Cog, name="Music"):
         artist_flag = ''
 
         #Check if user response matches the correct title
-        def title_check(m):
-            s1 = ''.join(e for e in m.content.lower() if e.isalnum())
+        def title_check(message):
+            s1 = ''.join(e for e in message.content.lower() if e.isalnum())
             s2 = ''.join(e for e in correct_title.lower() if e.isalnum())
             percent_correct = fuzz.token_set_ratio(s1,s2)
             if percent_correct >= mq_leniency:
-                increment_score(m.author.name)
-                return str(m.author.name)
+                increment_score(message.author.name)
+                return str(message.author.name)
             return ''
 
         #Check if user response matches the correct artist
-        def artist_check(m):
-            s1 = ''.join(e for e in m.content.lower() if e.isalnum())
+        def artist_check(message):
+            s1 = ''.join(e for e in message.content.lower() if e.isalnum())
             s2 = ''.join(e for e in correct_artist.lower() if e.isalnum())
             percent_correct = fuzz.token_set_ratio(s1,s2)
             if percent_correct >= mq_leniency:
-                increment_score(m.author.name)
-                return str(m.author.name)
+                increment_score(message.author.name)
+                return str(message.author.name)
             return ''
 
         #Check if title and artist have been guessed
@@ -206,6 +196,7 @@ class Music(commands.Cog, name="Music"):
             await vc.set_volume(default_volume)
             await vc.play(search)
             try:
+                #TODO: Re-do title, artist, and music quiz checks as one-liners
                 #If title isn't guessed compare guess to the title
                 if title_flag == '':
                     title_flag = await self.bot.wait_for('message',check=title_check)
@@ -213,7 +204,7 @@ class Music(commands.Cog, name="Music"):
                 if artist_flag == '':
                     artist_flag = await self.bot.wait_for('message',check=artist_check)
                 #End round when title and artist are guessed
-                guess = await self.bot.wait_for('message',check=mq_check,timeout=mq_duration)
+                await self.bot.wait_for('message',check=mq_check,timeout=mq_duration)
             except asyncio.TimeoutError:
                 #Stop the round if users don't guess in time
                 await vc.stop()
@@ -245,7 +236,6 @@ class Music(commands.Cog, name="Music"):
         #Send game results embed and leave voice channel
         await interaction.followup.send(embed=score_embed)
         await vc.disconnect()
-        mq_status = False
         return
 
         
@@ -258,8 +248,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first.")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
         
@@ -284,8 +272,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
@@ -302,8 +288,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
         
@@ -330,8 +314,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first.")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
@@ -356,8 +338,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
@@ -373,8 +353,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Join a voice channel first.")
         elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
             return await interaction.send("We have to be in the same voice channel.")
-        elif mq_status is True:
-            return await interaction.send("Music quiz is in progress!")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
