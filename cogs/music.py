@@ -140,10 +140,10 @@ class Music(commands.Cog, name="Music"):
         #Setup the embed to store game results
         score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
         #Make a list from available titles
-        title_list = list(db["titles"])
-        artist_list = list(db["artists"])
+        title_list = db["titles"]
+        artist_list = db["artists"]
         #Randomize songs for as many rounds as needed
-        index_list = range(0,len(title_list))
+        index_list = range(0,int(title_list.count_documents()))
         song_indices = random.sample(index_list, mq_rounds)
 
         #Initialize guess flags to empty strings
