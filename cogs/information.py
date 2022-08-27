@@ -138,6 +138,10 @@ class Information(commands.Cog, name = "Information"):
             value="https://www.instagram.com/oliviavisentin/",
             inline=False)
         embed.add_field(
+            name=f"TikTok:", 
+            value="https://www.tiktok.com/@oliviavisentin",
+            inline=False)
+        embed.add_field(
             name=f"Facebook:", 
             value="https://www.facebook.com/olivia.visentin.50",
             inline=False)
