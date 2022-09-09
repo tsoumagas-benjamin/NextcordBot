@@ -53,9 +53,9 @@ class Music(commands.Cog, name="Music"):
         await self.bot.wait_until_ready()
         await wavelink.NodePool.create_node(
             bot=self.bot,
-            host="www.exlink.ml",
+            host="lavalink.oops.wtf",
             port=443,
-            password="exlava",
+            password="www.freelavalink.ga",
             https=True
         )
     
