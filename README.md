@@ -2,13 +2,12 @@
 
 [![Discord](https://img.shields.io/discord/819650821314052106?color=7289DA&logo=discord&logoColor=white)](https://discord.gg/4eSAwMNvW2 "Ben's Server")
 [![Powered by Nextcord](https://custom-icon-badges.herokuapp.com/badge/-Powered%20by%20Nextcord-0d1620?logo=nextcord)](https://github.com/nextcord/nextcord "Powered by Nextcord Python API Wrapper")
-[![Heroku](https://img.shields.io/badge/Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white)](https://dashboard.heroku.com/)
 
 ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Visual Studio Code](https://img.shields.io/badge/Visual_Studio_Code-0078D4?style=for-the-badge&logo=visual%20studio%20code&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
 
-This repo is a personal project to work with Python, nextcord, mongoDB, and Heroku to make a Discord bot. Currently undergoing development.
+This repo is a personal project to work with Python, nextcord, mongoDB, and Fly.io to make a Discord bot. Previously hosted on Heroku. Currently undergoing development.
 
 The library used is [Nextcord](https://github.com/nextcord/nextcord), a maintained fork of Discord.py.
 
@@ -49,6 +48,10 @@ If you require additional API keys or variables specific to an enviroment, they 
 ## Heroku
 
 `runtime.txt` and `Procfile` are used for Heroku configuration and can be deleted in case you do not plan on hosting there.
+
+## Fly.io
+
+Check out `Dockerfile`, `fly.toml`, and `fly.yml` under workflows under .github. You can follow along with the official documentation here: https://fly.io/docs/getting-started/ or watch Jonah Lawrence's video if you prefer a video guide: https://youtu.be/J7Fm7MdZn_E.
 
 ## IDE Configuration
 
