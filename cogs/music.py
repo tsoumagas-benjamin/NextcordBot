@@ -39,6 +39,9 @@ def increment_score(guess):
     else:
         player_score[str(guess.author.name)] = 1
 
+
+#TODO: Fix music playing function
+#TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
     """Commands for playing music in voice channels"""
 
@@ -53,9 +56,9 @@ class Music(commands.Cog, name="Music"):
         await self.bot.wait_until_ready()
         await wavelink.NodePool.create_node(
             bot=self.bot,
-            host="lavalink.oops.wtf",
+            host="www.exlink.ml",
             port=443,
-            password="www.freelavalink.ga",
+            password="exlava",
             https=True
         )
     
