@@ -90,7 +90,7 @@ class Information(commands.Cog, name = "Information"):
             embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
             await interaction.send(embed=embed)
         else:
-            await interaction.send("You must first set your rules with $setrules!")
+            await interaction.send("You must first set your rules with /setrules!")
 
     @nextcord.slash_command()
     async def rules(self, interaction: Interaction):
@@ -104,7 +104,7 @@ class Information(commands.Cog, name = "Information"):
             embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.avatar)
             await interaction.send(embed=embed)
         else:
-            await interaction.send("You must first set your rules with $setrules!")
+            await interaction.send("You must first set your rules with /setrules!")
 
     @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
