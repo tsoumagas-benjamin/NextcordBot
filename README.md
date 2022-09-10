@@ -45,6 +45,8 @@ DISCORD_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 If you require additional API keys or variables specific to an enviroment, they should also be added here. You can access them by adding a line such as `GUILD_ID = os.getenv("GUILD_ID", "")` to `config.py`.
 
+For automatic deploys, you will need to get your Fly.io auth token with `flyctl auth token` and put it under Settings>Secrets>Actions as FLY_API_Token. More details on this can be found here https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/ and https://youtu.be/6u9BrDaSHJc.
+
 ## Heroku
 
 `runtime.txt` and `Procfile` are used for Heroku configuration and can be deleted in case you do not plan on hosting there.
