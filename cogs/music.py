@@ -131,7 +131,7 @@ class Music(commands.Cog, name="Music"):
     #     else:
     #         vc: wavelink.Player = interaction.guild.voice_client
         
-    #     await vc.set_volume(default_volume, True)
+    #     await vc.set_volume(default_volume)
         
     #     vc.interaction = interaction
     #     try:
@@ -196,7 +196,7 @@ class Music(commands.Cog, name="Music"):
     #             query=f"{title_list[index]} by {artist_list[index]}", 
     #             return_first=True
     #         )
-    #         await vc.set_volume(default_volume, True)
+    #         await vc.set_volume(default_volume)
     #         await vc.play(search)
     #         try:
     #             #TODO: Re-do title, artist, and music quiz checks as one-liners
@@ -295,7 +295,7 @@ class Music(commands.Cog, name="Music"):
             vc: wavelink.Player = interaction.guild.voice_client
         
         if vc.queue.is_empty and not vc.is_playing():
-            await vc.set_volume(default_volume, True)
+            await vc.set_volume(default_volume)
             await vc.play(search)
             await interaction.send(f"Now playing: {search.title}")
         else:
@@ -377,7 +377,7 @@ class Music(commands.Cog, name="Music"):
         if volume < 0 or volume > 100:
             return await interaction.send("Volume must be between 0 and 100.")
         await interaction.send(f"Set the volume to {volume}%.")
-        return await vc.set_volume(volume, True)
+        return await vc.set_volume(volume)
     
 def setup(bot):
     bot.add_cog(Music(bot))
