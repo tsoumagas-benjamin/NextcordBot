@@ -40,7 +40,6 @@ def increment_score(guess):
         player_score[str(guess.author.name)] = 1
 
 
-#TODO: Fix music playing function
 #TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
     """Commands for playing music in voice channels"""
