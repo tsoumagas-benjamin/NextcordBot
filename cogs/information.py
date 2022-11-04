@@ -158,7 +158,7 @@ class Information(commands.Cog, name = "Information"):
         commands_list = self.bot.get_application_commands()
         cmds = []
         for cmd in commands_list:
-            cmds.append(str(cmd))
+            cmds.append(cmd.qualified_name)
         cmds.sort()
         bot_commands = ", ".join(cmds)
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
