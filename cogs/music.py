@@ -115,130 +115,138 @@ class Music(commands.Cog, name="Music"):
         else:
             return await interaction.send("No longer looping the current song.")
 
-    # @nextcord.slash_command()
-    # async def music_quiz(self, interaction: Interaction):
-    #     """Starts music quiz."""
-    #     #Start of game message
-    #     await interaction.send(f"Music quiz, {mq_rounds} rounds, {mq_duration} seconds each.")
-    #     #Join user's voice channel
-    #     if not interaction.guild.voice_client:
-    #         vc: wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
-    #     elif not getattr(interaction.user.voice, "channel", None):
-    #         return await interaction.send("Join a voice channel first")
-    #     elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
-    #         return await interaction.send("We have to be in the same voice channel.")
-    #     else:
-    #         vc: wavelink.Player = interaction.guild.voice_client
+    @nextcord.slash_command()
+    async def music_quiz(self, interaction: Interaction):
+        """Starts music quiz."""
+        #Start of game message
+        await interaction.send(f"Music quiz, {mq_rounds} rounds, {mq_duration} seconds each.")
+        #Join user's voice channel
+        if not interaction.guild.voice_client:
+            vc: wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
+        elif not getattr(interaction.user.voice, "channel", None):
+            return await interaction.send("Join a voice channel first")
+        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
+            return await interaction.send("We have to be in the same voice channel.")
+        else:
+            vc: wavelink.Player = interaction.guild.voice_client
         
-    #     await vc.set_volume(default_volume)
+        await vc.set_volume(default_volume)
         
-    #     vc.interaction = interaction
-    #     try:
-    #         if vc.loop: return
-    #     except Exception:
-    #         setattr(vc, "loop", False)
-    #     #Clear dictionary that stores player score
-    #     player_dict = {}
-    #     #Setup the embed to store game results
-    #     score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
-    #     #Make a list from available titles
-    #     title_list = db["titles"]
-    #     artist_list = db["artists"]
-    #     #Randomize songs for as many rounds as needed
-    #     index_list = range(0,int(title_list.count_documents({})))
-    #     song_indices = random.sample(index_list, mq_rounds)
+        vc.interaction = interaction
+        try:
+            if vc.loop: return
+        except Exception:
+            setattr(vc, "loop", False)
 
-    #     #Initialize guess flags to empty strings
-    #     title_flag = ''
-    #     artist_flag = ''
+        #Clear dictionary that stores player score
+        player_dict = {}
+        #Setup the embed to store game results
+        score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
+        #Make a list from available titles
+        title_list = song_list.find({}, {"title":1, "_id":0})
+        artist_list = song_list.find({}, {"artist":1, "_id":0})
+        #Randomize songs for as many rounds as needed
+        index_list = range(0,int(song_list.count_documents({})))
+        song_indices = random.sample(index_list, mq_rounds)
 
-    #     #Check if user response matches the correct title
-    #     def title_check(message):
-    #         s1 = ''.join(e for e in message.content.lower() if e.isalnum())
-    #         s2 = ''.join(e for e in correct_title.lower() if e.isalnum())
-    #         percent_correct = fuzz.token_set_ratio(s1,s2)
-    #         if percent_correct >= mq_leniency:
-    #             increment_score(message.author.name)
-    #             return str(message.author.name)
-    #         return ''
+        #Initialize guess flags to empty strings
+        title_flag = ''
+        artist_flag = ''
 
-    #     #Check if user response matches the correct artist
-    #     def artist_check(message):
-    #         s1 = ''.join(e for e in message.content.lower() if e.isalnum())
-    #         s2 = ''.join(e for e in correct_artist.lower() if e.isalnum())
-    #         percent_correct = fuzz.token_set_ratio(s1,s2)
-    #         if percent_correct >= mq_leniency:
-    #             increment_score(message.author.name)
-    #             return str(message.author.name)
-    #         return ''
+        #Check if user response matches the correct title
+        def title_check(message):
+            # s1 = ''.join(e for e in message.content.lower() if e.isalnum())
+            # s2 = ''.join(e for e in correct_title.lower() if e.isalnum())
+            # percent_correct = fuzz.token_set_ratio(s1,s2)
+            # if percent_correct >= mq_leniency:
+            #     increment_score(message.author.name)
+            #     return str(message.author.name)
+            # return ''
+            return fuzz.token_set_ratio(''.join(e for e in message.content.lower() if e.isalnum()), ''.join(e for e in correct_title.lower() if e.isalnum())) >= mq_leniency
 
-    #     #Check if title and artist have been guessed
-    #     def mq_check(m):
-    #         return ((title_flag != '') and (artist_flag != ''))
 
-    #     for i in range(mq_rounds):
-    #         #Start of round
-    #         await asyncio.sleep(3)
-    #         await interaction.followup.send(f"Starting round {i+1}")
-    #         #Set guess flags to false at round start
-    #         title_flag = ''
-    #         artist_flag = ''
-    #         #Make the correct song the first one from our random list
-    #         index = song_indices[i]
-    #         correct_title = title_list[index]
-    #         correct_artist = artist_list[index]
-    #         #Play the song at volume
-    #         print(f"Playing {title_list[index]} by {artist_list[index]}")
-    #         #Instantiate our player
-    #         vc: wavelink.Player = interaction.guild.voice_client
-    #         search = await wavelink.YouTubeTrack.search(
-    #             query=f"{title_list[index]} by {artist_list[index]}", 
-    #             return_first=True
-    #         )
-    #         await vc.set_volume(default_volume)
-    #         await vc.play(search)
-    #         try:
-    #             #TODO: Re-do title, artist, and music quiz checks as one-liners
-    #             #If title isn't guessed compare guess to the title
-    #             if title_flag == '':
-    #                 title_flag = await self.bot.wait_for('message',check=title_check)
-    #             #If artist isn't guessed compare guess to the artist
-    #             if artist_flag == '':
-    #                 artist_flag = await self.bot.wait_for('message',check=artist_check)
-    #             #End round when title and artist are guessed
-    #             await self.bot.wait_for('message',check=mq_check,timeout=mq_duration)
-    #         except asyncio.TimeoutError:
-    #             #Stop the round if users don't guess in time
-    #             await vc.stop()
-    #             await interaction.followup.send(f"Round over.\n Title: {title_case(correct_title)}\nArtist: {title_case(correct_artist)}.")
-    #         else:
-    #             #Stop the round and announce the round winner
-    #             await vc.stop()
-    #             await interaction.followup.send(f"Successfully guessed {title_case(correct_title)} by {title_case(correct_artist)}")
-    #         #Sort player score dictionary from highest to lowest
-    #         sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
-    #         sorted_dict = dict(sorted_list)
-    #         #Add each player and their score to game results embed
-    #         for key, value in sorted_dict.items():
-    #             score = str(value) + " pts"
-    #             score_embed.add_field(name=key, value=score)
-    #         #Send game results embed
-    #         await interaction.followup.send(embed=score_embed)
-    #         for key, value in sorted_dict.items():
-    #             score_embed.remove_field(0)
-    #     #Announce end of the game
-    #     await interaction.followup.send("Music quiz is done.")
-    #     #Sort player score dictionary from highest to lowest
-    #     sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
-    #     sorted_dict = dict(sorted_list)
-    #     #Add each player and their score to game results embed
-    #     for key, value in sorted_dict.items():
-    #         score = str(value) + " pts"
-    #         score_embed.add_field(name=key, value=score)
-    #     #Send game results embed and leave voice channel
-    #     await interaction.followup.send(embed=score_embed)
-    #     await vc.disconnect()
-    #     return
+        #Check if user response matches the correct artist
+        def artist_check(message):
+            # s1 = ''.join(e for e in message.content.lower() if e.isalnum())
+            # s2 = ''.join(e for e in correct_artist.lower() if e.isalnum())
+            # percent_correct = fuzz.token_set_ratio(s1,s2)
+            # if percent_correct >= mq_leniency:
+            #     increment_score(message.author.name)
+            #     return str(message.author.name)
+            # return ''
+            return fuzz.token_set_ratio(''.join(e for e in message.content.lower() if e.isalnum()), ''.join(e for e in correct_artist.lower() if e.isalnum())) >= mq_leniency
+
+        #Check if title and artist have been guessed
+        def mq_check(m):
+            return ((title_flag != '') and (artist_flag != ''))
+
+        for i in range(mq_rounds):
+            #Start of round
+            await asyncio.sleep(3)
+            await interaction.followup.send(f"Starting round {i+1}")
+            #Set guess flags to false at round start
+            title_flag = ''
+            artist_flag = ''
+            #Make the correct song the first one from our random list
+            index = song_indices[i]
+            correct_title = title_list[index]
+            correct_artist = artist_list[index]
+            #Play the song at volume
+            print(f"Playing {title_list[index]} by {artist_list[index]}")
+            #Instantiate our player
+            vc: wavelink.Player = interaction.guild.voice_client
+            search = await wavelink.YouTubeTrack.search(
+                query=f"{title_list[index]} by {artist_list[index]}", 
+                return_first=True
+            )
+            await vc.set_volume(default_volume)
+            await vc.play(search)
+            try:
+                #TODO: Re-do title, artist, and music quiz checks as one-liners
+                #If title isn't guessed compare guess to the title
+                if title_flag == '':
+                    title_flag = await self.bot.wait_for('message',check=title_check)
+                    increment_score(title_flag.author.name)
+                    interaction.followup.send(f"{title_flag.author.name} guessed the title!")
+                #If artist isn't guessed compare guess to the artist
+                if artist_flag == '':
+                    artist_flag = await self.bot.wait_for('message',check=artist_check)
+                    increment_score(artist_flag.author.name)
+                    interaction.followup.send(f"{artist_flag.author.name} guessed the artist!")
+                #End round when title and artist are guessed
+                await self.bot.wait_for('message',check=mq_check,timeout=mq_duration)
+            except asyncio.TimeoutError:
+                #Stop the round if users don't guess in time
+                await vc.stop()
+                await interaction.followup.send(f"Round over.\n Title: {title_case(correct_title)}\nArtist: {title_case(correct_artist)}.")
+            else:
+                #Stop the round and announce the round winner
+                await vc.stop()
+                await interaction.followup.send(f"Successfully guessed {title_case(correct_title)} by {title_case(correct_artist)}")
+            #Sort player score dictionary from highest to lowest
+            sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
+            sorted_dict = dict(sorted_list)
+            #Add each player and their score to game results embed
+            for key, value in sorted_dict.items():
+                score = str(value) + " pts"
+                score_embed.add_field(name=key, value=score)
+            #Send game results embed
+            await interaction.followup.send(embed=score_embed)
+            for key, value in sorted_dict.items():
+                score_embed.remove_field(0)
+        #Announce end of the game
+        await interaction.followup.send("Music quiz is done.")
+        #Sort player score dictionary from highest to lowest
+        sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
+        sorted_dict = dict(sorted_list)
+        #Add each player and their score to game results embed
+        for key, value in sorted_dict.items():
+            score = str(value) + " pts"
+            score_embed.add_field(name=key, value=score)
+        #Send game results embed and leave voice channel
+        await interaction.followup.send(embed=score_embed)
+        await vc.disconnect()
+        return
 
         
     @nextcord.slash_command()
