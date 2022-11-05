@@ -39,6 +39,9 @@ def increment_score(guess):
     else:
         player_score[str(guess.author.name)] = 1
 
+#Function to do fuzzy string matching
+def fuzz_check(s1, s2):
+    return fuzz.token_set_ratio(''.join(e for e in s1.content.lower() if e.isalnum()), ''.join(e for e in s2.lower() if e.isalnum())) >= mq_leniency
 
 #TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
@@ -162,7 +165,7 @@ class Music(commands.Cog, name="Music"):
             #     increment_score(message.author.name)
             #     return str(message.author.name)
             # return ''
-            return fuzz.token_set_ratio(''.join(e for e in message.content.lower() if e.isalnum()), ''.join(e for e in correct_title.lower() if e.isalnum())) >= mq_leniency
+            return fuzz_check(message, correct_title)
 
 
         #Check if user response matches the correct artist
@@ -174,7 +177,7 @@ class Music(commands.Cog, name="Music"):
             #     increment_score(message.author.name)
             #     return str(message.author.name)
             # return ''
-            return fuzz.token_set_ratio(''.join(e for e in message.content.lower() if e.isalnum()), ''.join(e for e in correct_artist.lower() if e.isalnum())) >= mq_leniency
+            return fuzz_check(message, correct_artist)
 
         #Check if title and artist have been guessed
         def mq_check(m):
@@ -191,6 +194,7 @@ class Music(commands.Cog, name="Music"):
             index = song_indices[i]
             correct_title = title_list[index]
             correct_artist = artist_list[index]
+            print(correct_title + correct_artist)
             #Play the song at volume
             print(f"Playing {title_list[index]} by {artist_list[index]}")
             #Instantiate our player
