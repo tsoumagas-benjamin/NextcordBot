@@ -77,6 +77,14 @@ class Music(commands.Cog, name="Music"):
         if vc.loop:
             return await vc.play(track)
         
+        #If queue finishes and is empty 
+        if vc.queue.empty():
+            await asyncio.sleep(120) #Disconnect after 2 minutes of inactivity
+            while vc.is_playing(): 
+                break 
+            else:
+                await vc.disconnect() 
+        
         next_song = vc.queue.get()
         await vc.play(next_song)
         await interaction.send(f"Now playing: {next_song.title}")
