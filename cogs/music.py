@@ -145,13 +145,18 @@ class Music(commands.Cog, name="Music"):
         player_dict = {}
         #Setup the embed to store game results
         score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
-        #Make a list from available titles
-        title_list = song_list["title"]
-        artist_list = song_list["artist"]
+        #Make a list from available titles and artists
+        titles = song_list.find({}, {"title":1, "_id":0})
+        artists = song_list.find({}, {"artist":1, "_id":0})
+        title_list, artist_list = [], []
+        for t in titles:
+            title_list.append(t["title"])
+        for a in artists:
+            artist_list.append(a["artist"])
         print(title_list)
         print(artist_list)
         #Randomize songs for as many rounds as needed
-        index_list = range(0,int(song_list.count_documents({})))
+        index_list = range(0,int(song_list.count_documents({}))+1)
         song_indices = random.sample(index_list, mq_rounds)
 
         #Initialize guess flags to empty strings
@@ -196,7 +201,6 @@ class Music(commands.Cog, name="Music"):
             index = song_indices[i]
             correct_title = title_list[index]
             correct_artist = artist_list[index]
-            print(correct_title + correct_artist)
             #Play the song at volume
             print(f"Playing {title_list[index]} by {artist_list[index]}")
             #Instantiate our player
