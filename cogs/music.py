@@ -78,7 +78,7 @@ class Music(commands.Cog, name="Music"):
             return await vc.play(track)
         
         #If queue finishes and is empty 
-        if vc.queue.empty():
+        if vc.queue.copy().empty():
             await asyncio.sleep(120) #Disconnect after 2 minutes of inactivity
             while vc.is_playing(): 
                 break 
