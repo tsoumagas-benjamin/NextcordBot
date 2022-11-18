@@ -27,9 +27,8 @@ score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colo
 song_indices = []
 title_list = []
 artist_list = []
-mq_interaction: Interaction
-mq_vc: wavelink.Player
-mq_status = False
+# mq_interaction: Interaction
+# mq_status = False
 
 def title_case(s):
   return re.sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),s)
@@ -53,6 +52,10 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.mq_status = False
+        self.mq_interaction = None
+        self.song_indices = []
+        self.player_dict = {}
         bot.loop.create_task(self.connect_nodes())
 
     async def connect_nodes(self):
@@ -152,7 +155,7 @@ class Music(commands.Cog, name="Music"):
             setattr(vc, "loop", False)
 
         #Clear dictionary that stores player score
-        player_dict = {}
+        self.player_dict = {}
         #Setup the embed to store game results
         score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
         #Make a list from available titles and artists
@@ -167,17 +170,16 @@ class Music(commands.Cog, name="Music"):
         print(artist_list)
         #Randomize songs for as many rounds as needed
         index_list = range(0,int(song_list.count_documents({}))+1)
-        song_indices = random.sample(index_list, mq_rounds)
+        self.song_indices = random.sample(index_list, mq_rounds)
 
         #Enable music quiz responses to be read in the channel and declare start interaction
-        mq_status = True
-        mq_interaction = interaction
-        mq_vc = interaction.guild.voice_client
+        self.mq_status = True
+        self.mq_interaction = interaction
 
     @commands.Cog.listener('on_message')
     async def mq(self, message):
         # If the message is from a bot or music quiz is inactive, don't react
-        if message.author.bot or mq_status == False:
+        if message.author.bot or self.mq_status == False:
             return
 
         channel = message.channel
@@ -269,12 +271,12 @@ class Music(commands.Cog, name="Music"):
             title_flag = ''
             artist_flag = ''
             #Make the correct song the first one from our random list
-            index = song_indices[i]
+            index = self.song_indices[i]
             correct_title = title_list[index]
             correct_artist = artist_list[index]
             #Play the song at volume
             print("Playing " + title_list[index] + " by " + artist_list[index])
-            await mq_play(mq_interaction, title_list[index]+" by "+artist_list[index])
+            await mq_play(self.mq_interaction, title_list[index]+" by "+artist_list[index])
             try:
                 #If title isn't guessed compare guess to the title
                 if title_flag == '':
@@ -283,14 +285,14 @@ class Music(commands.Cog, name="Music"):
                 if artist_flag == '':
                     artist_flag = await client.wait_for('message', check=artist_check)
                 #End round when title and artist are guessed
-                guess = await client.wait_for('message', check=mq_check, timeout=mq_duration)
+                await client.wait_for('message', check=mq_check, timeout=mq_duration)
             except asyncio.TimeoutError:
                 #Stop the round if users don't guess in time
-                await mq_stop(mq_interaction)
+                await mq_stop(self.mq_interaction)
                 await channel.send(f"Round over.\n Title: {title_case(correct_title)}\nArtist: {title_case(correct_artist)}.")
             else:
                 #Stop the round and announce the round winner
-                await mq_stop(mq_interaction)
+                await mq_stop(self.mq_interaction)
                 await channel.send(f"Successfully guessed {title_case(correct_title)} by {title_case(correct_artist)}")
                 #Sort player score dictionary from highest to lowest
                 sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
@@ -314,8 +316,8 @@ class Music(commands.Cog, name="Music"):
             score_embed.add_field(name=key, value=score)
         #Send game results embed and leave voice channel
         await ctx.send(embed=score_embed)
-        await mq_disconnect(mq_interaction)
-        mq_status = False
+        await mq_disconnect(self.mq_interaction)
+        self.mq_status = False
         return
  
     @nextcord.slash_command()
