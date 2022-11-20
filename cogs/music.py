@@ -363,9 +363,10 @@ class Music(commands.Cog, name="Music"):
         return
 
     @nextcord.slash_command()
-    async def mq_swap(self):
+    async def mq_swap(self, interaction: Interaction):
         """Debugging command to manually switch music quiz status"""
         self.mq_status = not self.mq_status
+        await interaction.send(f"Status is {self.mq_status}")
 
     @nextcord.slash_command()
     async def nowplaying(self, interaction: Interaction):
