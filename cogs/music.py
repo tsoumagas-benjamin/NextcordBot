@@ -362,6 +362,7 @@ class Music(commands.Cog, name="Music"):
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, search: str):
         """Plays a song in a voice channel."""
+        #TODO: Implement feature to add all songs in YouTube playlist
         search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
         if not interaction.guild.voice_client:
             vc: wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
