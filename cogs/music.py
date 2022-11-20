@@ -203,6 +203,7 @@ class Music(commands.Cog, name="Music"):
 
     @commands.Cog.listener("on_message")
     async def mq(self, message):
+        print("mq start")
         # If the message is from a bot or music quiz is inactive, don't react
         if message.author.bot or self.mq_status == False:
             return
