@@ -427,16 +427,7 @@ class Music(commands.Cog, name="Music"):
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
-        try:
-            search = await wavelink.YouTubeTrack.search(query=search, return_first=True)
-            if vc.queue.is_empty and not vc.is_playing():
-                await vc.set_volume(default_volume)
-                await vc.play(search)
-                await interaction.send(f"Now playing: {search.title}")
-            else:
-                await vc.queue.put_wait(search)
-                await interaction.send(f"Added {search.title} to the queue.")
-        except:
+        if re.match("/^.*(youtu.be\/|list=)([^#\&\?]*).*/", search):
             playlist = await wavelink.YouTubePlaylist.search(
                 query=search, return_first=True
             )
@@ -446,6 +437,15 @@ class Music(commands.Cog, name="Music"):
             await vc.set_volume(default_volume)
             for track in playlist.tracks:
                 await vc.queue.put_wait(track)
+        else:
+            track = await wavelink.YouTubeTrack.search(query=search, return_first=True)
+            if vc.queue.is_empty and not vc.is_playing():
+                await vc.set_volume(default_volume)
+                await vc.play(track)
+                await interaction.send(f"Now playing: {track.title}")
+            else:
+                await vc.queue.put_wait(track)
+                await interaction.send(f"Added {track.title} to the queue.")
 
         vc.interaction = interaction
         try:
