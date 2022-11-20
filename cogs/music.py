@@ -203,7 +203,6 @@ class Music(commands.Cog, name="Music"):
 
     @commands.Cog.listener("on_message")
     async def mq(self, message):
-        print("mq start")
         # If the message is from a bot or music quiz is inactive, don't react
         if message.author.bot or self.mq_status == False:
             return
@@ -445,9 +444,11 @@ class Music(commands.Cog, name="Music"):
                 f"Added playlist {playlist.name.title} to the queue."
             )
             for track in playlist.tracks:
+                await interaction.send(type(track))
                 track = await wavelink.YouTubeTrack.search(
                     query=track, return_first=True
                 )
+                await interaction.send(type(track))
                 if vc.queue.is_empty and not vc.is_playing():
                     await vc.set_volume(default_volume)
                     await vc.play(track)
