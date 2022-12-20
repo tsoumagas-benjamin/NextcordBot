@@ -426,7 +426,7 @@ class Music(commands.Cog, name="Music"):
 
         if search.startswith("https://"):
             if "list" in search:
-                playlist = await wavelink.YouTubePlaylist.search(query=search, return_first=True)
+                playlist = await wavelink.YouTubePlaylist.search(query=search)
                 await interaction.send(f"Added {playlist.name} to the queue.")
                 for track in playlist.tracks:
                     await vc.queue.put_wait(track)
