@@ -440,10 +440,8 @@ class Music(commands.Cog, name="Music"):
         
         if vc.queue.is_empty and not vc.is_playing():
             await vc.set_volume(15)
-            await interaction.send(f"Now playing: {track.title}.")
             await vc.play(track[0])
         else:
-            await interaction.send(f"Added {track.title} to the queue.")
             await vc.queue.put_wait(track[0])
 
         vc.interaction = interaction
