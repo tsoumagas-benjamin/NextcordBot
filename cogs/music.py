@@ -434,7 +434,7 @@ class Music(commands.Cog, name="Music"):
                     track = await vc.queue.get_wait()
                     return await vc.play(track)
             else:
-                track = await vc.node.get_tracks(query=search, cls=wavelink.Track, return_first=True)
+                track = await vc.node.get_tracks(query=search, cls=wavelink.Track)
         else:
             track = await wavelink.YouTubeTrack.search(search, return_first=True)
         
