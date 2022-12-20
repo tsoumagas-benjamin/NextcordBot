@@ -385,8 +385,8 @@ class Music(commands.Cog, name="Music"):
             return await interaction.send("Nothing is playing.")
 
         embed = nextcord.Embed(
-            title=f"Now playing {vc.track.title}",
-            description=f"Artist {vc.track.author}",
+            title=f"Now playing: {vc.track.title}",
+            description=f"Artist: {vc.track.author}",
             color=nextcord.Colour.from_rgb(225, 0, 255),
         )
         full_time = str(datetime.timedelta(seconds=vc.position))
@@ -439,6 +439,7 @@ class Music(commands.Cog, name="Music"):
         else:
             track = await wavelink.YouTubeTrack.search(search, return_first=True)
         
+        await interaction.send(f"Added {search} to the queue.")
         if vc.queue.is_empty and not vc.is_playing():
             await vc.set_volume(15)
             await vc.play(track[0])
