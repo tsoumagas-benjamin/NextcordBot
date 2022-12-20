@@ -83,7 +83,7 @@ class Music(commands.Cog, name="Music"):
         await self.bot.wait_until_ready()
         await wavelink.NodePool.create_node(
             bot=self.bot,
-            host="lavalink.oops.wtf",
+            host="ssl.freelavalink.ga",
             port=443,
             password="www.freelavalink.ga",
             https=True,
@@ -432,7 +432,6 @@ class Music(commands.Cog, name="Music"):
             if "list" in search:
                 playlist = await wavelink.YouTubePlaylist.search(query=search)
                 for track in playlist.tracks:
-                    await interaction.send(f"Added {playlist.name.title}.")
                     await vc.queue.put_wait(track)
                 if not vc.is_playing():
                     track = await vc.queue.get_wait()
@@ -441,7 +440,7 @@ class Music(commands.Cog, name="Music"):
             else:
                 track = await vc.node.get_tracks(query=search, cls=wavelink.Track)
         else:
-            track = await wavelink.YouTubeTrack.search(search)
+            track = await wavelink.YouTubeTrack.search(search, return_first=True)
         
         if vc.queue.is_empty and not vc.is_playing():
             await vc.set_volume(15)
