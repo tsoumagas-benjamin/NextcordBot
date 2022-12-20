@@ -432,6 +432,8 @@ class Music(commands.Cog, name="Music"):
                     await vc.queue.put_wait(track)
                 if not vc.is_playing():
                     track = await vc.queue.get_wait()
+                    await vc.set_volume(15)
+                    await interaction.send(f"Now playing {vc.track.title}")
                     return await vc.play(track)
             else:
                 track = await vc.node.get_tracks(query=search, cls=wavelink.Track)
@@ -440,6 +442,7 @@ class Music(commands.Cog, name="Music"):
         
         if vc.queue.is_empty and not vc.is_playing():
             await vc.set_volume(15)
+            await interaction.send(f"Now playing {vc.track[0].title}")
             await vc.play(track[0])
         else:
             await vc.queue.put_wait(track[0])
