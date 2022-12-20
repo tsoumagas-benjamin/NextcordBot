@@ -22,11 +22,11 @@ default_volume = 5
 mq_rounds = 10
 mq_duration = 30
 mq_leniency = 90
-player_score = {}
-score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))
-song_indices = []
-title_list = []
-artist_list = []
+# player_score = {}
+# score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))
+# song_indices = []
+# title_list = []
+# artist_list = []
 # mq_interaction: Interaction
 # mq_status = False
 
@@ -52,10 +52,14 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.mq_status = False
+        self.mq_channel = None
         self.mq_interaction = None
         self.song_indices = []
         self.player_dict = {}
+        self.player_score = {}
+        self.title_list = []
+        self.artist_list = []
+        self.score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))
         bot.loop.create_task(self.connect_nodes())
 
     async def connect_nodes(self):
@@ -157,29 +161,34 @@ class Music(commands.Cog, name="Music"):
         #Clear dictionary that stores player score
         self.player_dict = {}
         #Setup the embed to store game results
-        score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
+        self.score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
         #Make a list from available titles and artists
         titles = song_list.find({}, {"title":1, "_id":0})
         artists = song_list.find({}, {"artist":1, "_id":0})
-        title_list, artist_list = [], []
+        self.title_list, self.artist_list = [], []
         for t in titles:
-            title_list.append(t["title"])
+            self.title_list.append(t["title"])
         for a in artists:
-            artist_list.append(a["artist"])
-        print(title_list)
-        print(artist_list)
+            self.artist_list.append(a["artist"])
+        print(self.title_list)
+        print(self.artist_list)
         #Randomize songs for as many rounds as needed
         index_list = range(0,int(song_list.count_documents({}))+1)
         self.song_indices = random.sample(index_list, mq_rounds)
-
         #Enable music quiz responses to be read in the channel and declare start interaction
-        self.mq_status = True
+        self.mq_channel = interaction.channel
         self.mq_interaction = interaction
+        #Added for testing purposes
+        await interaction.send(self.player_dict)
+        await interaction.send(self.score_embed)
+        await interaction.send(self.title_list)
+        await interaction.send(self.song_indices)
+
 
     @commands.Cog.listener('on_message')
     async def mq(self, message):
         # If the message is from a bot or music quiz is inactive, don't react
-        if message.author.bot or self.mq_status == False:
+        if message.author.bot or self.mq_channel != message.channel:
             return
 
         channel = message.channel
@@ -272,11 +281,11 @@ class Music(commands.Cog, name="Music"):
             artist_flag = ''
             #Make the correct song the first one from our random list
             index = self.song_indices[i]
-            correct_title = title_list[index]
-            correct_artist = artist_list[index]
+            correct_title = self.title_list[index]
+            correct_artist = self.artist_list[index]
             #Play the song at volume
-            print("Playing " + title_list[index] + " by " + artist_list[index])
-            await mq_play(self.mq_interaction, title_list[index]+" by "+artist_list[index])
+            print("Playing " + self.title_list[index] + " by " + self.artist_list[index])
+            await mq_play(self.mq_interaction, self.title_list[index]+" by "+ self.artist_list[index])
             try:
                 #If title isn't guessed compare guess to the title
                 if title_flag == '':
@@ -295,29 +304,29 @@ class Music(commands.Cog, name="Music"):
                 await mq_stop(self.mq_interaction)
                 await channel.send(f"Successfully guessed {title_case(correct_title)} by {title_case(correct_artist)}")
                 #Sort player score dictionary from highest to lowest
-                sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
+                sorted_list = sorted(self.player_score.items(), key = lambda x:x[1], reverse=True)
                 sorted_dict = dict(sorted_list)
                 #Add each player and their score to game results embed
                 for key, value in sorted_dict.items():
                     score = str(value) + " pts"
-                    score_embed.add_field(name=key, value=score)
+                    self.score_embed.add_field(name=key, value=score)
                 #Send game results embed
-                await ctx.send(embed=score_embed)
+                await ctx.send(embed=self.score_embed)
                 for key, value in sorted_dict.items():
-                    score_embed.remove_field(0)
+                    self.score_embed.remove_field(0)
         #Announce end of the game
         await channel.send("Music quiz is done.")
         #Sort player score dictionary from highest to lowest
-        sorted_list = sorted(player_score.items(), key = lambda x:x[1], reverse=True)
+        sorted_list = sorted(self.player_score.items(), key = lambda x:x[1], reverse=True)
         sorted_dict = dict(sorted_list)
         #Add each player and their score to game results embed
         for key, value in sorted_dict.items():
             score = str(value) + " pts"
-            score_embed.add_field(name=key, value=score)
+            self.score_embed.add_field(name=key, value=score)
         #Send game results embed and leave voice channel
-        await ctx.send(embed=score_embed)
+        await ctx.send(embed=self.score_embed)
         await mq_disconnect(self.mq_interaction)
-        self.mq_status = False
+        self.mq_channel = None
         return
  
     @nextcord.slash_command()
