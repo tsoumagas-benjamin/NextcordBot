@@ -421,10 +421,6 @@ class Music(commands.Cog, name="Music"):
             vc: wavelink.Player = await interaction.user.voice.channel.connect(
                 cls=wavelink.Player
             )
-        elif not getattr(interaction.user.voice, "channel", None):
-            return await interaction.send("Join a voice channel first")
-        elif interaction.user.voice.channel != interaction.guild.me.voice.channel:
-            return await interaction.send("We have to be in the same voice channel.")
         else:
             vc: wavelink.Player = interaction.guild.voice_client
 
