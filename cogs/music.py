@@ -99,21 +99,19 @@ class Music(commands.Cog, name="Music"):
         self, player: wavelink.Player, track: wavelink.YouTubeTrack, reason
     ):
         interaction = player.interaction
-        vc: player = interaction.guild.voice_client
 
-        if vc.loop:
-            return await vc.play(track)
+        if player.loop:
+            return await player.play(track)
 
         # If queue finishes and is empty
-        if vc.queue.is_empty:
+        if player.queue.is_empty:
             await asyncio.sleep(120)  # Disconnect after 2 minutes of inactivity
-            while vc.is_playing():
-                break
-            else:
-                return await vc.disconnect()
 
-        next_song = vc.queue.get()
-        await vc.play(next_song)
+            if not player.is_playing():
+                return await player.disconnect()
+
+        next_song = await player.queue.get_wait()
+        await player.play(next_song)
         await interaction.send(f"Now playing: {next_song.title}")
 
     @nextcord.slash_command()
@@ -365,9 +363,9 @@ class Music(commands.Cog, name="Music"):
 
     @nextcord.slash_command()
     async def mq_swap(self, interaction: Interaction):
-        """Debugging command to manually switch music quiz status"""
-        self.mq_status = not self.mq_status
-        await interaction.send(f"Status is {self.mq_status}")
+        """Debugging command to manually switch music quiz channel"""
+        self.mq_channel = None
+        await interaction.send(f"Status is {self.mq_channel}")
 
     @nextcord.slash_command()
     async def nowplaying(self, interaction: Interaction):
@@ -431,9 +429,7 @@ class Music(commands.Cog, name="Music"):
                 for track in playlist.tracks:
                     await vc.queue.put_wait(track)
                 if not vc.is_playing():
-                    track = await vc.queue.get_wait()
-                    await vc.set_volume(15)
-                    return await vc.play(track)
+                    return await vc.set_volume(15)
             else:
                 track = await vc.node.get_tracks(query=search, cls=wavelink.Track)
         else:
