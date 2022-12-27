@@ -440,9 +440,10 @@ class Music(commands.Cog, name="Music"):
                 playlist = await wavelink.YouTubePlaylist.search(query=search)
                 await interaction.send(f"Added {playlist.name} to the queue.")
                 for track in playlist.tracks:
+                    if not vc.is_playing():
+                        await vc.set_volume(15)
+                        await vc.play(track)
                     await vc.queue.put_wait(track)
-                if not vc.is_playing():
-                    return await vc.set_volume(15)
             else:
                 track = await vc.node.get_tracks(query=search, cls=wavelink.Track)
         else:
