@@ -104,15 +104,15 @@ class Music(commands.Cog, name="Music"):
     ):
         interaction = player.interaction
 
-        if player.loop:
-            return await player.play(track)
+        # if player.loop:
+        #     return await player.play(track)
 
-        # If queue finishes and is empty
-        if player.queue.is_empty:
-            await asyncio.sleep(120)  # Disconnect after 2 minutes of inactivity
+        # # If queue finishes and is empty
+        # if player.queue.is_empty:
+        #     await asyncio.sleep(120)  # Disconnect after 2 minutes of inactivity
 
-            if not player.is_playing():
-                return await player.disconnect()
+        #     if not player.is_playing():
+        #         return await player.disconnect()
 
         next_song = await player.queue.get_wait()
         await player.play(next_song)
