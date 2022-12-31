@@ -114,9 +114,12 @@ class Music(commands.Cog, name="Music"):
         #     if not player.is_playing():
         #         return await player.disconnect()
 
-        next_song = await player.queue.get_wait()
-        await player.play(next_song)
-        await interaction.send(f"Now playing: {next_song.title}")
+        if not player.queue.is_empty():
+            next_song = await player.queue.get_wait()
+            await player.play(next_song)
+            await interaction.send(f"Now playing: {next_song.title}")
+        else:
+            await player.stop()
 
     @nextcord.slash_command()
     async def disconnect(self, interaction: Interaction):
