@@ -85,13 +85,13 @@ class Music(commands.Cog, name="Music"):
         self.correct_artist = None
         self.score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))    
 
-    @commands.Cog.listener
+    @commands.Cog.listener()
     async def on_ready(self):
         lavalink.set_user_id(self.bot.user.id)
         lavalink.set_event_loop(self.bot.loop)
         lavalink.connect()
     
-    @commands.Cog.listener
+    @commands.Cog.listener()
     async def on_socket_raw_receive(msg):
         data = json.loads(msg)
 
