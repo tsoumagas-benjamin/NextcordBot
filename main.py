@@ -1,5 +1,4 @@
 import nextcord, os, pymongo, random, config
-from NextcordBot.cogs.music import Music
 from nextcord.ext import commands
 from log import log
 
