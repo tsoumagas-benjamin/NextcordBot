@@ -1,8 +1,7 @@
-import nextcord, pymongo, os, re, datetime, random, asyncio
+import nextcord, pymongo, os, json, lavaplayer, re, datetime, random, asyncio
 from nextcord import Interaction
-from nextcord.ext import commands, application_checks, lava
+from nextcord.ext import commands
 from fuzzywuzzy import fuzz
-from contextlib import suppress
 
 # Set up our mongodb client
 client = pymongo.MongoClient(os.getenv("CONN_STRING"))
@@ -30,8 +29,9 @@ score_embed = nextcord.Embed(
 song_indices = []
 title_list = []
 artist_list = []
+# mq_interaction: Interaction
+# mq_status = False
 
-url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 def title_case(s):
     return re.sub(
@@ -58,68 +58,11 @@ def fuzz_check(s1, s2):
         >= mq_leniency
     )
 
-class LavalinkVoiceClient(nextcord.VoiceClient):
-    """
-    This is the preferred way to handle external voice sending
-    This client will be created via a cls in the connect method of the channel
-    see the following documentation:
-    https://nextcord.readthedocs.io/en/latest/api.html#voiceprotocol
-    """
-
-    def __init__(self, client: nextcord.Client, channel: nextcord.abc.Connectable):
-        self.client = client
-        self.channel = channel
-        # ensure there exists a client already
-        if hasattr(self.client, "lavalink"):
-            self.lavalink = self.client.lavalink
-        else:
-            self.client.lavalink = lava.Client(client.user.id)
-            self.client.lavalink.add_node(
-                "lavalink.botsuniversity.ml", "443", "mathiscool", "us", "default-node"
-            )
-            self.lavalink = self.client.lavalink
-
-    async def on_voice_server_update(self, data):
-        # the data needs to be transformed before being handed down to
-        # voice_update_handler
-        lavalink_data = {"t": "VOICE_SERVER_UPDATE", "d": data}
-        await self.lavalink.voice_update_handler(lavalink_data)
-
-    async def on_voice_state_update(self, data):
-        # the data needs to be transformed before being handed down to
-        # voice_update_handler
-        lavalink_data = {"t": "VOICE_STATE_UPDATE", "d": data}
-        await self.lavalink.voice_update_handler(lavalink_data)
-
-    async def connect(self, *, timeout: float, reconnect: bool) -> None:
-        """
-        Connect the bot to the voice channel and create a player_manager
-        if it doesn't exist yet.
-        """
-        # ensure there is a player_manager when creating a new voice_client
-        self.lavalink.player_manager.create(guild_id=self.channel.guild.id)
-        await self.channel.guild.change_voice_state(channel=self.channel)
-
-    async def disconnect(self, *, force: bool) -> None:
-        """
-        Handles the disconnect.
-        Cleans up running player and leaves the voice client.
-        """
-        player = self.lavalink.player_manager.get(self.channel.guild.id)
-
-        # no need to disconnect if we are not connected
-        if not force and not player.is_connected:
-            return
-
-        # None means disconnect
-        await self.channel.guild.change_voice_state(channel=None)
-
-        # update the channel_id of the player to None
-        # this must be done because the on_voice_state_update that
-        # would set channel_id to None doesn't get dispatched after the
-        # disconnect
-        player.channel_id = None
-        self.cleanup()
+lavalink = lavaplayer.Lavalink(
+    host="lavalink.botsuniversity.ml",  # Lavalink host
+    port=443,  # Lavalink port
+    password="mathiscool",  # Lavalink password
+)
 
 # TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
@@ -142,569 +85,381 @@ class Music(commands.Cog, name="Music"):
         self.correct_artist = None
         self.score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))    
 
-        if not hasattr(
-            bot, "lavalink"
-        ):  # This ensures the client isn't overwritten during cog reloads.
-            self.bot.lavalink = lava.Client("bot id here!")
-            self.bot.lavalink.add_node(
-                "lavalink.botsuniversity.ml", "443", "mathiscool", "us", "default-node"
-            )  # Host, Port, Password, Region, Name
+    @commands.Cog.listener
+    async def on_ready(self):
+        lavalink.set_user_id(self.bot.user.id)
+        lavalink.set_event_loop(self.bot.loop)
+        lavalink.connect()
+    
+    @commands.Cog.listener
+    async def on_socket_raw_receive(msg):
+        data = json.loads(msg)
 
-        lava.add_event_hook(self.track_hook)
+        if not data or not data["t"]:
+            return
+        if data["t"] == "VOICE_SERVER_UPDATE":
+            guild_id = int(data["d"]["guild_id"])
+            endpoint = data["d"]["endpoint"]
+            token = data["d"]["token"]
 
-    def cog_unload(self):
-        """Cog unload handler. This removes any event hooks that were registered."""
-        self.bot.lavalink._event_hooks.clear()
+            await lavalink.raw_voice_server_update(guild_id, endpoint, token)
 
-    async def cog_before_invoke(self, ctx):
-        """Command before-invoke handler."""
-        guild_check = ctx.guild is not None
-        #  This is essentially the same as `@commands.guild_only()`
-        #  except it saves us repeating ourselves (and also a few lines).
+        elif data["t"] == "VOICE_STATE_UPDATE":
+            if not data["d"]["channel_id"]:
+                channel_id = None
+            else:
+                channel_id = int(data["d"]["channel_id"])
 
-        if guild_check:
-            await self.ensure_voice(ctx)
-            #  Ensure that the bot and command author share a mutual voicechannel.
+            guild_id = int(data["d"]["guild_id"])
+            user_id = int(data["d"]["user_id"])
+            session_id = data["d"]["session_id"]
 
-        return guild_check
-
-    async def cog_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandInvokeError):
-            await ctx.send(error.original)
-            # The above handles errors thrown in this cog and shows them to the user.
-            # This shouldn't be a problem as the only errors thrown in this cog are from `ensure_voice`
-            # which contain a reason string, such as "Join a voicechannel" etc. You can modify the above
-            # if you want to do things differently.
-
-    async def ensure_voice(self, ctx):
-        """This check ensures that the bot and command author are in the same voicechannel."""
-        player = self.bot.lavalink.player_manager.create(
-            ctx.guild.id, endpoint=str(ctx.guild.region)
-        )
-        # Create returns a player if one exists, otherwise creates.
-        # This line is important because it ensures that a player always exists for a guild.
-
-        # Most people might consider this a waste of resources for guilds that aren't playing, but this is
-        # the easiest and simplest way of ensuring players are created.
-
-        # These are commands that require the bot to join a voicechannel (i.e. initiating playback).
-        # Commands such as volume/skip etc don't require the bot to be in a voicechannel so don't need listing here.
-        should_connect = ctx.command.name in ("play",)
-
-        if not ctx.author.voice or not ctx.author.voice.channel:
-            # Our cog_command_error handler catches this and sends it to the voicechannel.
-            # Exceptions allow us to "short-circuit" command invocation via checks so the
-            # execution state of the command goes no further.
-            raise commands.CommandInvokeError("Join a voicechannel first.")
-
-        if not player.is_connected:
-            if not should_connect:
-                raise commands.CommandInvokeError("Not connected.")
-
-            permissions = ctx.author.voice.channel.permissions_for(ctx.me)
-
-            if (
-                not permissions.connect or not permissions.speak
-            ):  # Check user limit too?
-                raise commands.CommandInvokeError(
-                    "I need the `CONNECT` and `SPEAK` permissions."
-                )
-
-            player.store("channel", ctx.channel.id)
-            await ctx.author.voice.channel.connect(cls=LavalinkVoiceClient)
-        else:
-            if int(player.channel_id) != ctx.author.voice.channel.id:
-                raise commands.CommandInvokeError("You need to be in my voicechannel.")
-
-    async def track_hook(self, event):
-        if isinstance(event, lava.events.QueueEndEvent):
-            # When this track_hook receives a "QueueEndEvent" from lava
-            # it indicates that there are no tracks left in the player's queue.
-            # To save on resources, we can tell the bot to disconnect from the voicechannel.
-            guild_id = int(event.player.guild_id)
-            guild = self.bot.get_guild(guild_id)
-            await guild.voice_client.disconnect(force=True)   
+            await lavalink.raw_voice_state_update(
+                guild_id,
+                user_id,
+                session_id,
+                channel_id,
+            )
 
     @nextcord.slash_command(aliases=["join"])
-    async def connect(self, interaction: Interaction, *, channel: nextcord.VoiceChannel = None):
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if player.is_connected:
-            # We can't connect, if we're already connected.
-            return await interaction.send("Already connected.")
-        
-        if channel is None or not interaction.user.voice:
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not connect the bot.
-            return await interaction.send("No channel provided!")
-        
-        # Connect to the voice channel.
-        await interaction.guild.voice_client.connect(force=True)
-        await interaction.send("*⃣ | Connected.")
+    async def connect(self, interaction: Interaction):
+        """Connects the bot to the voice channel."""
+        if not interaction.user.voice:
+            await interaction.response.send_message("You are not in a voice channel!")
+            return
+        await interaction.guild.change_voice_state(
+            channel=interaction.user.voice.channel, self_deaf=True, self_mute=False
+        )
+        await lavalink.wait_for_connection(interaction.guild.id)
+        await interaction.response.send_message("Joined the voice channel.")
 
     @nextcord.slash_command(aliases=["leave"])
     async def disconnect(self, interaction: Interaction):
         """Disconnects the bot from the voice channel."""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if not player.is_connected:
-            # We can't disconnect, if we're not connected.
-            return await interaction.send("Not connected.")
-
-        if not interaction.user.voice or (
-            player.is_connected
-            and interaction.user.voice.channel.id != int(player.channel_id)
-        ):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not disconnect the bot.
-            return await interaction.send("You're not in my voicechannel!")
-
-        # Clear the queue to ensure old tracks don't start playing
-        # when someone else queues something.
-        player.queue.clear()
-        # Stop the current track so Lavalink consumes less resources.
-        await player.stop()
-        # Disconnect from the voice channel.
-        await interaction.guild.voice_client.disconnect(force=True)
-        await interaction.send("*⃣ | Disconnected.")
+        await interaction.guild.change_voice_state(channel=None)
+        await lavalink.wait_for_remove_connection(interaction.guild.id)
+        await interaction.response.send_message("Left the voice channel.")
 
     @nextcord.slash_command()
-    async def loop(self, interaction: Interaction, selection: int):
-        """0 to turn off looping, 1 to loop current song, 2 to loop entire queue"""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if not interaction.voice_client:
-            # We can't loop, if we're not connected.
-            return await interaction.send('Not connected.')
-        if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not loop the bot.
-            return await interaction.send('You\'re not in my voicechannel!')
-
-        # Set the correct loop.
-        await player.set_loop(selection)
-        if player.loop == player.LOOP_NONE:
-            await interaction.send('Loop disabled.')
-        elif player.loop == player.LOOP_SINGLE:
-            await interaction.send(f'Looping {player.current.title}')
-        elif player.loop == player.LOOP_QUEUE:
-            await interaction.send('Looping entire queue.')
-
-    @nextcord.slash_command()
-    async def music_quiz(self, interaction: Interaction):
-        """Starts music quiz."""
-        # Start of game message
-        await interaction.send(
-            f"Music quiz, {mq_rounds} rounds, {mq_duration} seconds each."
-        )
-        # Join user's voice channel
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-        channel = interaction.user.voice.channel
-        if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not disconnect the bot.
-            return await interaction.send('You\'re not in my voicechannel!')
-        await channel.connect()
-        await player.set_volume(default_volume)
-
-        # Clear dictionary that stores player score
-        self.player_dict = {}
-        # Setup the embed to store game results
-        self.score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
-        # Make a list from available titles and artists
-        titles = song_list.find({}, {"title":1, "_id":0})
-        artists = song_list.find({}, {"artist":1, "_id":0})
-        self.title_list, self.artist_list = [], []
-        for t in titles:
-            self.title_list.append(t["title"])
-        for a in artists:
-            self.artist_list.append(a["artist"])
-        print(self.title_list)
-        print(self.artist_list)
-        # Randomize songs for as many rounds as needed
-        index_list = range(0,int(song_list.count_documents({}))+1)
-        self.song_indices = random.sample(index_list, mq_rounds)
-        # Enable music quiz responses to be read in the channel and store start interaction
-        if self.mq_channel is None:
-            self.mq_channel = interaction.channel
+    async def loop(self, interaction: Interaction, loop: bool, queue: bool = False):
+        """Enable/Disable looping for the entire queue or a single song."""
+        if queue:
+            await lavalink.queue_repeat(interaction.guild.id, loop)
         else:
-            return await interaction.send("Music quiz is already active in another channel! Please try again later.")
-        self.mq_interaction = interaction
-        # Added for testing purposes
-        await interaction.send(self.player_dict)
-        await interaction.send(self.score_embed)
-        await interaction.send(self.title_list)
-        await interaction.send(self.song_indices)
+            await lavalink.repeat(interaction.guild.id, loop)
+        await interaction.response.send_message("Looped the queue.")
 
-        channel = self.mq_channel
+    # @nextcord.slash_command()
+    # async def music_quiz(self, interaction: Interaction):
+    #     """Starts music quiz."""
+    #     # Start of game message
+    #     await interaction.send(
+    #         f"Music quiz, {mq_rounds} rounds, {mq_duration} seconds each."
+    #     )
+    #     # Join user's voice channel
+    #     player = self.bot.lavalink.player_manager.get(interaction.guild.id)
+    #     channel = interaction.user.voice.channel
+    #     if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
+    #         # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
+    #         # may not disconnect the bot.
+    #         return await interaction.send('You\'re not in my voicechannel!')
+    #     await channel.connect()
+    #     await player.set_volume(default_volume)
+
+    #     # Clear dictionary that stores player score
+    #     self.player_dict = {}
+    #     # Setup the embed to store game results
+    #     self.score_embed.set_footer(icon_url = interaction.guild.icon.url, text = interaction.guild.name)
+    #     # Make a list from available titles and artists
+    #     titles = song_list.find({}, {"title":1, "_id":0})
+    #     artists = song_list.find({}, {"artist":1, "_id":0})
+    #     self.title_list, self.artist_list = [], []
+    #     for t in titles:
+    #         self.title_list.append(t["title"])
+    #     for a in artists:
+    #         self.artist_list.append(a["artist"])
+    #     print(self.title_list)
+    #     print(self.artist_list)
+    #     # Randomize songs for as many rounds as needed
+    #     index_list = range(0,int(song_list.count_documents({}))+1)
+    #     self.song_indices = random.sample(index_list, mq_rounds)
+    #     # Enable music quiz responses to be read in the channel and store start interaction
+    #     if self.mq_channel is None:
+    #         self.mq_channel = interaction.channel
+    #     else:
+    #         return await interaction.send("Music quiz is already active in another channel! Please try again later.")
+    #     self.mq_interaction = interaction
+    #     # Added for testing purposes
+    #     await interaction.send(self.player_dict)
+    #     await interaction.send(self.score_embed)
+    #     await interaction.send(self.title_list)
+    #     await interaction.send(self.song_indices)
+
+    #     channel = self.mq_channel
 
         
-        async def mq_disconnect(self, interaction: Interaction):
-            """Disconnects the bot from the voice channel."""
-            if not interaction.voice_client:
-                # We can't disconnect, if we're not connected.
-                return await interaction.send('Not connected.')
-            if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-                # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-                # may not disconnect the bot.
-                return await interaction.send('You\'re not in my voicechannel!')
+    #     async def mq_disconnect(self, interaction: Interaction):
+    #         """Disconnects the bot from the voice channel."""
+    #         if not interaction.voice_client:
+    #             # We can't disconnect, if we're not connected.
+    #             return await interaction.send('Not connected.')
+    #         if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
+    #             # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
+    #             # may not disconnect the bot.
+    #             return await interaction.send('You\'re not in my voicechannel!')
 
-            # Clear the queue to ensure old tracks don't start playing
-            # when someone else queues something.
-            player.queue.clear()
-            # Stop the current track so Lavalink consumes less resources.
-            await player.stop()
-            # Disconnect from the voice channel.
-            await interaction.voice_client.disconnect(force=True)
-            await interaction.send('*⃣ | Music Quiz has ended.')
+    #         # Clear the queue to ensure old tracks don't start playing
+    #         # when someone else queues something.
+    #         player.queue.clear()
+    #         # Stop the current track so Lavalink consumes less resources.
+    #         await player.stop()
+    #         # Disconnect from the voice channel.
+    #         await interaction.voice_client.disconnect(force=True)
+    #         await interaction.send('*⃣ | Music Quiz has ended.')
 
-        async def mq_play(self, interaction: Interaction, search: str):
-            """Plays a song in a voice channel."""
-            # Get the player for this guild from cache.
-            player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-            # Remove leading and trailing <>. <> may be used to suppress embedding links in Discord.
-            query = query.strip('<>')
+    #     async def mq_play(self, interaction: Interaction, search: str):
+    #         """Plays a song in a voice channel."""
+    #         # Get the player for this guild from cache.
+    #         player = self.bot.lavalink.player_manager.get(interaction.guild.id)
+    #         # Remove leading and trailing <>. <> may be used to suppress embedding links in Discord.
+    #         query = query.strip('<>')
 
-            # Check if the user input might be a URL. If it isn't, we can Lavalink do a YouTube search for it instead.
-            # SoundCloud searching is possible by prefixing "scsearch:" instead.
-            if not url_rx.match(query):
-                query = f'ytsearch:{query}'
+    #         # Check if the user input might be a URL. If it isn't, we can Lavalink do a YouTube search for it instead.
+    #         # SoundCloud searching is possible by prefixing "scsearch:" instead.
+    #         if not url_rx.match(query):
+    #             query = f'ytsearch:{query}'
 
-            # Get the results for the query from Lavalink.
-            results = await player.node.get_tracks(query)
+    #         # Get the results for the query from Lavalink.
+    #         results = await player.node.get_tracks(query)
 
-            # Results could be None if Lavalink returns an invalid response (non-JSON/non-200 (OK)).
-            # Alternatively, results.tracks could be an empty array if the query yielded no tracks.
-            if not results or not results.tracks:
-                return await interaction.send('Nothing found!')
+    #         # Results could be None if Lavalink returns an invalid response (non-JSON/non-200 (OK)).
+    #         # Alternatively, results.tracks could be an empty array if the query yielded no tracks.
+    #         if not results or not results.tracks:
+    #             return await interaction.send('Nothing found!')
 
-            # Valid loadTypes are:
-            #   TRACK_LOADED    - single video/direct URL)
-            #   PLAYLIST_LOADED - direct URL to playlist)
-            #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
-            #   NO_MATCHES      - query yielded no results
-            #   LOAD_FAILED     - most likely, the video encountered an exception during loading.
-            if results.load_type == 'PLAYLIST_LOADED':
-                tracks = results.tracks
-                for track in tracks:
-                    # Add all of the tracks from the playlist to the queue.
-                    player.add(track=track)
-            else:
-                track = results.tracks[0]
-                player.add(track=track)
+    #         # Valid loadTypes are:
+    #         #   TRACK_LOADED    - single video/direct URL)
+    #         #   PLAYLIST_LOADED - direct URL to playlist)
+    #         #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
+    #         #   NO_MATCHES      - query yielded no results
+    #         #   LOAD_FAILED     - most likely, the video encountered an exception during loading.
+    #         if results.load_type == 'PLAYLIST_LOADED':
+    #             tracks = results.tracks
+    #             for track in tracks:
+    #                 # Add all of the tracks from the playlist to the queue.
+    #                 player.add(track=track)
+    #         else:
+    #             track = results.tracks[0]
+    #             player.add(track=track)
 
-            # We don't want to call .play() if the player is playing as that will effectively skip
-            # the current track.
-            if not player.is_playing:
-                await player.play()
+    #         # We don't want to call .play() if the player is playing as that will effectively skip
+    #         # the current track.
+    #         if not player.is_playing:
+    #             await player.play()
 
-        for i in range(mq_rounds):
-            # Start of round
-            await asyncio.sleep(3)
-            await channel.send(f"Starting round {i+1}")
-            # Reset guess flags for each round
-            self.title_flag = ""
-            self.artist_flag = ""
-            # Make the correct song the first one from our random list
-            index = self.song_indices[i]
-            self.correct_title = self.title_list[index]
-            self.correct_artist = self.artist_list[index]
-            #Play the song at volume
-            print("Playing " + self.title_list[index] + " by " + self.artist_list[index])
-            await mq_play(self.mq_interaction, self.title_list[index]+" by "+ self.artist_list[index])
-        #Announce end of the game
-        await channel.send("Music quiz is done.")
-        #Sort player score dictionary from highest to lowest
-        sorted_list = sorted(self.player_score.items(), key = lambda x:x[1], reverse=True)
-        sorted_dict = dict(sorted_list)
-        # Add each player and their score to game results embed
-        for key, value in sorted_dict.items():
-            score = str(value) + " pts"
-            self.score_embed.add_field(name=key, value=score)
-        #Send game results embed and leave voice channel
-        await interaction.send(embed=self.score_embed)
-        await disconnect(self.mq_interaction)
-        self.mq_channel = None
-        return
+    #     for i in range(mq_rounds):
+    #         # Start of round
+    #         await asyncio.sleep(3)
+    #         await channel.send(f"Starting round {i+1}")
+    #         # Reset guess flags for each round
+    #         self.title_flag = ""
+    #         self.artist_flag = ""
+    #         # Make the correct song the first one from our random list
+    #         index = self.song_indices[i]
+    #         self.correct_title = self.title_list[index]
+    #         self.correct_artist = self.artist_list[index]
+    #         #Play the song at volume
+    #         print("Playing " + self.title_list[index] + " by " + self.artist_list[index])
+    #         await mq_play(self.mq_interaction, self.title_list[index]+" by "+ self.artist_list[index])
+    #     #Announce end of the game
+    #     await channel.send("Music quiz is done.")
+    #     #Sort player score dictionary from highest to lowest
+    #     sorted_list = sorted(self.player_score.items(), key = lambda x:x[1], reverse=True)
+    #     sorted_dict = dict(sorted_list)
+    #     # Add each player and their score to game results embed
+    #     for key, value in sorted_dict.items():
+    #         score = str(value) + " pts"
+    #         self.score_embed.add_field(name=key, value=score)
+    #     #Send game results embed and leave voice channel
+    #     await interaction.send(embed=self.score_embed)
+    #     await disconnect(self.mq_interaction)
+    #     self.mq_channel = None
+    #     return
         
-    @commands.Cog.listener("on_message")
-    async def mq(self, message):
-        # If the message is from a bot or not in an active music quiz channel, don't react
-        if message.author.bot or self.mq_channel != message.channel:
-            return
+    # @commands.Cog.listener("on_message")
+    # async def mq(self, message):
+    #     # If the message is from a bot or not in an active music quiz channel, don't react
+    #     if message.author.bot or self.mq_channel != message.channel:
+    #         return
 
-        channel = message.channel
+    #     channel = message.channel
         
-        async def mq_stop(self, interaction: Interaction):
-            """Stops the current song."""
-            player = self.bot.lavalink.player_manager.get(interaction.guild.id)
+    #     async def mq_stop(self, interaction: Interaction):
+    #         """Stops the current song."""
+    #         player = self.bot.lavalink.player_manager.get(interaction.guild.id)
 
-            if not interaction.voice_client:
-                # We can't stop, if we're not connected.
-                return await interaction.send('Not connected.')
-            if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-                # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-                # may not stop the bot.
-                return await interaction.send('You\'re not in my voicechannel!')
+    #         if not interaction.voice_client:
+    #             # We can't stop, if we're not connected.
+    #             return await interaction.send('Not connected.')
+    #         if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
+    #             # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
+    #             # may not stop the bot.
+    #             return await interaction.send('You\'re not in my voicechannel!')
 
-            # Stop the current track so Lavalink consumes less resources.
-            await player.stop()
-            await interaction.send('*⃣ | Stopped playing music.')
+    #         # Stop the current track so Lavalink consumes less resources.
+    #         await player.stop()
+    #         await interaction.send('*⃣ | Stopped playing music.')
 
-        # Check if user response matches the correct title
-        def title_check(m):
-            s1 = "".join(e for e in m.content.lower() if e.isalnum())
-            s2 = "".join(e for e in self.correct_title.lower() if e.isalnum())
-            percent_correct = fuzz.token_set_ratio(s1, s2)
-            if percent_correct >= mq_leniency:
-                increment_score(m.author.name)
-                return str(m.author.name)
-            return ""
+    #     # Check if user response matches the correct title
+    #     def title_check(m):
+    #         s1 = "".join(e for e in m.content.lower() if e.isalnum())
+    #         s2 = "".join(e for e in self.correct_title.lower() if e.isalnum())
+    #         percent_correct = fuzz.token_set_ratio(s1, s2)
+    #         if percent_correct >= mq_leniency:
+    #             increment_score(m.author.name)
+    #             return str(m.author.name)
+    #         return ""
 
-        # Check if user response matches the correct artist
-        def artist_check(m):
-            s1 = "".join(e for e in m.content.lower() if e.isalnum())
-            s2 = "".join(e for e in self.correct_artist.lower() if e.isalnum())
-            percent_correct = fuzz.token_set_ratio(s1, s2)
-            if percent_correct >= mq_leniency:
-                increment_score(m.author.name)
-                return str(m.author.name)
-            return ""
+    #     # Check if user response matches the correct artist
+    #     def artist_check(m):
+    #         s1 = "".join(e for e in m.content.lower() if e.isalnum())
+    #         s2 = "".join(e for e in self.correct_artist.lower() if e.isalnum())
+    #         percent_correct = fuzz.token_set_ratio(s1, s2)
+    #         if percent_correct >= mq_leniency:
+    #             increment_score(m.author.name)
+    #             return str(m.author.name)
+    #         return ""
 
-        # Check if title and artist have been guessed
-        def mq_check(m):
-            if (self.title_flag != None) and (self.artist_flag != None):
-                if self.title_flag == self.artist_flag:
-                    increment_score(m.author.name)
-                return True
+    #     # Check if title and artist have been guessed
+    #     def mq_check(m):
+    #         if (self.title_flag != None) and (self.artist_flag != None):
+    #             if self.title_flag == self.artist_flag:
+    #                 increment_score(m.author.name)
+    #             return True
            
-        try:
-            # If title isn't guessed compare guess to the title
-            if self.title_flag == "":
-                self.title_flag = await client.wait_for("message", check=title_check)
-            # If artist isn't guessed compare guess to the artist
-            if self.artist_flag == "":
-                self.artist_flag = await client.wait_for("message", check=artist_check)
-            # End round when title and artist are guessed
-            await client.wait_for("message", check=mq_check, timeout=mq_duration)
-        except asyncio.TimeoutError:
-            # Stop the round if users don't guess in time
-            await mq_stop(self.mq_interaction)
-            await channel.send(
-                f"Round over.\nTitle: {title_case(self.correct_title)}\nArtist: {title_case(self.correct_artist)}."
-            )
-        else:
-            # Stop the round and announce the round winner
-            await mq_stop(self.mq_interaction)
-            await channel.send(f"Successfully guessed {title_case(self.correct_title)} by {title_case(self.correct_artist)}")
-            #Sort player score dictionary from highest to lowest
-            sorted_list = sorted(self.player_score.items(), key = lambda x:x[1], reverse=True)
-            sorted_dict = dict(sorted_list)
-            # Add each player and their score to game results embed
-            for key, value in sorted_dict.items():
-                score = str(value) + " pts"
-                self.score_embed.add_field(name=key, value=score)
-            #Send game results embed
-            await self.mq_interaction.send(embed=self.score_embed)
-            for key, value in sorted_dict.items():
-                self.score_embed.remove_field(0)
+    #     try:
+    #         # If title isn't guessed compare guess to the title
+    #         if self.title_flag == "":
+    #             self.title_flag = await client.wait_for("message", check=title_check)
+    #         # If artist isn't guessed compare guess to the artist
+    #         if self.artist_flag == "":
+    #             self.artist_flag = await client.wait_for("message", check=artist_check)
+    #         # End round when title and artist are guessed
+    #         await client.wait_for("message", check=mq_check, timeout=mq_duration)
+    #     except asyncio.TimeoutError:
+    #         # Stop the round if users don't guess in time
+    #         await mq_stop(self.mq_interaction)
+    #         await channel.send(
+    #             f"Round over.\nTitle: {title_case(self.correct_title)}\nArtist: {title_case(self.correct_artist)}."
+    #         )
+    #     else:
+    #         # Stop the round and announce the round winner
+    #         await mq_stop(self.mq_interaction)
+    #         await channel.send(f"Successfully guessed {title_case(self.correct_title)} by {title_case(self.correct_artist)}")
+    #         #Sort player score dictionary from highest to lowest
+    #         sorted_list = sorted(self.player_score.items(), key = lambda x:x[1], reverse=True)
+    #         sorted_dict = dict(sorted_list)
+    #         # Add each player and their score to game results embed
+    #         for key, value in sorted_dict.items():
+    #             score = str(value) + " pts"
+    #             self.score_embed.add_field(name=key, value=score)
+    #         #Send game results embed
+    #         await self.mq_interaction.send(embed=self.score_embed)
+    #         for key, value in sorted_dict.items():
+    #             self.score_embed.remove_field(0)
 
-    @nextcord.slash_command()
-    async def mq_swap(self, interaction: Interaction):
-        """Debugging command to manually switch music quiz channel"""
-        self.mq_channel = None
-        await interaction.send(f"Status is {self.mq_channel}")
+    # @nextcord.slash_command()
+    # async def mq_swap(self, interaction: Interaction):
+    #     """Debugging command to manually switch music quiz channel"""
+    #     self.mq_channel = None
+    #     await interaction.send(f"Status is {self.mq_channel}")
 
     @nextcord.slash_command()
     async def nowplaying(self, interaction: Interaction):
         """Returns the currently playing song"""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if not interaction.voice_client:
-            # We can't get the current song, if we're not connected.
-            return await interaction.send('Not connected.')
-        if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not query the bot.
-            return await interaction.send('You\'re not in my voicechannel!')
-
-        if not player.is_playing():
-            return await interaction.send("Nothing is playing.")
+        queue = await lavalink.queue(interaction.guild.id)
+        current_song = queue[0]
+        if not queue:
+            return await interaction.response.send_message("No tracks in queue.")
 
         embed = nextcord.Embed(
-            title=f"Now playing: {player.current.title}",
-            description=f"Artist: {player.current.author}",
+            title=f"Now playing: {current_song.title}",
+            description=f"Artist: {current_song.author}",
             color=nextcord.Colour.from_rgb(225, 0, 255),
         )
         embed.add_field(
-            name="Duration", value=f"{str(datetime.timedelta(seconds=player.current.duration))}"
+            name="Duration", value=f"{str(datetime.timedelta(seconds=current_song.length))}"
         )
-        embed.add_field(name="Song URL", value=f"[Click Here]({str(player.current.uri)})")
+        embed.add_field(name="Song URL", value=f"[Click Here]({str(current_song.uri)})")
 
         return await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def pause(self, interaction: Interaction):
         """Pauses the current song."""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if not player.is_connected:
-            # We can't pause, if we're not connected.
-            return await interaction.send("Not connected.")
-
-        if not interaction.user.voice or (
-            player.is_connected
-            and interaction.user.voice.channel.id != int(player.channel_id)
-        ):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not pause the bot.
-            return await interaction.send("You're not in my voicechannel!")
-
-        # Pause the current track.
-        await player.pause()
-        await interaction.send("*⃣ | Paused.")
+        await lavalink.pause(interaction.guild.id, True)
+        await interaction.response.send_message("Paused the track.")
 
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, search: str):
         """Plays a song in a voice channel."""
-        # Get the player for this guild from cache.
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-        # Remove leading and trailing <>. <> may be used to suppress embedding links in nextcord.
-        query = query.strip("<>")
-
-        # Check if the user input might be a URL. If it isn't, we can Lavalink do a YouTube search for it instead.
-        # SoundCloud searching is possible by prefixing "scsearch:" instead.
-        if not url_rx.match(query):
-            query = f"ytsearch:{query}"
-
-        # Get the results for the query from Lavalink.
-        results = await player.node.get_tracks(query)
-
-        # Results could be None if Lavalink returns an invalid response (non-JSON/non-200 (OK)).
-        # ALternatively, resullts['tracks'] could be an empty array if the query yielded no tracks.
-        if not results or not results["tracks"]:
-            return await interaction.send("Nothing found!")
-
-        embed = nextcord.Embed(color=nextcord.Color.blurple())
-
-        # Valid loadTypes are:
-        #   TRACK_LOADED    - single video/direct URL)
-        #   PLAYLIST_LOADED - direct URL to playlist)
-        #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
-        #   NO_MATCHES      - query yielded no results
-        #   LOAD_FAILED     - most likely, the video encountered an exception during loading.
-        if results["loadType"] == "PLAYLIST_LOADED":
-            tracks = results["tracks"]
-
-            for track in tracks:
-                # Add all of the tracks from the playlist to the queue.
-                player.add(requester=interaction.user.id, track=track)
-
-            embed.title = "Playlist Enqueued!"
-            embed.description = (
-                f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
+        tracks = await lavalink.auto_search_tracks(search)
+        if not tracks:
+            return await interaction.response.send_message("No results found.")
+        elif isinstance(tracks, lavaplayer.TrackLoadFailed):
+            await interaction.response.send_message(f"Error loading track, Try again later.\n```{tracks.message}```")
+            return
+        elif isinstance(tracks, lavaplayer.PlayList):
+            await interaction.response.send_message(
+                "Playlist found, Adding to queue, Please wait..."
             )
-        else:
-            track = results["tracks"][0]
-            embed.title = "Track Enqueued"
-            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
-
-            # You can attach additional information to audiotracks through kwargs, however this involves
-            # constructing the AudioTrack class yourself.
-            track = lava.models.AudioTrack(track, interaction.user.id, recommended=True)
-            player.add(requester=interaction.user.id, track=track)
-
-        await interaction.send(embed=embed)
-
-        # We don't want to call .play() if the player is playing as that will effectively skip
-        # the current track.
-        if not player.is_playing:
-            await player.play()
+            await lavalink.add_to_queue(
+                interaction.guild.id, tracks.tracks, interaction.user.id
+            )
+            await interaction.edit_original_message(
+                content=f"Added to queue, tracks: {len(tracks.tracks)}, name: {tracks.name}"
+            )
+            return
+        await lavalink.play(interaction.guild.id, tracks[0], interaction.user.id)
+        await interaction.response.send_message(f"Now playing: {tracks[0].title}")
 
     @nextcord.slash_command()
     async def queue(self, interaction: Interaction):
         """Returns songs in the queue."""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if not interaction.voice_client:
-            # We can't get the queue, if we're not connected.
-            return await interaction.send('Not connected.')
-        if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not query the bot.
-            return await interaction.send('You\'re not in my voicechannel!')
-
-        if not player.queue:
-            return await interaction.send("Queue is empty.")
-
-        embed = nextcord.Embed(
-            title="Queue", color=nextcord.Colour.from_rgb(225, 0, 255)
-        )
-        queue = player.queue
-        song_count = 0
-        for song in queue:
-            song_count += 1
-            embed.add_field(name=f"{song_count}.", value=f"`{song.title}`")
-
-        return await interaction.send(embed=embed)
+        queue = await lavalink.queue(interaction.guild.id)
+        if not queue:
+            return await interaction.response.send_message("No tracks in queue.")
+        tracks = [f"**{i + 1}.** {t.title}" for (i, t) in enumerate(queue)]
+        await interaction.response.send_message("\n".join(tracks))
 
     @nextcord.slash_command()
     async def resume(self, interaction: Interaction):
         """Resumes the current song."""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
+        await lavalink.pause(interaction.guild.id, False)
+        await interaction.response.send_message("Resumed the track.")
 
-        if not player.is_connected:
-            # We can't resume, if we're not connected.
-            return await interaction.send("Not connected.")
-
-        if not interaction.user.voice or (
-            player.is_connected
-            and interaction.user.voice.channel.id != int(player.channel_id)
-        ):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not resume the bot.
-            return await interaction.send("You're not in my voicechannel!")
-
-        # Pause the current track.
-        await player.resume()
-        await interaction.send("*⃣ | Resumed.")
+    @nextcord.slash_command()
+    async def resume(self, interaction: Interaction):
+        """Shuffles the current queue."""
+        await lavalink.shuffle(interaction.guild.id)
+        await interaction.response.send_message("Shuffled the queue.")
 
     @nextcord.slash_command()
     async def skip(self, interaction: Interaction):
         """Skips the current song."""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
+        await lavalink.skip(interaction.guild.id)
+        await interaction.response.send_message("Skipped the track.")
 
-        if not interaction.voice_client:
-            # We can't skip, if we're not connected.
-            return await interaction.send('Not connected.')
-        if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not skip the bot.
-            return await interaction.send('You\'re not in my voicechannel!')
-
-        # Skip the current track.
-        await player.skip()
-        await interaction.send(f'*⃣ | Skipped {player.current.title}.')
+    @nextcord.slash_command()
+    async def stop(self, interaction: Interaction):
+        await lavalink.stop(interaction.guild.id)
+        await interaction.response.send_message("Stopped the track.")
 
     @nextcord.slash_command()
     async def volume(self, interaction: Interaction, volume: int):
         """Changes the music volume."""
-        player = self.bot.lavalink.player_manager.get(interaction.guild.id)
-
-        if not interaction.voice_client:
-            # We can't change volume, if we're not connected.
-            return await interaction.send('Not connected.')
-        if not interaction.author.voice or (player.is_connected and interaction.author.voice.channel.id != int(player.channel_id)):
-            # Abuse prevention. Users not in voice channels, or not in the same voice channel as the bot
-            # may not change the bot's volume.
-            return await interaction.send('You\'re not in my voicechannel!')
-
-        # Set the new volume:
-        if volume < 0 or volume > 100:
-            return await interaction.send("Volume must be between 0 and 100.")
-        await player.set_volume(volume)
-        await interaction.send(f'*⃣ | Set volume to {volume}%.')
-
+        await lavalink.volume(interaction.guild.id, volume)
+        await interaction.response.send_message(f"Set the volume to {volume}%.")
 
 def setup(bot):
     bot.add_cog(Music(bot))
