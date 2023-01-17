@@ -125,20 +125,20 @@ class Music(commands.Cog, name="Music"):
     async def connect(self, interaction: Interaction):
         """Connects the bot to the voice channel."""
         if not interaction.user.voice:
-            await interaction.response.send_message("You are not in a voice channel!")
+            await interaction.send("You are not in a voice channel!")
             return
         await interaction.guild.change_voice_state(
             channel=interaction.user.voice.channel, self_deaf=True, self_mute=False
         )
         await lavalink.wait_for_connection(interaction.guild.id)
-        await interaction.response.send_message("Joined the voice channel.")
+        await interaction.send("Joined the voice channel.")
 
     @nextcord.slash_command()
     async def disconnect(self, interaction: Interaction):
         """Disconnects the bot from the voice channel."""
         await interaction.guild.change_voice_state(channel=None)
         await lavalink.wait_for_remove_connection(interaction.guild.id)
-        await interaction.response.send_message("Left the voice channel.")
+        await interaction.send("Left the voice channel.")
 
     @nextcord.slash_command()
     async def loop(self, interaction: Interaction, loop: bool, queue: bool = False):
@@ -147,7 +147,7 @@ class Music(commands.Cog, name="Music"):
             await lavalink.queue_repeat(interaction.guild.id, loop)
         else:
             await lavalink.repeat(interaction.guild.id, loop)
-        await interaction.response.send_message("Looped the queue.")
+        await interaction.send("Looped the queue.")
 
     # @nextcord.slash_command()
     # async def music_quiz(self, interaction: Interaction):
@@ -380,7 +380,7 @@ class Music(commands.Cog, name="Music"):
         queue = await lavalink.queue(interaction.guild.id)
         current_song = queue[0]
         if not queue:
-            return await interaction.response.send_message("No tracks in queue.")
+            return await interaction.send("No tracks in queue.")
 
         embed = nextcord.Embed(
             title=f"Now playing: {current_song.title}",
@@ -398,7 +398,7 @@ class Music(commands.Cog, name="Music"):
     async def pause(self, interaction: Interaction):
         """Pauses the current song."""
         await lavalink.pause(interaction.guild.id, True)
-        await interaction.response.send_message("Paused the track.")
+        await interaction.send("Paused the track.")
 
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, search: str):
@@ -407,10 +407,10 @@ class Music(commands.Cog, name="Music"):
         if not tracks:
             return await interaction.response.send_message("No results found.")
         elif isinstance(tracks, lavaplayer.TrackLoadFailed):
-            await interaction.response.send_message(f"Error loading track, Try again later.\n```{tracks.message}```")
+            await interaction.send(f"Error loading track, Try again later.\n```{tracks.message}```")
             return
         elif isinstance(tracks, lavaplayer.PlayList):
-            await interaction.response.send_message(
+            await interaction.send(
                 "Playlist found, Adding to queue, Please wait..."
             )
             await lavalink.add_to_queue(
@@ -421,45 +421,45 @@ class Music(commands.Cog, name="Music"):
             )
             return
         await lavalink.play(interaction.guild.id, tracks[0], interaction.user.id)
-        await interaction.response.send_message(f"Now playing: {tracks[0].title}")
+        await interaction.send(f"Now playing: {tracks[0].title}")
 
     @nextcord.slash_command()
     async def queue(self, interaction: Interaction):
         """Returns songs in the queue."""
         queue = await lavalink.queue(interaction.guild.id)
         if not queue:
-            return await interaction.response.send_message("No tracks in queue.")
+            return await interaction.send("No tracks in queue.")
         tracks = [f"**{i + 1}.** {t.title}" for (i, t) in enumerate(queue)]
-        await interaction.response.send_message("\n".join(tracks))
+        await interaction.send("\n".join(tracks))
 
     @nextcord.slash_command()
     async def resume(self, interaction: Interaction):
         """Resumes the current song."""
         await lavalink.pause(interaction.guild.id, False)
-        await interaction.response.send_message("Resumed the track.")
+        await interaction.send("Resumed the track.")
 
     @nextcord.slash_command()
     async def resume(self, interaction: Interaction):
         """Shuffles the current queue."""
         await lavalink.shuffle(interaction.guild.id)
-        await interaction.response.send_message("Shuffled the queue.")
+        await interaction.send("Shuffled the queue.")
 
     @nextcord.slash_command()
     async def skip(self, interaction: Interaction):
         """Skips the current song."""
         await lavalink.skip(interaction.guild.id)
-        await interaction.response.send_message("Skipped the track.")
+        await interaction.send("Skipped the track.")
 
     @nextcord.slash_command()
     async def stop(self, interaction: Interaction):
         await lavalink.stop(interaction.guild.id)
-        await interaction.response.send_message("Stopped the track.")
+        await interaction.send("Stopped the track.")
 
     @nextcord.slash_command()
     async def volume(self, interaction: Interaction, volume: int):
         """Changes the music volume."""
         await lavalink.volume(interaction.guild.id, volume)
-        await interaction.response.send_message(f"Set the volume to {volume}%.")
+        await interaction.send(f"Set the volume to {volume}%.")
 
 def setup(bot):
     bot.add_cog(Music(bot))
