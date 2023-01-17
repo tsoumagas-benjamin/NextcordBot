@@ -59,10 +59,9 @@ def fuzz_check(s1, s2):
     )
 
 lavalink = lavaplayer.Lavalink(
-    host="lavalink.botsuniversity.ml",  # Lavalink host
-    port=443,  # Lavalink port
-    password="mathiscool",  # Lavalink password
-    is_ssl=True # Server is using SSL
+    host="localhost",  # Lavalink host
+    port=8888,  # Lavalink port
+    password="abc",  # Lavalink password
 )
 
 # TODO: Fix music quiz functionality
