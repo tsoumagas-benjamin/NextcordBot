@@ -92,7 +92,7 @@ class Music(commands.Cog, name="Music"):
         lavalink.connect()
     
     @commands.Cog.listener()
-    async def on_socket_raw_receive(msg):
+    async def on_socket_raw_receive(self, msg):
         data = json.loads(msg)
 
         if not data or not data["t"]:
@@ -121,7 +121,7 @@ class Music(commands.Cog, name="Music"):
                 channel_id,
             )
 
-    @nextcord.slash_command(aliases=["join"])
+    @nextcord.slash_command()
     async def connect(self, interaction: Interaction):
         """Connects the bot to the voice channel."""
         if not interaction.user.voice:
@@ -133,7 +133,7 @@ class Music(commands.Cog, name="Music"):
         await lavalink.wait_for_connection(interaction.guild.id)
         await interaction.response.send_message("Joined the voice channel.")
 
-    @nextcord.slash_command(aliases=["leave"])
+    @nextcord.slash_command()
     async def disconnect(self, interaction: Interaction):
         """Disconnects the bot from the voice channel."""
         await interaction.guild.change_voice_state(channel=None)
