@@ -59,8 +59,8 @@ def fuzz_check(s1, s2):
     )
 
 lavalink = lavaplayer.Lavalink(
-    host="localhost",  # Lavalink host
-    port=8888,  # Lavalink port
+    host="127.0.0.1",  # Lavalink host
+    port=1337,  # Lavalink port
     password="abc",  # Lavalink password
 )
 
