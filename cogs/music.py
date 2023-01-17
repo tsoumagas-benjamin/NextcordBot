@@ -62,6 +62,7 @@ lavalink = lavaplayer.Lavalink(
     host="lavalink.botsuniversity.ml",  # Lavalink host
     port=443,  # Lavalink port
     password="mathiscool",  # Lavalink password
+    is_ssl=True # Server is using SSL
 )
 
 # TODO: Fix music quiz functionality
