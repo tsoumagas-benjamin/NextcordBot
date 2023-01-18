@@ -62,6 +62,7 @@ lavalink = lavaplayer.Lavalink(
     host="ssl.freelavalink.ga",  # Lavalink host
     port=443,  # Lavalink port
     password="www.freelavalink.ga",  # Lavalink password
+    user_id=848293425437736980,
     is_ssl=True # Server uses SSL
 )
 
