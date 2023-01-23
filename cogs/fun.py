@@ -13,7 +13,6 @@ client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 db = client.NextcordBot
 
 daily_channel_id = 793685161635741712
-main_guild = 793685160931098696
 
 def animal_task():
     choices = ["shibes", "cats", "birds"]
@@ -111,9 +110,7 @@ class Fun(commands.Cog, name="Fun"):
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
                 user = await self.bot.fetch_user(user_id)
-                common_servers = user.mutual_guilds
-                if main_guild in common_servers:
-                    bday_list.append(f"{user.name}: {user.mention}")
+                bday_list.append(f"{user.name}: {user.mention}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
             print(bday_message)
