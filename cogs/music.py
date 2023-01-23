@@ -119,6 +119,7 @@ class Music(commands.Cog, name="Music"):
     @nextcord.slash_command()
     async def join(self, interaction: Interaction):
         if interaction.user.voice.channel:
+            await interaction.send(f"Joining {interaction.user.voice.channel.name}.")
             return await interaction.user.voice.channel.connect()
         else:
             interaction.send("You must be in a voice channel to use this command!")
@@ -170,20 +171,21 @@ class Music(commands.Cog, name="Music"):
     async def stop(self, interaction: Interaction):
         """Stops and disconnects the bot from voice"""
 
+        await interaction.send(f"Leaving voice.")
         await interaction.guild.voice_client.disconnect()
 
     @play.before_invoke
     @yt.before_invoke
     @stream.before_invoke
-    async def ensure_voice(self, ctx):
-        if ctx.voice_client is None:
-            if ctx.author.voice:
-                await ctx.author.voice.channel.connect()
+    async def ensure_voice(self, interaction: Interaction):
+        if interaction.guild.voice_client is None:
+            if interaction.user.voice:
+                await interaction.user.voice.channel.connect()
             else:
-                await ctx.send("You are not connected to a voice channel.")
+                await interaction.send("You are not connected to a voice channel.")
                 raise commands.CommandError("Author not connected to a voice channel.")
-        elif ctx.voice_client.is_playing():
-            ctx.voice_client.stop()
+        elif interaction.guild.voice_client.is_playing():
+            interaction.voice_client.stop()
 
     # @nextcord.slash_command()
     # async def music_quiz(self, interaction: Interaction):
