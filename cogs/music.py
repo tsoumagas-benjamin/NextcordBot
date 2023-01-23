@@ -1,4 +1,4 @@
-import nextcord, pymongo, os, json, lavaplayer, re, datetime, random, asyncio
+import nextcord, pymongo, os, json, re, youtube_dl, datetime, random, asyncio
 from nextcord import Interaction
 from nextcord.ext import commands
 from fuzzywuzzy import fuzz
@@ -32,6 +32,43 @@ artist_list = []
 # mq_interaction: Interaction
 # mq_status = False
 
+youtube_dl.utils.bug_reports_message = lambda: ''
+
+ytdl_format_options = {
+    "format": "bestaudio/best",
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0',
+}
+
+ffmpeg_options = {"options": "-vn"}
+
+ytdl = youtube_dl.YouTubeDL(ytdl_format_options)
+
+class YTDLSource(nextcord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+        self.data = data
+        self.title = data.get("title")
+        self.url = data.get("url")
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if "entries" in data:
+            data = data["entries"][0]
+        
+        filename = data["url"] if stream else ytdl.prepare_filename(data)
+        return cls(nextcord.FFmpegAudio(filename, *ffmpeg_options), data=data)
 
 def title_case(s):
     return re.sub(
@@ -58,14 +95,6 @@ def fuzz_check(s1, s2):
         >= mq_leniency
     )
 
-lavalink = lavaplayer.Lavalink(
-    host="ssl.freelavalink.ga",  # Lavalink host
-    port=443,  # Lavalink port
-    password="www.freelavalink.ga",  # Lavalink password
-    user_id=848293425437736980,
-    is_ssl=True # Server uses SSL
-)
-
 # TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
     """Commands for playing music in voice channels"""
@@ -87,69 +116,74 @@ class Music(commands.Cog, name="Music"):
         self.correct_artist = None
         self.score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))    
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        lavalink.set_user_id(self.bot.user.id)
-        lavalink.set_event_loop(self.bot.loop)
-        lavalink.connect()
-    
-    @commands.Cog.listener()
-    async def on_socket_raw_receive(self, msg):
-        data = json.loads(msg)
+    @nextcord.slash_command()
+    async def join(self, interaction: Interaction):
+        if interaction.user.voice.channel:
+            return await interaction.user.voice.channel.connect()
+        else:
+            interaction.send("You must be in a voice channel to use this command!")
+        
+    @nextcord.slash_command()
+    async def play(self, interaction: Interaction, *, query):
+        """Plays a file from the local filesystem"""
 
-        if not data or not data["t"]:
-            return
-        if data["t"] == "VOICE_SERVER_UPDATE":
-            guild_id = int(data["d"]["guild_id"])
-            endpoint = data["d"]["endpoint"]
-            token = data["d"]["token"]
+        source = nextcord.PCMVolumeTransformer(nextcord.FFmpegPCMAudio(query))
+        interaction.guild.voice_client.play(source, after=lambda e: print(f"Player error: {e}") if e else None)
 
-            await lavalink.raw_voice_server_update(guild_id, endpoint, token)
+        await interaction.send(f"Now playing: {query}")
 
-        elif data["t"] == "VOICE_STATE_UPDATE":
-            if not data["d"]["channel_id"]:
-                channel_id = None
-            else:
-                channel_id = int(data["d"]["channel_id"])
+    @nextcord.slash_command()
+    async def yt(self, interaction: Interaction, *, url):
+        """Plays from a URL (almost anything youtube_dl supports)"""
 
-            guild_id = int(data["d"]["guild_id"])
-            user_id = int(data["d"]["user_id"])
-            session_id = data["d"]["session_id"]
-
-            await lavalink.raw_voice_state_update(
-                guild_id,
-                user_id,
-                session_id,
-                channel_id,
+        async with interaction.channel.typing():
+            player = await YTDLSource.from_url(url, loop=self.bot.loop)
+            interaction.guild.voice_client.play(
+                player, after=lambda e: print(f"Player error: {e}") if e else None
             )
 
-    @nextcord.slash_command()
-    async def connect(self, interaction: Interaction):
-        """Connects the bot to the voice channel."""
-        if not interaction.user.voice:
-            await interaction.send("You are not in a voice channel!")
-            return
-        await interaction.guild.change_voice_state(
-            channel=interaction.user.voice.channel, self_deaf=True, self_mute=False
-        )
-        await lavalink.wait_for_connection(interaction.guild.id)
-        await interaction.send("Joined the voice channel.")
+        await interaction.send(f"Now playing: {player.title}")
 
     @nextcord.slash_command()
-    async def disconnect(self, interaction: Interaction):
-        """Disconnects the bot from the voice channel."""
-        await interaction.guild.change_voice_state(channel=None)
-        await lavalink.wait_for_remove_connection(interaction.guild.id)
-        await interaction.send("Left the voice channel.")
+    async def stream(self, interaction: Interaction, *, url):
+        """Streams from a URL (same as yt, but doesn't predownload)"""
+
+        async with interaction.channel.typing():
+            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+            interaction.voice_client.play(
+                player, after=lambda e: print(f"Player error: {e}") if e else None
+            )
+
+        await interaction.send(f"Now playing: {player.title}")
 
     @nextcord.slash_command()
-    async def loop(self, interaction: Interaction, loop: bool, queue: bool = False):
-        """Enable/Disable looping for the entire queue or a single song."""
-        if queue:
-            await lavalink.queue_repeat(interaction.guild.id, loop)
-        else:
-            await lavalink.repeat(interaction.guild.id, loop)
-        await interaction.send("Looped the queue.")
+    async def volume(self, interaction: Interaction, volume: int):
+        """Changes the player's volume"""
+
+        if interaction.guild.voice_client is None:
+            return await interaction.send("Not connected to a voice channel.")
+
+        interaction.guild.voice_client.source.volume = volume / 100
+        await interaction.send(f"Changed volume to {volume}%")
+
+    @nextcord.slash_command()
+    async def stop(self, interaction: Interaction):
+        """Stops and disconnects the bot from voice"""
+
+        await interaction.guild.voice_client.disconnect()
+
+    @play.before_invoke
+    @yt.before_invoke
+    @stream.before_invoke
+    async def ensure_voice(self, ctx):
+        if ctx.voice_client is None:
+            if ctx.author.voice:
+                await ctx.author.voice.channel.connect()
+            else:
+                await ctx.send("You are not connected to a voice channel.")
+                raise commands.CommandError("Author not connected to a voice channel.")
+        elif ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
 
     # @nextcord.slash_command()
     # async def music_quiz(self, interaction: Interaction):
@@ -376,92 +410,7 @@ class Music(commands.Cog, name="Music"):
     #     self.mq_channel = None
     #     await interaction.send(f"Status is {self.mq_channel}")
 
-    @nextcord.slash_command()
-    async def nowplaying(self, interaction: Interaction):
-        """Returns the currently playing song"""
-        queue = await lavalink.queue(interaction.guild.id)
-        current_song = queue[0]
-        if not queue:
-            return await interaction.send("No tracks in queue.")
-
-        embed = nextcord.Embed(
-            title=f"Now playing: {current_song.title}",
-            description=f"Artist: {current_song.author}",
-            color=nextcord.Colour.from_rgb(225, 0, 255),
-        )
-        embed.add_field(
-            name="Duration", value=f"{str(datetime.timedelta(seconds=current_song.length))}"
-        )
-        embed.add_field(name="Song URL", value=f"[Click Here]({str(current_song.uri)})")
-
-        return await interaction.send(embed=embed)
-
-    @nextcord.slash_command()
-    async def pause(self, interaction: Interaction):
-        """Pauses the current song."""
-        await lavalink.pause(interaction.guild.id, True)
-        await interaction.send("Paused the track.")
-
-    @nextcord.slash_command()
-    async def play(self, interaction: Interaction, *, search: str):
-        """Plays a song in a voice channel."""
-        tracks = await lavalink.auto_search_tracks(search)
-        if not tracks:
-            return await interaction.response.send_message("No results found.")
-        elif isinstance(tracks, lavaplayer.TrackLoadFailed):
-            await interaction.send(f"Error loading track, Try again later.\n```{tracks.message}```")
-            return
-        elif isinstance(tracks, lavaplayer.PlayList):
-            await interaction.send(
-                "Playlist found, Adding to queue, Please wait..."
-            )
-            await lavalink.add_to_queue(
-                interaction.guild.id, tracks.tracks, interaction.user.id
-            )
-            await interaction.edit_original_message(
-                content=f"Added to queue, tracks: {len(tracks.tracks)}, name: {tracks.name}"
-            )
-            return
-        await lavalink.play(interaction.guild.id, tracks[0], interaction.user.id)
-        await interaction.send(f"Now playing: {tracks[0].title}")
-
-    @nextcord.slash_command()
-    async def queue(self, interaction: Interaction):
-        """Returns songs in the queue."""
-        queue = await lavalink.queue(interaction.guild.id)
-        if not queue:
-            return await interaction.send("No tracks in queue.")
-        tracks = [f"**{i + 1}.** {t.title}" for (i, t) in enumerate(queue)]
-        await interaction.send("\n".join(tracks))
-
-    @nextcord.slash_command()
-    async def resume(self, interaction: Interaction):
-        """Resumes the current song."""
-        await lavalink.pause(interaction.guild.id, False)
-        await interaction.send("Resumed the track.")
-
-    @nextcord.slash_command()
-    async def resume(self, interaction: Interaction):
-        """Shuffles the current queue."""
-        await lavalink.shuffle(interaction.guild.id)
-        await interaction.send("Shuffled the queue.")
-
-    @nextcord.slash_command()
-    async def skip(self, interaction: Interaction):
-        """Skips the current song."""
-        await lavalink.skip(interaction.guild.id)
-        await interaction.send("Skipped the track.")
-
-    @nextcord.slash_command()
-    async def stop(self, interaction: Interaction):
-        await lavalink.stop(interaction.guild.id)
-        await interaction.send("Stopped the track.")
-
-    @nextcord.slash_command()
-    async def volume(self, interaction: Interaction, volume: int):
-        """Changes the music volume."""
-        await lavalink.volume(interaction.guild.id, volume)
-        await interaction.send(f"Set the volume to {volume}%.")
+    
 
 def setup(bot):
     bot.add_cog(Music(bot))
