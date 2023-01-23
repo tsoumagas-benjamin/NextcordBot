@@ -50,7 +50,7 @@ ytdl_format_options = {
 
 ffmpeg_options = {"options": "-vn"}
 
-ytdl = youtube_dl.YouTubeDL(ytdl_format_options)
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 class YTDLSource(nextcord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
