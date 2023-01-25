@@ -95,6 +95,16 @@ def fuzz_check(s1, s2):
         >= mq_leniency
     )
 
+async def ensure_voice(interaction: Interaction):
+    if interaction.guild.voice_client is None:
+        if interaction.user.voice:
+            await interaction.user.voice.channel.connect()
+        else:
+            await interaction.send("You are not connected to a voice channel.")
+            raise commands.CommandError("Author not connected to a voice channel.")
+    elif interaction.guild.voice_client.is_playing():
+        interaction.guild.voice_client.stop()
+
 # TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
     """Commands for playing music in voice channels"""
@@ -116,16 +126,6 @@ class Music(commands.Cog, name="Music"):
         self.correct_artist = None
         self.score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))    
 
-    async def ensure_voice(self, interaction: Interaction):
-        if interaction.guild.voice_client is None:
-            if interaction.user.voice:
-                await interaction.user.voice.channel.connect()
-            else:
-                await interaction.send("You are not connected to a voice channel.")
-                raise commands.CommandError("Author not connected to a voice channel.")
-        elif interaction.guild.voice_client.is_playing():
-            interaction.guild.voice_client.stop()
-
     @nextcord.slash_command()
     async def join(self, interaction: Interaction):
         if interaction.user.voice.channel:
@@ -133,9 +133,9 @@ class Music(commands.Cog, name="Music"):
             return await interaction.user.voice.channel.connect()
         else:
             interaction.send("You must be in a voice channel to use this command!")
-        
-    @nextcord.slash_command()
+    
     @application_checks.application_command_before_invoke(ensure_voice)
+    @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, query):
         """Plays a file from the local filesystem"""
 
@@ -144,8 +144,8 @@ class Music(commands.Cog, name="Music"):
 
         await interaction.send(f"Now playing: {query}")
 
-    @nextcord.slash_command()
     @application_checks.application_command_before_invoke(ensure_voice)
+    @nextcord.slash_command()
     async def yt(self, interaction: Interaction, *, url):
         """Plays from a URL (almost anything youtube_dl supports)"""
 
@@ -157,8 +157,8 @@ class Music(commands.Cog, name="Music"):
 
         await interaction.send(f"Now playing: {player.title}")
 
-    @nextcord.slash_command()
     @application_checks.application_command_before_invoke(ensure_voice)
+    @nextcord.slash_command()
     async def stream(self, interaction: Interaction, *, url):
         """Streams from a URL (same as yt, but doesn't predownload)"""
 
