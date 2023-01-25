@@ -1,6 +1,6 @@
 import nextcord, pymongo, os, json, re, youtube_dl, datetime, random, asyncio
 from nextcord import Interaction
-from nextcord.ext import commands
+from nextcord.ext import commands, application_checks
 from fuzzywuzzy import fuzz
 
 # Set up our mongodb client
@@ -135,7 +135,7 @@ class Music(commands.Cog, name="Music"):
             interaction.send("You must be in a voice channel to use this command!")
         
     @nextcord.slash_command()
-    @nextcord.SlashApplicationCommand.before_invoke(ensure_voice)
+    @application_checks.application_command_before_invoke(ensure_voice)
     async def play(self, interaction: Interaction, *, query):
         """Plays a file from the local filesystem"""
 
@@ -145,7 +145,7 @@ class Music(commands.Cog, name="Music"):
         await interaction.send(f"Now playing: {query}")
 
     @nextcord.slash_command()
-    @nextcord.SlashApplicationCommand.before_invoke(ensure_voice)
+    @application_checks.application_command_before_invoke(ensure_voice)
     async def yt(self, interaction: Interaction, *, url):
         """Plays from a URL (almost anything youtube_dl supports)"""
 
@@ -158,7 +158,7 @@ class Music(commands.Cog, name="Music"):
         await interaction.send(f"Now playing: {player.title}")
 
     @nextcord.slash_command()
-    @nextcord.SlashApplicationCommand.before_invoke(ensure_voice)
+    @application_checks.application_command_before_invoke(ensure_voice)
     async def stream(self, interaction: Interaction, *, url):
         """Streams from a URL (same as yt, but doesn't predownload)"""
 
