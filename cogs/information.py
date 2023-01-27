@@ -117,33 +117,25 @@ class Information(commands.Cog, name = "Information"):
         embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
         await interaction.send(embed=embed)
 
-    @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096])
+    @nextcord.slash_command(guild_ids=[793685160931098696])
     async def socials(self, interaction: Interaction):
-        """Returns links to Olivia's socials"""
-        embed = nextcord.Embed(title=f"Olivia's Socials", color=nextcord.Colour.from_rgb(225, 0, 255))
+        """Returns links to Ben's socials"""
+        embed = nextcord.Embed(title=f"Ben's Socials", color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.add_field(
             name=f"Twitch:", 
-            value="https://www.twitch.tv/oliviavisentin",
+            value="https://www.twitch.tv/chaosherald2",
             inline=False)
         embed.add_field(
             name=f"YouTube:", 
-            value="https://www.youtube.com/channel/UCk92VCcs2zWzj_bTQ6aeTdg",
+            value="https://www.youtube.com/channel/UC147mLQpBtta_ykHdo-fZDw",
             inline=False)
         embed.add_field(
             name=f"Twitter:", 
-            value="https://twitter.com/VisentinOlivia",
+            value="https://twitter.com/ChaosHerald2",
             inline=False)
         embed.add_field(
             name=f"Instagram:", 
-            value="https://www.instagram.com/oliviavisentin/",
-            inline=False)
-        embed.add_field(
-            name=f"TikTok:", 
-            value="https://www.tiktok.com/@oliviavisentin",
-            inline=False)
-        embed.add_field(
-            name=f"Facebook:", 
-            value="https://www.facebook.com/olivia.visentin.50",
+            value="https://www.instagram.com/chaos.herald2/",
             inline=False)
         embed.set_footer(icon_url=interaction.guild.icon.url, text=interaction.guild.name)
         await interaction.send(embed=embed)
