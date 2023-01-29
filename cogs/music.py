@@ -99,11 +99,13 @@ async def ensure_voice(interaction: Interaction):
     if interaction.guild.voice_client is None:
         if interaction.user.voice:
             await interaction.user.voice.channel.connect()
+            interaction.guild.voice_client.source.volume = default_volume / 100
         else:
             await interaction.send("You are not connected to a voice channel.")
             raise commands.CommandError("Author not connected to a voice channel.")
     elif interaction.guild.voice_client.is_playing():
         interaction.guild.voice_client.stop()
+        interaction.guild.voice_client.source.volume = default_volume / 100
 
 # TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
@@ -134,26 +136,25 @@ class Music(commands.Cog, name="Music"):
         else:
             interaction.send("You must be in a voice channel to use this command!")
     
-    @application_checks.application_command_before_invoke(ensure_voice)
-    @nextcord.slash_command()
-    async def play(self, interaction: Interaction, *, query):
-        """Plays a file from the local filesystem"""
+    # @application_checks.application_command_before_invoke(ensure_voice)
+    # @nextcord.slash_command()
+    # async def play(self, interaction: Interaction, *, query):
+    #     """Plays a file from the local filesystem"""
 
-        source = nextcord.PCMVolumeTransformer(nextcord.FFmpegPCMAudio(query))
-        interaction.guild.voice_client.play(source, after=lambda e: print(f"Player error: {e}") if e else None)
+    #     source = nextcord.PCMVolumeTransformer(nextcord.FFmpegPCMAudio(query))
+    #     interaction.guild.voice_client.play(source, after=lambda e: print(f"Player error: {e}") if e else None)
 
-        await interaction.send(f"Now playing: {query}")
+    #     await interaction.send(f"Now playing: {query}")
 
     @application_checks.application_command_before_invoke(ensure_voice)
     @nextcord.slash_command()
     async def yt(self, interaction: Interaction, *, url):
         """Plays from a URL (almost anything youtube_dl supports)"""
 
-        async with interaction.channel.typing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop)
-            interaction.guild.voice_client.play(
-                player, after=lambda e: print(f"Player error: {e}") if e else None
-            )
+        player = await YTDLSource.from_url(url, loop=self.bot.loop)
+        interaction.guild.voice_client.play(
+            player, after=lambda e: print(f"Player error: {e}") if e else None
+        )
 
         await interaction.send(f"Now playing: {player.title}")
 
@@ -164,7 +165,7 @@ class Music(commands.Cog, name="Music"):
 
         async with interaction.channel.typing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            interaction.voice_client.play(
+            interaction.guild.voice_client.play(
                 player, after=lambda e: print(f"Player error: {e}") if e else None
             )
 
