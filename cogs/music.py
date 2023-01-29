@@ -68,7 +68,7 @@ class YTDLSource(nextcord.PCMVolumeTransformer):
             data = data["entries"][0]
         
         filename = data["url"] if stream else ytdl.prepare_filename(data)
-        return cls(nextcord.FFmpegAudio(filename, *ffmpeg_options), data=data)
+        return cls(nextcord.FFmpegAudio(filename, **ffmpeg_options), data=data)
 
 def title_case(s):
     return re.sub(
