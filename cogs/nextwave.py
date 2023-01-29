@@ -16,9 +16,9 @@ class Nextwave(commands.Cog):
         await self.bot.wait_until_ready()
 
         await nextwave.NodePool.create_node(bot=self.bot,
-                                            host='lavalink.botsuniversity.ml',
-                                            port=443,
-                                            password='mathiscool')
+                                            host='lavalink.sneakynodes.com',
+                                            port=2333,
+                                            password='sneakynodes.com')
 
     @commands.Cog.listener()
     async def on_nextwave_node_ready(self, node: nextwave.Node):
@@ -68,9 +68,9 @@ class Nextwave(commands.Cog):
         else:
             vc: nextwave.Player = interaction.guild.voice_client
 
-        query = nextwave.SearchableTrack.search(search, return_first=True)
-        await vc.play(search)
-        await interaction.send(f"Playing {query}")
+        query = await nextwave.SearchableTrack.search(search, return_first=True)
+        await vc.play(query)
+        await interaction.send(f"Playing {search}")
     
     @nextcord.slash_command()
     async def queue(self, interaction: Interaction):
