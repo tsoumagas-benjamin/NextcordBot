@@ -29,8 +29,6 @@ score_embed = nextcord.Embed(
 song_indices = []
 title_list = []
 artist_list = []
-# mq_interaction: Interaction
-# mq_status = False
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -138,7 +136,7 @@ class Music(commands.Cog, name="Music"):
     
     # @application_checks.application_command_before_invoke(ensure_voice)
     # @nextcord.slash_command()
-    # async def play(self, interaction: Interaction, *, query):
+    # async def local_play(self, interaction: Interaction, *, query):
     #     """Plays a file from the local filesystem"""
 
     #     source = nextcord.PCMVolumeTransformer(nextcord.FFmpegPCMAudio(query))
@@ -146,21 +144,22 @@ class Music(commands.Cog, name="Music"):
 
     #     await interaction.send(f"Now playing: {query}")
 
+    # @application_checks.application_command_before_invoke(ensure_voice)
+    # @nextcord.slash_command()
+    # async def yt(self, interaction: Interaction, *, url):
+    #     """Plays from a URL (almost anything youtube_dl supports)"""
+
+    #     async with interaction.channel.typing():
+    #         player = await YTDLSource.from_url(url, loop=self.bot.loop)
+    #         interaction.guild.voice_client.play(
+    #             player, after=lambda e: print(f"Player error: {e}") if e else None
+    #         )
+
+    #     await interaction.send(f"Now playing: {player.title}")
+
     @application_checks.application_command_before_invoke(ensure_voice)
     @nextcord.slash_command()
-    async def yt(self, interaction: Interaction, *, url):
-        """Plays from a URL (almost anything youtube_dl supports)"""
-
-        player = await YTDLSource.from_url(url, loop=self.bot.loop)
-        interaction.guild.voice_client.play(
-            player, after=lambda e: print(f"Player error: {e}") if e else None
-        )
-
-        await interaction.send(f"Now playing: {player.title}")
-
-    @application_checks.application_command_before_invoke(ensure_voice)
-    @nextcord.slash_command()
-    async def stream(self, interaction: Interaction, *, url):
+    async def play(self, interaction: Interaction, *, url):
         """Streams from a URL (same as yt, but doesn't predownload)"""
 
         async with interaction.channel.typing():
