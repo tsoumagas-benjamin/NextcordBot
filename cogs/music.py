@@ -101,9 +101,7 @@ async def ensure_voice(interaction: Interaction):
         else:
             await interaction.send("You are not connected to a voice channel.")
             raise commands.CommandError("Author not connected to a voice channel.")
-    elif interaction.guild.voice_client.is_playing():
-        interaction.guild.voice_client.stop()
-        interaction.guild.voice_client.source.volume = default_volume / 100
+
 
 # TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
@@ -113,6 +111,7 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.queue = []
         self.mq_channel = None
         self.mq_interaction = None
         self.song_indices = []
@@ -141,6 +140,9 @@ class Music(commands.Cog, name="Music"):
 
         async with interaction.channel.typing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+            if interaction.guild.voice_client.is_playing():
+                self.queue.append(player)
+                # EDIT HERE
             interaction.guild.voice_client.play(
                 player, after=lambda e: print(f"Player error: {e}") if e else None
             )
@@ -172,7 +174,7 @@ class Music(commands.Cog, name="Music"):
         interaction.guild.voice_client.resume()
 
     @nextcord.slash_command()
-    async def stop(self, interaction: Interaction):
+    async def leave(self, interaction: Interaction):
         """Stops and disconnects the bot from voice"""
 
         await interaction.send(f"Leaving voice.")
