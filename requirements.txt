@@ -10,6 +10,5 @@ cffi==1.15.1
 pycparser==2.21
 six==1.16.0
 youtube_dl==2021.12.17
-nextcord-ext-pomice==1.1.7.1
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.12.2
