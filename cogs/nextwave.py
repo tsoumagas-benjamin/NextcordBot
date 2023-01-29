@@ -44,7 +44,7 @@ class Nextwave(commands.Cog):
         else:
             vc: nextwave.Player = interaction.guild.voice_client
 
-        await interaction.send(f"Now playing {vc.track.title}")
+        await interaction.send(f"Now playing {str(vc.source)}")
 
     @nextcord.slash_command()
     async def pause(self, interaction: Interaction):
@@ -57,10 +57,10 @@ class Nextwave(commands.Cog):
             vc: nextwave.Player = interaction.guild.voice_client
 
         await vc.pause()
-        await interaction.send(f"Paused {vc.track.title}")
+        await interaction.send(f"Paused.")
 
     @nextcord.slash_command()
-    async def play(self, interaction: Interaction, *, search: nextwave.YouTubeTrack):
+    async def play(self, interaction: Interaction, *, search: str):
         """Play a song with the given search query.
         If not connected, connect to our voice channel."""
         if not interaction.guild.voice_client:
@@ -68,8 +68,9 @@ class Nextwave(commands.Cog):
         else:
             vc: nextwave.Player = interaction.guild.voice_client
 
+        query = nextwave.SearchableTrack.search(search, return_first=True)
         await vc.play(search)
-        await interaction.send(f"Playing {vc.track.title}")
+        await interaction.send(f"Playing {query}")
     
     @nextcord.slash_command()
     async def queue(self, interaction: Interaction):
@@ -95,7 +96,7 @@ class Nextwave(commands.Cog):
             vc: nextwave.Player = interaction.guild.voice_client
 
         await vc.resume()
-        await interaction.send(f"Resumed {vc.track.title}")
+        await interaction.send(f"Resumed.")
     
     @nextcord.slash_command()
     async def stop(self, interaction: Interaction):
@@ -106,7 +107,7 @@ class Nextwave(commands.Cog):
             vc: nextwave.Player = interaction.guild.voice_client
 
         await vc.stop()
-        await interaction.send(f"Stopped {vc.track.title}")
+        await interaction.send(f"Stopped {str(vc.source)}")
     
     @nextcord.slash_command()
     async def volume(self, interaction: Interaction, volume: int):
@@ -119,7 +120,7 @@ class Nextwave(commands.Cog):
             vc: nextwave.Player = interaction.guild.voice_client
 
         await vc.set_volume(volume, True)
-        await interaction.send(f"Resumed {vc.track.title}")
+        await interaction.send(f"Resumed {str(vc.source)}")
 
 def setup(bot):
     bot.add_cog(Nextwave(bot))
