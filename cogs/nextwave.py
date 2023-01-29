@@ -68,7 +68,7 @@ class Nextwave(commands.Cog):
         else:
             vc: nextwave.Player = interaction.guild.voice_client
 
-        query = await nextwave.SearchableTrack.search(search, return_first=True)
+        query = await nextwave.SearchableTrack.search(query=search, return_first=True)
         await vc.play(query)
         await interaction.send(f"Playing {search}")
     
