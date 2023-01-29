@@ -133,29 +133,6 @@ class Music(commands.Cog, name="Music"):
             return await interaction.user.voice.channel.connect()
         else:
             interaction.send("You must be in a voice channel to use this command!")
-    
-    # @application_checks.application_command_before_invoke(ensure_voice)
-    # @nextcord.slash_command()
-    # async def local_play(self, interaction: Interaction, *, query):
-    #     """Plays a file from the local filesystem"""
-
-    #     source = nextcord.PCMVolumeTransformer(nextcord.FFmpegPCMAudio(query))
-    #     interaction.guild.voice_client.play(source, after=lambda e: print(f"Player error: {e}") if e else None)
-
-    #     await interaction.send(f"Now playing: {query}")
-
-    # @application_checks.application_command_before_invoke(ensure_voice)
-    # @nextcord.slash_command()
-    # async def yt(self, interaction: Interaction, *, url):
-    #     """Plays from a URL (almost anything youtube_dl supports)"""
-
-    #     async with interaction.channel.typing():
-    #         player = await YTDLSource.from_url(url, loop=self.bot.loop)
-    #         interaction.guild.voice_client.play(
-    #             player, after=lambda e: print(f"Player error: {e}") if e else None
-    #         )
-
-    #     await interaction.send(f"Now playing: {player.title}")
 
     @application_checks.application_command_before_invoke(ensure_voice)
     @nextcord.slash_command()
@@ -179,6 +156,20 @@ class Music(commands.Cog, name="Music"):
 
         interaction.guild.voice_client.source.volume = volume / 100
         await interaction.send(f"Changed volume to {volume}%")
+
+    @nextcord.slash_command()
+    async def pause(self, interaction: Interaction):
+        """Pauses the bot's playback"""
+
+        await interaction.send(f"Pausing playback.")
+        interaction.guild.voice_client.pause()
+
+    @nextcord.slash_command()
+    async def resume(self, interaction: Interaction):
+        """Resumes the bot's playback"""
+
+        await interaction.send(f"Resuming playback.")
+        interaction.guild.voice_client.resume()
 
     @nextcord.slash_command()
     async def stop(self, interaction: Interaction):
