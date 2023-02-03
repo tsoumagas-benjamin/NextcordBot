@@ -15,8 +15,9 @@ collections = db.list_collection_names()
 # Get access to the songs collection
 song_list = db["songs"]
 
-# Default player volume
+# Default player volume and song queue
 default_volume = 5
+song_queue = []
 
 # Music quiz variables
 mq_rounds = 10
@@ -51,7 +52,7 @@ ffmpeg_options = {"options": "-vn"}
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 class YTDLSource(nextcord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
+    def __init__(self, source, *, data, volume=0.05):
         super().__init__(source, volume)
         self.data = data
         self.title = data.get("title")
@@ -96,12 +97,11 @@ def fuzz_check(s1, s2):
 async def ensure_voice(interaction: Interaction):
     if interaction.guild.voice_client is None:
         if interaction.user.voice:
+            await interaction.send(f"Joining {interaction.user.voice.channel.name}.")
             await interaction.user.voice.channel.connect()
-            interaction.guild.voice_client.source.volume = default_volume / 100
         else:
             await interaction.send("You are not connected to a voice channel.")
             raise commands.CommandError("Author not connected to a voice channel.")
-
 
 # TODO: Fix music quiz functionality
 class Music(commands.Cog, name="Music"):
@@ -111,7 +111,6 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.queue = []
         self.mq_channel = None
         self.mq_interaction = None
         self.song_indices = []
@@ -125,24 +124,60 @@ class Music(commands.Cog, name="Music"):
         self.correct_artist = None
         self.score_embed = nextcord.Embed(title = "Music Quiz Results", color = nextcord.Colour.from_rgb(225, 0, 255))    
 
-    @nextcord.slash_command()
-    async def join(self, interaction: Interaction):
-        if interaction.user.voice.channel:
-            await interaction.send(f"Joining {interaction.user.voice.channel.name}.")
-            return await interaction.user.voice.channel.connect()
+    async def play_next(error, self, interaction):
+        if error:
+            print(f"Player error: {error}")
         else:
-            interaction.send("You must be in a voice channel to use this command!")
+            # Remove played song from queue
+            song_queue.pop()
+            # Play next song in queue, if there is one
+            if song_queue.empty():
+                return await interaction.send("Queue has been cleared.")
+            async with interaction.channel.typing():
+                player = await YTDLSource.from_url(song_queue[0], loop=self.bot.loop)
+                interaction.guild.voice_client.play(
+                    player, after=Music.play_next
+                )
+            await interaction.send(f"Now playing: {player.title}")
+
+    async def stream_next(error, self, interaction):
+        if error:
+            print(f"Player error: {error}")
+        else:
+            # Remove played song from queue
+            song_queue.pop()
+            # Play next song in queue, if there is one
+            if song_queue.empty():
+                return await interaction.send("Queue has been cleared.")
+            async with interaction.channel.typing():
+                player = await YTDLSource.from_url(song_queue[0], loop=self.bot.loop, stream=True)
+                interaction.guild.voice_client.play(
+                    player, after=Music.play_next
+                )
+            await interaction.send(f"Now playing: {player.title}")
 
     @application_checks.application_command_before_invoke(ensure_voice)
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, url):
+        """Plays from a URL (almost anything youtube_dl supports)"""
+        song_queue.append(url)
+        if not song_queue.empty():
+            return
+        else:
+            async with interaction.channel.typing():
+                player = await YTDLSource.from_url(url, loop=self.bot.loop)
+                interaction.guild.voice_client.play(
+                    player, after=Music.play_next(self, interaction)
+                )
+            await interaction.send(f"Now playing: {player.title}")
+    
+    @application_checks.application_command_before_invoke(ensure_voice)
+    @nextcord.slash_command()
+    async def stream(self, interaction: Interaction, *, url):
         """Streams from a URL (same as yt, but doesn't predownload)"""
 
         async with interaction.channel.typing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            if interaction.guild.voice_client.is_playing():
-                self.queue.append(player)
-                # EDIT HERE
             interaction.guild.voice_client.play(
                 player, after=lambda e: print(f"Player error: {e}") if e else None
             )
@@ -172,6 +207,17 @@ class Music(commands.Cog, name="Music"):
 
         await interaction.send(f"Resuming playback.")
         interaction.guild.voice_client.resume()
+    
+    @nextcord.slash_command()
+    async def queue(self, interaction: Interaction):
+        """Returns the current queue"""
+        if song_queue.empty():
+            return await interaction.send("Queue is currently empty.")
+        else:
+            queue = ""
+            for count, song in enumerate(song_queue, 1):
+                queue += f"[{count}] {song}\t"
+            await interaction.send(queue)
 
     @nextcord.slash_command()
     async def leave(self, interaction: Interaction):
