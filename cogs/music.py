@@ -181,7 +181,7 @@ class Music(commands.Cog, name="Music"):
             await vc.disconnect()
     
     @nextcord.slash_command()
-    async def play(interaction: Interaction, song: str):
+    async def play(self, interaction: Interaction, song: str):
         view = Music_Buttons()
         search = await nextwave.YouTubeTrack.search(query=song, return_first=True)
         text = search.title
