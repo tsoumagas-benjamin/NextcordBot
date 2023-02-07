@@ -167,11 +167,11 @@ class Music(commands.Cog, name="Music"):
 
     async def node_connect(self):
         await self.bot.wait_until_ready()
-        await nextwave.NodePool.create_node(bot=self.bot, host='lavalink2.botsuniversity.ml', port=443, password='mathiscool', https=True)
+        await nextwave.NodePool.create_node(bot=self.bot, host='lavalink.botsuniversity.ml', port=443, password='mathiscool', https=True)
 
     @commands.Cog.listener()
     async def on_ready(self):   
-        self.bot.loop.create_task(Music.node_connect())
+        self.bot.loop.create_task(Music.node_connect(self))
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -181,7 +181,7 @@ class Music(commands.Cog, name="Music"):
             await vc.disconnect()
     
     @nextcord.slash_command()
-    async def play(interaction: nextcord.Interaction, song: str):
+    async def play(interaction: Interaction, song: str):
         view = Music_Buttons()
         search = await nextwave.YouTubeTrack.search(query=song, return_first=True)
         text = search.title
