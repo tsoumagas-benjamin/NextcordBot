@@ -19,9 +19,6 @@ collections = db.list_collection_names()
 # Get access to the songs collection
 song_list = db["songs"]
 
-# Command which has the music control buttons
-menu_command : InteractionMessage = None
-
 # Music quiz variables
 mq_rounds = 10
 mq_duration = 30
@@ -168,6 +165,7 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.menu_command = None
         self.mq_channel = None
         self.mq_interaction = None
         self.song_indices = []
@@ -211,15 +209,13 @@ class Music(commands.Cog, name="Music"):
             await vc.play(search)
             embed = nextcord.Embed(title=f"Added {text} to the queue!",
             color=nextcord.Colour.from_rgb(225, 0, 255))
-            await interaction.send(embed=embed, view=view)
-            menu_command = await interaction.original_message()
+            self.menu_command = await interaction.send(embed=embed, view=view)
             await view.wait()
         else:
             await vc.queue.put_wait(search)
             embed = nextcord.Embed(title=f"Added {text} to the queue!",
             color=nextcord.Colour.from_rgb(225, 0, 255))
-            menu_command.edit(view=None)
-            menu_command = await interaction.send(embed=embed, view=view)
+            await self.menu_command.edit(embed=embed, view=view)
         vc.interaction = interaction
         try:
             setattr(vc, "loop", False)
