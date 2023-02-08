@@ -165,7 +165,6 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.menu_command = None
         self.mq_channel = None
         self.mq_interaction = None
         self.song_indices = []
@@ -209,13 +208,13 @@ class Music(commands.Cog, name="Music"):
             await vc.play(search)
             embed = nextcord.Embed(title=f"Added {text} to the queue!",
             color=nextcord.Colour.from_rgb(225, 0, 255))
-            self.menu_command = await interaction.send(embed=embed, view=view)
+            await interaction.send(embed=embed, view=view)
             await view.wait()
         else:
             await vc.queue.put_wait(search)
             embed = nextcord.Embed(title=f"Added {text} to the queue!",
             color=nextcord.Colour.from_rgb(225, 0, 255))
-            await self.menu_command.edit(embed=embed, view=view)
+            await interaction.send(embed=embed, delete_after=10.0)
         vc.interaction = interaction
         try:
             setattr(vc, "loop", False)
