@@ -74,6 +74,7 @@ async def voice_ensure(interaction: Interaction):
 
 class Music_Buttons(nextcord.ui.View):
     def __init__(self):
+        super().__init__()
         self.value = None
 
     @nextcord.ui.button(label = "⏯️ Play/Pause", style = nextcord.ButtonStyle.blurple)
@@ -206,7 +207,7 @@ class Music(commands.Cog, name="Music"):
             vc: nextwave.Player = interaction.guild.voice_client
         if vc.queue.is_empty and not vc.is_playing():
             await vc.play(search)
-            embed = nextcord.Embed(title=f"Added {text} to the queue!",
+            embed = nextcord.Embed(title=f"Started playing {text}!",
             color=nextcord.Colour.from_rgb(225, 0, 255))
             await interaction.send(embed=embed, view=view)
             await view.wait()
