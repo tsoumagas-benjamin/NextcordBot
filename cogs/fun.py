@@ -32,7 +32,12 @@ def birthday_task():
         member_list = []
         # Gets all birthday users ID's
         for member in bday:
-            member_list.append(member['_id'])
+            # Prune user birthday if no mutual servers exist
+            if member.mutual_guilds is None:
+                if db.birthdays.find_one({"_id": member.id}):
+                    db.birthdays.delete_one({"_id": member.id})
+            else:
+                member_list.append(member['_id'])
         return member_list
     else:
         return None
@@ -123,9 +128,7 @@ class Fun(commands.Cog, name="Fun"):
                     title=post_title, 
                     description=post_description, 
                     color=nextcord.Colour.from_rgb(225, 0, 255))
-                if res['data']['children'][num]['data']['url_overridden_by_dest']:
-                    image_url = res['data']['children'][num]['data']['url_overridden_by_dest']
-                    embed.set_image(url=image_url)
+                embed.set_image(url=post_url)
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
                 await daily_channel.send(embed=embed)
                 await cs.close()
@@ -181,14 +184,12 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                if res['data']['children'][num]['data']['url_overridden_by_dest']:
-                    image_url = res['data']['children'][num]['data']['url_overridden_by_dest']
-                    embed.set_image(url=image_url)
                 post_description = f"Posted by u/{post_author} [here]({post_url})"
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=post_description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
+                embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
 
@@ -222,14 +223,12 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                if res['data']['children'][num]['data']['url_overridden_by_dest']:
-                    image_url = res['data']['children'][num]['data']['url_overridden_by_dest']
-                    embed.set_image(url=image_url)
                 post_description = f"Posted by u/{post_author} [here]({post_url})"
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=post_description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
+                embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
     
@@ -276,14 +275,12 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                if res['data']['children'][num]['data']['url_overridden_by_dest']:
-                    image_url = res['data']['children'][num]['data']['url_overridden_by_dest']
-                    embed.set_image(url=image_url)
                 post_description = f"Posted by u/{post_author} [here]({post_url})"
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=post_description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
+                embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
 
