@@ -133,8 +133,8 @@ class Fun(commands.Cog, name="Fun"):
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
-                    name=f"Posted by u/{author} [here]({post_url})", 
-                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
+                    name=f"🔺{ups} upvotes with a {ratio}% upvote ratio", 
+                    value=f"Posted by u/{author} [here]({post_url})")
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
                 await daily_channel.send(embed=embed)
                 await cs.close()
@@ -200,8 +200,8 @@ class Fun(commands.Cog, name="Fun"):
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
-                    name=f"Posted by u/{author} [here]({post_url})", 
-                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
+                    name=f"🔺{ups} upvotes with a {ratio}% upvote ratio", 
+                    value=f"Posted by u/{author} [here]({post_url})")
                 await interaction.send(embed=embed)
                 await cs.close()
 
@@ -245,8 +245,8 @@ class Fun(commands.Cog, name="Fun"):
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
-                    name=f"Posted by u/{author} [here]({post_url})", 
-                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
+                    name=f"🔺{ups} upvotes with a {ratio}% upvote ratio", 
+                    value=f"Posted by u/{author} [here]({post_url})")
                 await interaction.send(embed=embed)
                 await cs.close()
     
@@ -303,8 +303,8 @@ class Fun(commands.Cog, name="Fun"):
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
-                    name=f"Posted by u/{author} [here]({post_url})", 
-                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
+                    name=f"🔺{ups} upvotes with a {ratio}% upvote ratio", 
+                    value=f"Posted by u/{author} [here]({post_url})")
                 await interaction.send(embed=embed)
                 await cs.close()
 
