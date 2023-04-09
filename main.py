@@ -32,7 +32,7 @@ def main():
 
         await bot.change_presence(activity = nextcord.Activity(
         type=nextcord.ActivityType.listening, 
-        name="commands, @ me for help!"
+        name="commands, /commands for help!"
         ))
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
@@ -80,19 +80,6 @@ def main():
                 if word.lower() in message.content.lower():
                     await message.channel.send(random.choice(options))
                     break
-
-        if bot.user.mentioned_in(message) and not message.mention_everyone:
-            commands_list = bot.get_application_commands()
-            cmds = []
-            for cmd in commands_list:
-                cmds.append(cmd.qualified_name)
-            cmds.sort()
-            bot_commands = ", ".join(cmds)
-            embed = nextcord.Embed(
-                title=f"{bot.user.name} Commands",
-                description=bot_commands,
-                color=nextcord.Colour.from_rgb(225, 0, 255))
-            await message.channel.send(embed=embed)  
 
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):

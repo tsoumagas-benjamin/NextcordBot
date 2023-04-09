@@ -28,11 +28,26 @@ class Information(commands.Cog, name = "Information"):
         equation = equation.replace(" ", "")
         evaluator = InfixParser.Evaluator()
         await interaction.send(f' Result of {equation} is {evaluator.eval(equation)}')
+    
+    @nextcord.slash_command()
+    async def commands(self, interaction: Interaction):
+        commands_list = self.bot.get_application_commands()
+        cmds = []
+        for cmd in commands_list:
+            cmds.append(cmd.qualified_name)
+        cmds.sort()
+        bot_commands = ", ".join(cmds)
+        embed = nextcord.Embed(
+            title=f"{self.bot.user.name} Commands",
+            description=bot_commands,
+            color=nextcord.Colour.from_rgb(225, 0, 255))
+        await interaction.send(embed=embed)  
 
     @nextcord.slash_command(guild_ids=[686394755009347655])
     async def date(self, interaction: Interaction):
         """Gets today's date"""
-        date_time = datetime.today().strftime("%B %d, %Y")
+        date = datetime.today() - datetime.timedelta(days=1)
+        date_time = date.strftime("%B %d, %Y")
         await interaction.send(f"Today is: {date_time}")
 
     @nextcord.slash_command()
