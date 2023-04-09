@@ -120,15 +120,21 @@ class Fun(commands.Cog, name="Fun"):
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
-                post_title = res['data']['children'][num]['data']['title']
-                post_author = res['data']['children'][num]['data']['author']
-                post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                post_data = res['data']['children'][num]['data']
+                post_title = post_data['title']
+                author = post_data['author']
+                post_url = post_data['url']
+                description = post_data['selftext']
+                ups = post_data['ups']
+                ratio = post_data['upvote_ratio']
                 embed = nextcord.Embed(
                     title=post_title, 
-                    description=post_description, 
+                    description=description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
+                embed.add_field(
+                    name=f"Posted by u/{author} [here]({post_url})", 
+                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
                 await daily_channel.send(embed=embed)
                 await cs.close()
@@ -181,15 +187,21 @@ class Fun(commands.Cog, name="Fun"):
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
-                post_title = res['data']['children'][num]['data']['title']
-                post_author = res['data']['children'][num]['data']['author']
-                post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                post_data = res['data']['children'][num]['data']
+                post_title = post_data['title']
+                author = post_data['author']
+                post_url = post_data['url']
+                description = post_data['selftext']
+                ups = post_data['ups']
+                ratio = post_data['upvote_ratio']
                 embed = nextcord.Embed(
                     title=post_title, 
-                    description=post_description,
+                    description=description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
+                embed.add_field(
+                    name=f"Posted by u/{author} [here]({post_url})", 
+                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
                 await interaction.send(embed=embed)
                 await cs.close()
 
@@ -220,15 +232,21 @@ class Fun(commands.Cog, name="Fun"):
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
-                post_title = res['data']['children'][num]['data']['title']
-                post_author = res['data']['children'][num]['data']['author']
-                post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                post_data = res['data']['children'][num]['data']
+                post_title = post_data['title']
+                author = post_data['author']
+                post_url = post_data['url']
+                description = post_data['selftext']
+                ups = post_data['ups']
+                ratio = post_data['upvote_ratio']
                 embed = nextcord.Embed(
                     title=post_title, 
-                    description=post_description,
+                    description=description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
+                embed.add_field(
+                    name=f"Posted by u/{author} [here]({post_url})", 
+                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
                 await interaction.send(embed=embed)
                 await cs.close()
     
@@ -272,15 +290,21 @@ class Fun(commands.Cog, name="Fun"):
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
-                post_title = res['data']['children'][num]['data']['title']
-                post_author = res['data']['children'][num]['data']['author']
-                post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                post_data = res['data']['children'][num]['data']
+                post_title = post_data['title']
+                author = post_data['author']
+                post_url = post_data['url']
+                description = post_data['selftext']
+                ups = post_data['ups']
+                ratio = post_data['upvote_ratio']
                 embed = nextcord.Embed(
                     title=post_title, 
-                    description=post_description,
+                    description=description,
                     color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
+                embed.add_field(
+                    name=f"Posted by u/{author} [here]({post_url})", 
+                    value=f"🔺{ups} upvotes with a {ratio}% upvote ratio")
                 await interaction.send(embed=embed)
                 await cs.close()
 
