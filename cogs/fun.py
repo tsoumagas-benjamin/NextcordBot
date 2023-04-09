@@ -58,28 +58,6 @@ def joke_task():
         embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
     return embed
 
-def meme_task():
-    memeAPI = request.urlopen('https://meme-api.herokuapp.com/gimme')
-    memeData = json.load(memeAPI)
-
-    memeURL = memeData['url']
-    memeName = memeData['title']
-    memePoster = memeData['author']
-    memeSub = memeData['subreddit']
-    memeLink = memeData['postLink']
-    memeVotes = memeData['ups']
-
-    embed = nextcord.Embed(
-        title=memeName, 
-        description=f"r/{memeSub} • Posted by u/{memePoster}", 
-        color=nextcord.Colour.orange()
-    )
-    embed.set_image(url=memeURL)
-    embed.set_footer(
-        text=f"{memeVotes}🔺 • Original post at: {memeLink}"
-    )
-    return embed
-
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
 
@@ -122,21 +100,30 @@ class Fun(commands.Cog, name="Fun"):
         # Gets daily animal
         daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(animal_task())
-        print(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
         daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(embed=joke_task())
-        print(joke_task())
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
-        daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        await daily_channel.send(embed=meme_task())
-        print(meme_task())
+        base_url = f'https://www.reddit.com/r/memes/hot.json?sort=hot'
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(base_url) as r:
+                res = await r.json()
+                num = random.randint(0, 25)
+                post_title = res['data']['children'][num]['data']['title']
+                post_author = res['data']['children'][num]['data']['author']
+                post_url = res['data']['children'][num]['data']['url']
+                post_description = f"Posted by {post_author} [here]({post_url})"
+                embed = nextcord.Embed(title=post_title, description=post_description)
+                embed.set_image(url=post_url)
+                daily_channel = await self.bot.fetch_channel(daily_channel_id)
+                await daily_channel.send(embed=embed)
+                await cs.close()
 
     @nextcord.slash_command()
     async def animal(self, interaction: Interaction):
@@ -177,6 +164,23 @@ class Fun(commands.Cog, name="Fun"):
         embed = nextcord.Embed(title='', description=message, color=nextcord.Colour.from_rgb(225, 0, 255))
         embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
+    
+    @nextcord.slash_command()
+    async def food(self, interaction: Interaction):
+        """Search r/food for a random post"""
+        base_url = f'https://www.reddit.com/r/food/hot.json?sort=hot'
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(base_url) as r:
+                res = await r.json()
+                num = random.randint(0, 25)
+                post_title = res['data']['children'][num]['data']['title']
+                post_author = res['data']['children'][num]['data']['author']
+                post_url = res['data']['children'][num]['data']['url']
+                post_description = f"Posted by {post_author} [here]({post_url})"
+                embed = nextcord.Embed(title=post_title, description=post_description)
+                embed.set_image(url=post_url)
+                await interaction.send(embed=embed)
+                await cs.close()
 
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_emojis=True)
@@ -204,7 +208,13 @@ class Fun(commands.Cog, name="Fun"):
         async with aiohttp.ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
-                embed.set_image(url=res['data']['children'][random.randint(0, 25)]['data']['url'])
+                num = random.randint(0, 25)
+                post_title = res['data']['children'][num]['data']['title']
+                post_author = res['data']['children'][num]['data']['author']
+                post_url = res['data']['children'][num]['data']['url']
+                post_description = f"Posted by {post_author} [here]({post_url})"
+                embed = nextcord.Embed(title=post_title, description=post_description)
+                embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
     
@@ -241,9 +251,21 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def meme(self, interaction: Interaction):
-        """Gets a random meme from Heroku's meme API"""
-        result = meme_task()
-        await interaction.send(embed=result)
+        """Gets a random meme from r/memes"""
+        embed = nextcord.Embed(title='', description='')
+        base_url = f'https://www.reddit.com/r/memes/new.json?sort=hot'
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(base_url) as r:
+                res = await r.json()
+                num = random.randint(0, 25)
+                post_title = res['data']['children'][num]['data']['title']
+                post_author = res['data']['children'][num]['data']['author']
+                post_url = res['data']['children'][num]['data']['url']
+                post_description = f"Posted by {post_author} [here]({post_url})"
+                embed = nextcord.Embed(title=post_title, description=post_description)
+                embed.set_image(url=post_url)
+                await interaction.send(embed=embed)
+                await cs.close()
 
     @nextcord.slash_command()
     async def velkoz(self, interaction: Interaction):
