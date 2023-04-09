@@ -118,8 +118,11 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by {post_author} [here]({post_url})"
-                embed = nextcord.Embed(title=post_title, description=post_description)
+                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                embed = nextcord.Embed(
+                    title=post_title, 
+                    description=post_description, 
+                    color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
                 await daily_channel.send(embed=embed)
@@ -134,7 +137,7 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
     @application_checks.has_permissions(administrator=True)
     async def birthday(self, interaction: Interaction, member: nextcord.Member, month: int, day: int):
-        """Allows you to store a person's birthdate for this server."""
+        """Allows you to store/overwrite a person's birthdate for this server."""
         if month < 1 or month > 12:
             await interaction.send("Invalid month.")
         elif day < 1 or day > 31:
@@ -176,8 +179,11 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by {post_author} [here]({post_url})"
-                embed = nextcord.Embed(title=post_title, description=post_description)
+                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                embed = nextcord.Embed(
+                    title=post_title, 
+                    description=post_description,
+                    color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
@@ -212,8 +218,11 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by {post_author} [here]({post_url})"
-                embed = nextcord.Embed(title=post_title, description=post_description)
+                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                embed = nextcord.Embed(
+                    title=post_title, 
+                    description=post_description,
+                    color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
@@ -261,8 +270,11 @@ class Fun(commands.Cog, name="Fun"):
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
-                post_description = f"Posted by {post_author} [here]({post_url})"
-                embed = nextcord.Embed(title=post_title, description=post_description)
+                post_description = f"Posted by u/{post_author} [here]({post_url})"
+                embed = nextcord.Embed(
+                    title=post_title, 
+                    description=post_description,
+                    color=nextcord.Colour.from_rgb(225, 0, 255))
                 embed.set_image(url=post_url)
                 await interaction.send(embed=embed)
                 await cs.close()
