@@ -32,13 +32,13 @@ def main():
 
         await bot.change_presence(activity = nextcord.Activity(
         type=nextcord.ActivityType.listening, 
-        name="commands, /commands for help!"
+        name="/commands for help!"
         ))
         print(f"Collections: {collections}")
         print(f"Intents: {intents}")
         print(f'We have logged in as {bot.user}')
     
-    # Define bot behaviour on joining server
+    # Initialize starter words when joining a new server.
     async def on_guild_join(self, guild):
         # Add an entry for starter keywords
         if db.keywords.find_one({"_id": guild.id}) == None:
@@ -49,12 +49,18 @@ def main():
                 "encouragements": config.encouragements,
                 "status": False})
         
-    # Defining bot behaviour on leaving server
+    # When leaving a server, delete all collections pertaining to that server.
     async def on_guild_remove(self, guild):
         for collection in db.list_collection_names():
             mycol = db[collection]
             mycol.delete_many({"_id": guild.id})
-    
+
+    # Remove user from birthdays if they no longer share servers with the bot.
+    async def on_member_remove(self, member):
+        if member.mutual_guilds is None:
+            if db.birthdays.find_one({"_id": member.id}):
+                db.birthdays.delete_one({"_id": member.id})
+                
     # Defining bot behaviour when a message is sent
     async def on_message(self, message):
         # If the message is from a bot, don't react
