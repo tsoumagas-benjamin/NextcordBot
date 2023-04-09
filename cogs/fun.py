@@ -110,11 +110,11 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
         # Gets daily meme
-        base_url = f'https://www.reddit.com/r/memes/hot.json?sort=hot'
+        base_url = f'https://www.reddit.com/r/memes/hot.json'
         async with aiohttp.ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
-                num = random.randint(0, 25)
+                num = random.randint(0, 24)
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
@@ -168,11 +168,11 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def food(self, interaction: Interaction):
         """Search r/food for a random post"""
-        base_url = f'https://www.reddit.com/r/food/hot.json?sort=hot'
+        base_url = f'https://www.reddit.com/r/food/hot.json'
         async with aiohttp.ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
-                num = random.randint(0, 25)
+                num = random.randint(0, 24)
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
@@ -204,11 +204,11 @@ class Fun(commands.Cog, name="Fun"):
     async def getpost(self, interaction: Interaction, message: str):
         """Search a subreddit for a random post"""
         embed = nextcord.Embed(title='', description='')
-        base_url = f'https://www.reddit.com/r/{message}/new.json?sort=hot'
+        base_url = f'https://www.reddit.com/r/{message}/hot.json'
         async with aiohttp.ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
-                num = random.randint(0, 25)
+                num = random.randint(0, 24)
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
@@ -253,11 +253,11 @@ class Fun(commands.Cog, name="Fun"):
     async def meme(self, interaction: Interaction):
         """Gets a random meme from r/memes"""
         embed = nextcord.Embed(title='', description='')
-        base_url = f'https://www.reddit.com/r/memes/new.json?sort=hot'
+        base_url = f'https://www.reddit.com/r/memes/hot.json'
         async with aiohttp.ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
-                num = random.randint(0, 25)
+                num = random.randint(0, 24)
                 post_title = res['data']['children'][num]['data']['title']
                 post_author = res['data']['children'][num]['data']['author']
                 post_url = res['data']['children'][num]['data']['url']
