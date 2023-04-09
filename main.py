@@ -23,9 +23,10 @@ def main():
         
     # Define bot behaviour on start up
     async def on_ready(self):
-        """When discord is connected"""
+        """When bot is connected to Discord"""
+        # Initialize default collections
         collections = db.list_collection_names()
-        for c in ['birthdays', 'rules', 'keywords', 'songs', 'velkoz']:
+        for c in ['birthdays', 'rules', 'keywords', 'velkoz']:
             if c not in collections:
                 db.create_collection(c)
 
