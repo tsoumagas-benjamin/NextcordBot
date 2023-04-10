@@ -39,7 +39,7 @@ class Information(commands.Cog, name = "Information"):
         embed = nextcord.Embed(
             title=f"{self.bot.user.name} Commands",
             description=bot_commands,
-            color=nextcord.Colour.from_rgb(225, 0, 255))
+            color=nextcord.Colour.from_rgb(214, 60, 26))
         await interaction.send(embed=embed)  
 
     @nextcord.slash_command()
@@ -47,7 +47,7 @@ class Information(commands.Cog, name = "Information"):
         """Get information on a user"""
         embed = nextcord.Embed(title=member.display_name,
                                description=member.mention,
-                               color=nextcord.Colour.from_rgb(225, 0, 255))
+                               color=nextcord.Colour.from_rgb(214, 60, 26))
         embed.add_field(name="ID", value=member.id, inline=False)
         embed.add_field(
             name="Created at",
@@ -76,7 +76,7 @@ class Information(commands.Cog, name = "Information"):
     async def ping(self, interaction: Interaction):
         """Gets bot ping and API response time"""
         start_time = time.time()
-        embed = nextcord.Embed(title="Response Times", color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title="Response Times", color=nextcord.Colour.from_rgb(214, 60, 26))
         end_time = time.time()
 
         embed.add_field(name=f"Ping:", value=f"{round(self.bot.latency * 1000)}ms")
@@ -93,7 +93,7 @@ class Information(commands.Cog, name = "Information"):
                 await interaction.send(f"Rule {number} doesn't exist!")
                 return
             description = output['rules'][number-1]
-            embed = nextcord.Embed(title=f"{interaction.guild.name} Rule {number}", description=description, color=nextcord.Colour.from_rgb(225, 0, 255))
+            embed = nextcord.Embed(title=f"{interaction.guild.name} Rule {number}", description=description, color=nextcord.Colour.from_rgb(214, 60, 26))
             embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
             await interaction.send(embed=embed)
         else:
@@ -107,7 +107,7 @@ class Information(commands.Cog, name = "Information"):
             description = ""
             for rule in output['rules']:
                 description += f"{rule}\n"
-            embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=description, color=nextcord.Colour.from_rgb(225, 0, 255))
+            embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=description, color=nextcord.Colour.from_rgb(214, 60, 26))
             embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.avatar)
             await interaction.send(embed=embed)
         else:
@@ -120,14 +120,14 @@ class Information(commands.Cog, name = "Information"):
         rule_arr = rules.split("; ")
         db.rules.replace_one({"_id": interaction.guild.id},{"_id": interaction.guild.id, "rules": rule_arr}, upsert=True)
         rule_body = rules.replace("; ", "\n")
-        embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=rule_body, color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title=f"{interaction.guild.name} Rules", description=rule_body, color=nextcord.Colour.from_rgb(214, 60, 26))
         embed.set_footer(text=f"Requested by {interaction.user.name}", icon_url=interaction.user.display_avatar)
         await interaction.send(embed=embed)
 
     @nextcord.slash_command(guild_ids=[793685160931098696])
     async def socials(self, interaction: Interaction):
         """Returns links to Ben's socials"""
-        embed = nextcord.Embed(title=f"Ben's Socials", color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title=f"Ben's Socials", color=nextcord.Colour.from_rgb(214, 60, 26))
         embed.add_field(
             name=f"Twitch:", 
             value="https://www.twitch.tv/chaosherald2",
@@ -161,7 +161,7 @@ class Information(commands.Cog, name = "Information"):
         cmds.sort()
         bot_commands = ", ".join(cmds)
         embed = nextcord.Embed(title=f"{self.bot.user.name} Statistics",
-                               color=nextcord.Colour.from_rgb(225, 0, 255))
+                               color=nextcord.Colour.from_rgb(214, 60, 26))
         embed.add_field(name=f"Servers with {self.bot.user.name}: ",
                         value=server_count,
                         inline=False)

@@ -48,7 +48,7 @@ class Error(commands.Cog):
         else:
           raise error
 
-        embed = nextcord.Embed(title=error, description = message, color = nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title=error, description = message, color=nextcord.Colour.from_rgb(214, 60, 26))
         await interaction.send(embed=embed, delete_after=5)
         await interaction.message.delete(delay=5)
 

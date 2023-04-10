@@ -69,7 +69,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
     async def inspire(self, interaction: Interaction):
         """Command to return an inspirational quote"""
         quote = get_quote()
-        embed = nextcord.Embed(title='', description=quote, color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title='', description=quote, color=nextcord.Colour.from_rgb(214, 60, 26))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
@@ -85,7 +85,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
             filtered = "N/a"
         if not encourage:
             encourage = "N/a"
-        embed = nextcord.Embed(title=f"{interaction.guild.name} Keywords", description="",color=nextcord.Colour.from_rgb(225, 0, 255))
+        embed = nextcord.Embed(title=f"{interaction.guild.name} Keywords", description="", color=nextcord.Colour.from_rgb(214, 60, 26))
         embed.add_field(name="Words that the bot will offer encouragement for:",
                         value= sad,
                         inline=False)
