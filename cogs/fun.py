@@ -310,7 +310,7 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def viktor(self, interaction: Interaction):
-        """Gets a random Vel'Koz quote."""
+        """Gets a random Viktor quote."""
         object = db['Viktor'].aggregate([{ "$sample": { "size": 1 }}])
         for x in object:
             quote = x['quote']
