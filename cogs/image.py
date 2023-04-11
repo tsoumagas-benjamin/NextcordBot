@@ -49,7 +49,7 @@ class Image(commands.Cog, name="Image"):
 
     @nextcord.slash_command()
     async def flip(self, interaction: Interaction, url: str, 
-                    style: str = nextcord.SlashOption(options=["Vertical", "Horizontal"])):
+                    style: str = nextcord.SlashOption(name="", description="", choices=["Vertical", "Horizontal"])):
         """Flip an image vertically or horizontally, given its URL"""
         image = get_image(interaction, url)
         if image:
@@ -61,7 +61,7 @@ class Image(commands.Cog, name="Image"):
     
     @nextcord.slash_command()
     async def convert(self, interaction: Interaction, url: str, 
-                      style: str = nextcord.SlashOption(choices=["Greyscale", "Colour"])):
+                      style: str = nextcord.SlashOption(name="", description="", choices=["Greyscale", "Colour"])):
         """Convert an image to greyscale or colour, given its URL"""
         image = get_image(interaction, url)
         if image:
