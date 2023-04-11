@@ -4,7 +4,7 @@ from nextcord.ext import commands, application_checks
 from PIL import Image, ImageFilter, ImageEnhance
 from io import BytesIO
 
-#TODO: Get image from URL, and send it in Discord.
+#Get image from URL, and return it.
 async def get_image(interaction, url):
    async with aiohttp.ClientSession() as ses:
       async with ses.get(url) as r:
@@ -41,15 +41,8 @@ class Image(commands.Cog, name="Image"):
     def __init__(self, bot) -> None:
       self.bot = bot
 
-    #TODO: Left-Right Flip
-    #TODO: Top-Bottom Flip
-    #TODO: Image convert to greyscale(L)
-    #TODO: Image convert to colour(RGB)
-    #TODO: Apply image filter
-
     @nextcord.slash_command()
-    async def flip(self, interaction: Interaction, url: str, 
-                    style: str = nextcord.SlashOption(name="", description="", choices=["Vertical", "Horizontal"])):
+    async def flip(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="", description="", choices=["Vertical", "Horizontal"])):
         """Flip an image vertically or horizontally, given its URL"""
         image = get_image(interaction, url)
         if image:
@@ -60,8 +53,7 @@ class Image(commands.Cog, name="Image"):
             await interaction.send(file=out)
     
     @nextcord.slash_command()
-    async def convert(self, interaction: Interaction, url: str, 
-                      style: str = nextcord.SlashOption(name="", description="", choices=["Greyscale", "Colour"])):
+    async def convert(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="", description="", choices=["Greyscale", "Colour"])):
         """Convert an image to greyscale or colour, given its URL"""
         image = get_image(interaction, url)
         if image:
@@ -69,9 +61,8 @@ class Image(commands.Cog, name="Image"):
             out = image.convert(mode)
             await interaction.send(file=out)
     
-    @nextcord.slash_command(name="Filter Image")
-    async def filter(self, interaction: Interaction, url: str, 
-                     filter: str = nextcord.SlashOption(choices=filters.keys)):
+    @nextcord.slash_command()
+    async def filter(self, interaction: Interaction, url: str, filter: str = nextcord.SlashOption(choices=filters.keys)):
         """Apply filters to an image, given its URL"""
         image = get_image(interaction, url)
         if image:

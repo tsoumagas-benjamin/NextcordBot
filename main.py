@@ -22,6 +22,7 @@ def main():
     bot = NextcordBot(intents=intents)  
         
     # Define bot behaviour on start up
+    @bot.event
     async def on_ready(self):
         """When bot is connected to Discord"""
         # Initialize default collections
@@ -39,6 +40,7 @@ def main():
         print(f'We have logged in as {bot.user}')
     
     # Initialize starter words when joining a new server.
+    @bot.event
     async def on_guild_join(self, guild):
         # Add an entry for starter keywords
         if db.keywords.find_one({"_id": guild.id}) == None:
@@ -50,18 +52,21 @@ def main():
                 "status": False})
         
     # When leaving a server, delete all collections pertaining to that server.
+    @bot.event
     async def on_guild_remove(self, guild):
         for collection in db.list_collection_names():
             mycol = db[collection]
             mycol.delete_many({"_id": guild.id})
 
     # Remove user from birthdays if they no longer share servers with the bot.
+    @bot.event
     async def on_member_remove(self, member):
         if member.mutual_guilds is None:
             if db.birthdays.find_one({"_id": member.id}):
                 db.birthdays.delete_one({"_id": member.id})
                 
     # Defining bot behaviour when a message is sent
+    @bot.event
     async def on_message(self, message):
         # If the message is from a bot, don't react
         if message.author.bot:

@@ -60,7 +60,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
 
     @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
-    async def filter(self, interaction: Interaction, *, message: str):
+    async def filterword(self, interaction: Interaction, *, message: str):
         """Command to add an filtered word or remove it if it already exists"""
         action = find_entry(interaction.guild.id, "filter", message)
         await interaction.send(f"{action} filter for: {message}.")
