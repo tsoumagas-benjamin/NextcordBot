@@ -92,10 +92,19 @@ def main():
                     await message.channel.send(random.choice(options))
                     break
 
+    #Temporary testing command
+    @bot.slash_command(guild_ids=[686394755009347655])
+    async def cogs(interaction: nextcord.Interaction):
+        cog_list = []
+        for filename in os.listdir('./cogs'):
+            if filename.endswith('.py'):
+                cog_list += (filename[:-3])
+        result = ', '.join(cog_list)
+        await interaction.send(f'Cogs: {result}')
+
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
-            print(f'cogs.{filename[:-3]}')
             bot.load_extension(f'cogs.{filename[:-3]}')
 
     # Tell the bot to store logs in nextcord.log
