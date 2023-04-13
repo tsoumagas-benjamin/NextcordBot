@@ -95,6 +95,7 @@ def main():
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
+            print(f'cogs.{filename[:-3]}')
             bot.load_extension(f'cogs.{filename[:-3]}')
 
     # Tell the bot to store logs in nextcord.log
