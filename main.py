@@ -30,6 +30,12 @@ def main():
         for c in ['birthdays', 'rules', 'keywords', 'velkoz']:
             if c not in collections:
                 db.create_collection(c)
+        
+        # Add functionality from cogs
+        for filename in os.listdir('./cogs'):
+            if filename.endswith('.py'):
+                bot.load_extension(f'cogs.{filename[:-3]}')
+        await bot.sync_all_application_commands()
 
         await bot.change_presence(activity = nextcord.Activity(
         type=nextcord.ActivityType.listening, 
@@ -98,14 +104,9 @@ def main():
         cog_list = []
         for filename in os.listdir('./cogs'):
             if filename.endswith('.py'):
-                cog_list += (filename[:-3])
+                cog_list.append(filename[:-3])
         result = ', '.join(cog_list)
         await interaction.send(f'Cogs: {result}')
-
-    # Add functionality from cogs
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            bot.load_extension(f'cogs.{filename[:-3]}')
 
     # Tell the bot to store logs in nextcord.log
     log()
