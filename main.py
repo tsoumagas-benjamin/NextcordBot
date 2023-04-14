@@ -35,6 +35,7 @@ def main():
         for filename in os.listdir('./cogs'):
             if filename.endswith('.py'):
                 bot.load_extension(f'cogs.{filename[:-3]}')
+        bot.add_all_application_commands()
         await bot.sync_all_application_commands()
 
         await bot.change_presence(activity = nextcord.Activity(
