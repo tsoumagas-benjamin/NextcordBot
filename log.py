@@ -1,14 +1,27 @@
-import logging
+import sys, logging
 
 def log():
   #Create logger
-  logger = logging.getLogger('nextcord')
-  logger.setLevel(logging.DEBUG)
-
-  #Create file handler to write to the log
-  handler = logging.FileHandler(filename='nextcord.log', encoding='utf-8', mode='w')
+  client_logger = logging.getLogger("nextcord.client")
+  state_logger = logging.getLogger("nextcord.state")
 
   #Format log entries
-  handler.setFormatter(logging.Formatter(fmt='%(asctime)s | %(levelname)s: %(message)s \n', datefmt='%m/%d/%Y %I:%M:%S %p'))
+  FORMAT = "[{asctime}][{filename}][{lineno:3}][{funcName}][{levelname}] {message}"
+  formatter = logging.Formatter(FORMAT, style="{")
+
+  #Create file handler to write to the log
+  console_handler = logging.StreamHandler(sys.stdout)
+  file_handler = logging.FileHandler("latest.log", mode="w")
+
+  console_handler.setFormatter(formatter)
+  file_handler.setFormatter(formatter)
+
   #Add file handler to logger
-  logger.addHandler(handler)
+  client_logger.addHandler(console_handler)
+  state_logger.addHandler(console_handler)
+
+  client_logger.addHandler(file_handler)
+  state_logger.addHandler(file_handler)
+
+  client_logger.setLevel(logging.DEBUG)
+  state_logger.setLevel(logging.DEBUG)
