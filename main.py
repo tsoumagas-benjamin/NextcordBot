@@ -35,8 +35,6 @@ def main():
         for filename in os.listdir('./cogs'):
             if filename.endswith('.py'):
                 bot.load_extension(f'cogs.{filename[:-3]}')
-        bot.add_all_application_commands()
-        await bot.sync_all_application_commands()
 
         await bot.change_presence(activity = nextcord.Activity(
         type=nextcord.ActivityType.listening, 
@@ -99,23 +97,11 @@ def main():
                     await message.channel.send(random.choice(options))
                     break
 
-    #Temporary testing command
-    @bot.slash_command(guild_ids=[686394755009347655])
-    async def cogs(interaction: nextcord.Interaction):
-        """Return a list of loaded cogs"""
-        cog_list = []
-        for filename in os.listdir('./cogs'):
-            if filename.endswith('.py'):
-                cog_list.append(filename[:-3])
-        result = ', '.join(cog_list)
-        await interaction.send(f'Cogs: {result}')
-
     # Tell the bot to store logs in nextcord.log
     log()
 
     # Run Discord bot
     bot.run(os.getenv('DISCORD_TOKEN'))
-
 
 if __name__ == "__main__":
     main()
