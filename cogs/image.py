@@ -1,19 +1,19 @@
 import nextcord, requests
 from nextcord import Interaction
 from nextcord.ext import commands
-from PIL import Image, ImageFilter, ImageEnhance
+import PIL.Image, PIL.ImageFilter
             
 filters = {
-    "Blur": ImageFilter.BLUR, 
-    "Contour": ImageFilter.CONTOUR,
-    "Detail": ImageFilter.DETAIL,
-    "Edge Enhance": ImageFilter.EDGE_ENHANCE,
-    "Edge Enhance More": ImageFilter.EDGE_ENHANCE_MORE,
-    "Emboss": ImageFilter.EMBOSS,
-    "Find Edges": ImageFilter.FIND_EDGES,
-    "Sharpen": ImageFilter.SHARPEN,
-    "Smooth": ImageFilter.SMOOTH,
-    "Smooth More": ImageFilter.SMOOTH_MORE
+    "Blur": PIL.ImageFilter.BLUR, 
+    "Contour": PIL.ImageFilter.CONTOUR,
+    "Detail": PIL.ImageFilter.DETAIL,
+    "Edge Enhance": PIL.ImageFilter.EDGE_ENHANCE,
+    "Edge Enhance More": PIL.ImageFilter.EDGE_ENHANCE_MORE,
+    "Emboss": PIL.ImageFilter.EMBOSS,
+    "Find Edges": PIL.ImageFilter.FIND_EDGES,
+    "Sharpen": PIL.ImageFilter.SHARPEN,
+    "Smooth": PIL.ImageFilter.SMOOTH,
+    "Smooth More": PIL.ImageFilter.SMOOTH_MORE
 }
 
 #Create a cog for image manipulation
@@ -31,12 +31,12 @@ class Image(commands.Cog, name="Image"):
         img_data = requests.get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
-        im = Image.open('../image.jpg')
+        im = PIL.Image.open('../image.jpg')
         if im:
             if style == "Vertical":
-                out = im.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+                out = im.transpose(PIL.Image.Transpose.FLIP_TOP_BOTTOM)
             else:
-                out = im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+                out = im.transpose(PIL.Image.Transpose.FLIP_LEFT_RIGHT)
             await interaction.send(file=out)
         else:
             await interaction.send("Could not load the image, sorry!")
@@ -47,7 +47,7 @@ class Image(commands.Cog, name="Image"):
         img_data = requests.get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
-        im = Image.open('../image.jpg')
+        im = PIL.Image.open('../image.jpg')
         if im:
             mode = "L" if style == "Greyscale" else "RGB"
             out = im.convert(mode)
@@ -61,7 +61,7 @@ class Image(commands.Cog, name="Image"):
         img_data = requests.get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
-        im = Image.open('../image.jpg')
+        im = PIL.Image.open('../image.jpg')
         if im:
             out = im.filter(filters[filter])
             await interaction.send(file=out)
