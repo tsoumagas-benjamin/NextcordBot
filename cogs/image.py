@@ -41,8 +41,8 @@ class Image(commands.Cog, name="Image"):
     def __init__(self, bot) -> None:
       self.bot = bot
 
-    @nextcord.slash_command()
-    async def flip(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="", description="", choices=["Vertical", "Horizontal"])):
+    @nextcord.slash_command(name="flip")
+    async def flip_image(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="", description="", choices=["Vertical", "Horizontal"])):
         """Flip an image vertically or horizontally, given its URL"""
         image = await get_image(interaction, url)
         if image:
@@ -52,8 +52,8 @@ class Image(commands.Cog, name="Image"):
                 out = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
             await interaction.send(file=out)
     
-    @nextcord.slash_command()
-    async def convert(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="", description="", choices=["Greyscale", "Colour"])):
+    @nextcord.slash_command(name="convert")
+    async def convert_image(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="", description="", choices=["Greyscale", "Colour"])):
         """Convert an image to greyscale or colour, given its URL"""
         image = await get_image(interaction, url)
         if image:
@@ -61,8 +61,8 @@ class Image(commands.Cog, name="Image"):
             out = image.convert(mode)
             await interaction.send(file=out)
     
-    @nextcord.slash_command()
-    async def filter(self, interaction: Interaction, url: str, filter: str = nextcord.SlashOption(choices=filters.keys())):
+    @nextcord.slash_command(name="filter")
+    async def filter_image(self, interaction: Interaction, url: str, filter: str = nextcord.SlashOption(choices=filters.keys())):
         """Apply filters to an image, given its URL"""
         image = await get_image(interaction, url)
         if image:

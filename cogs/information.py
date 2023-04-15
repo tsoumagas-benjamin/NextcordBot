@@ -30,6 +30,7 @@ class Information(commands.Cog, name = "Information"):
     
     @nextcord.slash_command()
     async def commands(self, interaction: Interaction):
+        """Get a list of commands for the bot"""
         commands_list = self.bot.get_application_commands()
         cmds = []
         for cmd in commands_list:

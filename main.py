@@ -102,6 +102,7 @@ def main():
     #Temporary testing command
     @bot.slash_command(guild_ids=[686394755009347655])
     async def cogs(interaction: nextcord.Interaction):
+        """Return a list of loaded cogs"""
         cog_list = []
         for filename in os.listdir('./cogs'):
             if filename.endswith('.py'):
