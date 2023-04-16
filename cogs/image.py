@@ -37,7 +37,8 @@ class Image(commands.Cog, name="Image"):
                 out = im.transpose(PIL.Image.Transpose.FLIP_TOP_BOTTOM)
             else:
                 out = im.transpose(PIL.Image.Transpose.FLIP_LEFT_RIGHT)
-            await interaction.send(file=out)
+            out.save("../output.jpg")
+            await interaction.send(file=nextcord.File("../output.jpg"))
         else:
             await interaction.send("Could not load the image, sorry!")
     
@@ -51,7 +52,8 @@ class Image(commands.Cog, name="Image"):
         if im:
             mode = "L" if style == "Greyscale" else "RGB"
             out = im.convert(mode)
-            await interaction.send(file=out)
+            out.save("../output.jpg")
+            await interaction.send(file=nextcord.File("../output.jpg"))
         else:
             await interaction.send("Could not load the image, sorry!")
     
@@ -64,7 +66,8 @@ class Image(commands.Cog, name="Image"):
         im = PIL.Image.open('../image.jpg')
         if im:
             out = im.filter(filters[filter])
-            await interaction.send(file=out)
+            out.save("../output.jpg")
+            await interaction.send(file=nextcord.File("../output.jpg"))
         else:
             await interaction.send("Could not load the image, sorry!")
 
