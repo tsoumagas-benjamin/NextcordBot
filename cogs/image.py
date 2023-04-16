@@ -35,6 +35,20 @@ class Image(commands.Cog, name="Image"):
 
     def __init__(self, bot) -> None:
       self.bot = bot
+
+    @nextcord.slash_command(name="contrast")
+    async def contrast_image(self, interaction: Interaction, url: str, value: float = 1.5):
+        """Increase image contrast by choosing a high value, decrease by choosing a low value, given its URL"""
+        img_data = requests.get(url).content
+        with open('../image.jpg', 'wb') as handler:
+            handler.write(img_data)
+        im = PIL.Image.open('../image.jpg')
+        if im:
+            out = im.point(lambda i: i * value)
+            out.save("../output.jpg")
+            await interaction.send(file=nextcord.File("../output.jpg"))
+        else:
+            await interaction.send("Could not load the image, sorry!")
     
     @nextcord.slash_command(name="convert")
     async def convert_image(self, interaction: Interaction, url: str, style: str = "Greyscale"):
