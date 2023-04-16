@@ -109,7 +109,8 @@ class Image(commands.Cog, name="Image"):
             out = PIL.Image.merge("RGB", (b, g, r))
             out.save("../output.jpg")
             await interaction.send(file=nextcord.File("../output.jpg"))
-        await interaction.send("Could not load the image, sorry!")
+        else:
+            await interaction.send("Could not load the image, sorry!")
 
 #Add the cog to the bot
 def setup(bot):
