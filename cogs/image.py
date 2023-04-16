@@ -18,7 +18,7 @@ filters = {
 
 # Function to verify if an image is greyscale
 def is_grey_scale(img_path):
-    img = Image.open(img_path).convert('RGB')
+    img = PIL.Image.open(img_path).convert('RGB')
     w, h = img.size
     for i in range(w):
         for j in range(h):
