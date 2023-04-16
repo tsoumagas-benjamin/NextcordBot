@@ -12,6 +12,8 @@ db = client.NextcordBot
 #Get all the existing collections
 collections = db.list_collection_names()
 
+#Create a list of poll choices to use below
+poll_choices = ["1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️", "9️", "🔟"]
 #Create a cog for information commands
 class Information(commands.Cog, name = "Information"):
     """Commands to give you more information"""
@@ -84,6 +86,32 @@ class Information(commands.Cog, name = "Information"):
         embed.add_field(name=f"API:", value=f"{round((end_time - start_time) * 1000)}ms")
 
         await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
+    async def poll(self, interaction: Interaction, question: str, *, responses: str):
+        """Create a poll question, list valid responses, and see results. 
+        Separate responses (max. 10) by commas and a space, i.e. "A, B".
+        Defaults to ✅/❌"""
+        # Format embed response to resemble a poll question
+        if question[-1] != "?":
+            question += "?"
+        poll = nextcord.Embed(title=f"Poll: {question.capitalize()}", color=nextcord.Colour.from_rgb(214, 60, 26))
+        response_list = responses.split(", ")
+        # Default reactions
+        if not responses:
+            poll.add_field(name="Yes", value="✅", inline=True)
+            poll.add_field(name="No", value="❌", inline=True)
+            await interaction.send(embed=poll)
+            await poll.add_reaction("✅")
+            await poll.add_reaction("❌")
+        elif len(response_list) > 10:
+            await interaction.send("Too many responses, the maximum is 10!")
+        else:
+            for count, resp in enumerate(responses):
+                poll.add_field(name=resp, value=poll_choices[count], inline=True)
+            await interaction.send(embed=poll)
+            for i in range(len(response_list)):
+                await poll.add_reaction(poll_choices[i])
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):
