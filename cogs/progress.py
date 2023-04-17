@@ -8,6 +8,7 @@ client = pymongo.MongoClient(os.getenv('CONN_STRING'))
 #Name our access to our client database
 db = client.NextcordBot
 
+# Generates xp for a given message
 def get_xp(message: nextcord.Message):
     words = message.content.split()
     if len(words) > 5:
@@ -15,6 +16,7 @@ def get_xp(message: nextcord.Message):
     else:
         return len(words)
 
+# Determines whether the user levels up or not
 def level_up(xp: int, level: int):
     threshold = level * 25 + 100
     if xp >= threshold:
@@ -22,7 +24,7 @@ def level_up(xp: int, level: int):
     else:
         return False
 
-#Create a cog for image manipulation
+# Create a cog for levelling
 class Progress(commands.Cog, name="Progress"):
     """Commands about economy/levelling."""
 
@@ -66,6 +68,7 @@ class Progress(commands.Cog, name="Progress"):
         target = {"_id": person.id, "guild": interaction.guild.id}
         record = db.levels.find_one(target)
 
+        # Return XP and level or nothing if user is not registered
         if not record:
             return await interaction.send(f"{person} has no levels or XP!")
         else:
