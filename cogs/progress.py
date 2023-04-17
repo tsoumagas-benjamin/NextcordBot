@@ -77,9 +77,11 @@ class Progress(commands.Cog, name="Progress"):
     async def leaderboard(self, interaction: Interaction):
         """Gets the top 10 highest ranked people on the server"""
         server = interaction.guild
+        # Sort the database for the highest 10 scoring on the server
         leaders = db.levels.find({"guild": server}).sort({"level":-1, "xp":-1}).limit(10)
         embed = nextcord.Embed(title=f"{server} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
         for position, leader in enumerate(leaders):
+            # Get relevant information for each of the top 10
             uid = leader["_id"]
             user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
             xp = leader["xp"]
