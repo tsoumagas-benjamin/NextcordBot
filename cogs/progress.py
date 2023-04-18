@@ -93,10 +93,6 @@ class Progress(commands.Cog, name="Progress"):
             embed.add_field(name=f"{position+1}. {user} Level: {level}", value=f"{xp}/{threshold}XP", inline=False)
         embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
-        
-    
-
-
 
 #Add the cog to the bot
 def setup(bot):
