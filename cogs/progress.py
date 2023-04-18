@@ -74,14 +74,15 @@ class Progress(commands.Cog, name="Progress"):
         else:
             xp = record["xp"]
             level = record["level"]
-            return await interaction.send(f"{person} is level {level} with {xp}XP!")
+            return await interaction.send(f"{person} is level {level} with {xp} XP!")
         
     @nextcord.slash_command()
     async def leaderboard(self, interaction: Interaction):
         """Gets the top 10 highest ranked people on the server"""
         server = interaction.guild
         # Sort the database for the highest 10 scoring on the server
-        leaders = db.levels.find({"guild": server}).sort({"level":-1, "xp":-1}).limit(10)
+        cursor = db.levels.find_one({"guild": server})
+        leaders = cursor.sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
         embed = nextcord.Embed(title=f"{server} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10
@@ -91,7 +92,7 @@ class Progress(commands.Cog, name="Progress"):
             level = leader["level"]
             threshold = level * 25 + 100
             embed.add_field(name=f"{position+1}. {user} Level: {level}", value=f"{xp}/{threshold}XP", inline=False)
-        embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.guild.icon.url)
+        embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
 
 #Add the cog to the bot
