@@ -145,7 +145,7 @@ class Fun(commands.Cog, name="Fun"):
         result = animal_task()
         await interaction.send(result)
 
-    @nextcord.slash_command(guild_ids=[686394755009347655, 579555794933252096, 793685160931098696])
+    @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
     async def birthday(self, interaction: Interaction, member: nextcord.Member, month: int, day: int):
         """Allows you to store/overwrite a person's birthdate for this server."""

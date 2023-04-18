@@ -55,12 +55,13 @@ class Progress(commands.Cog, name="Progress"):
         print(user, give_xp(message))
         xp = user["xp"] + give_xp(message)
         level = user["level"]
-        print(xp, level)
+        await channel.send(f"{give_xp(message)} | {xp} | {level}")
         if level_up(xp, level):
             level += 1
             xp = 0
             await channel.send(f"{author} reached level {level} on {guild}!")
         db.levels.replace_one(target, {"_id": author.id, "guild": guild.id, "level": level, "xp": xp})
+        await channel.send("Updated XP")
 
     @nextcord.slash_command()
     async def level(self, interaction: Interaction, person: nextcord.Member | nextcord.User | None = None):
