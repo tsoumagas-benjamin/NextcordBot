@@ -33,7 +33,7 @@ class Progress(commands.Cog, name="Progress"):
     def __init__(self, bot) -> None:
       self.bot = bot
 
-    @nextcord.Cog.listener("on_message")
+    @commands.Cog.listener("on_message")
     async def xp(self, message: nextcord.Message):
         if message.author.bot:
             return
