@@ -81,7 +81,7 @@ class Progress(commands.Cog, name="Progress"):
         """Gets the top 10 highest ranked people on the server"""
         server = interaction.guild
         # Sort the database for the highest 10 scoring on the server
-        cursor = db.levels.find_one({"guild": server})
+        cursor = db.levels.find({"guild": server})
         leaders = cursor.sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
         embed = nextcord.Embed(title=f"{server} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
         for position, leader in enumerate(leaders):

@@ -27,7 +27,7 @@ def main():
         """When bot is connected to Discord"""
         # Initialize default collections
         collections = db.list_collection_names()
-        for c in ['birthdays', 'rules', 'keywords', 'velkoz', 'levels']:
+        for c in ['birthdays', 'rules', 'keywords', 'Viktor', 'levels']:
             if c not in collections:
                 db.create_collection(c)
         
