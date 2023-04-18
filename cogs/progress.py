@@ -11,9 +11,12 @@ db = client.NextcordBot
 # Generates xp for a given message
 def give_xp(message: nextcord.Message):
     words = message.content.split()
+    print("give xp", message.content, words, len(words))
     if len(words) > 5:
+        print(5)
         return 5
     else:
+        print(len(words))
         return len(words)
 
 # Determines whether the user levels up or not
@@ -53,6 +56,7 @@ class Progress(commands.Cog, name="Progress"):
         # Increase user xp and level as necessary
         user = db.levels.find_one(target)
         print(user, give_xp(message))
+        print(message)
         xp = user["xp"] + give_xp(message)
         level = user["level"]
         await channel.send(f"{give_xp(message)} | {xp} | {level}")
@@ -82,11 +86,11 @@ class Progress(commands.Cog, name="Progress"):
     @nextcord.slash_command()
     async def leaderboard(self, interaction: Interaction):
         """Gets the top 10 highest ranked people on the server"""
-        server = interaction.guild.name
+        server = interaction.guild
         # Sort the database for the highest 10 scoring on the server
         cursor = db.levels.find({"guild": server})
         leaders = cursor.sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
-        embed = nextcord.Embed(title=f"{server} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
+        embed = nextcord.Embed(title=f"{server.name} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10
             uid = leader["_id"]
