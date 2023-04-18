@@ -65,14 +65,6 @@ class Moderation(commands.Cog, name="Moderation"):
                 f"Member {member.name} has been muted for {init_time}. Reason: {reason}.")
 
     @nextcord.slash_command()
-    @application_checks.is_owner()
-    async def sync(self, interaction: Interaction):
-        """Manually syncs all application commands with Discord"""
-        self.bot.add_all_application_commands()
-        await self.bot.sync_all_application_commands()
-        await interaction.send("Commands synced!")
-
-    @nextcord.slash_command()
     @application_checks.has_permissions(ban_members=True)
     async def unban(self, interaction: Interaction, *, member):
         """Takes member off the ban list"""
