@@ -52,8 +52,10 @@ class Progress(commands.Cog, name="Progress"):
         
         # Increase user xp and level as necessary
         user = db.levels.find_one(target)
+        print(user, give_xp(message))
         xp = user["xp"] + give_xp(message)
         level = user["level"]
+        print(xp, level)
         if level_up(xp, level):
             level += 1
             xp = 0
@@ -79,7 +81,7 @@ class Progress(commands.Cog, name="Progress"):
     @nextcord.slash_command()
     async def leaderboard(self, interaction: Interaction):
         """Gets the top 10 highest ranked people on the server"""
-        server = interaction.guild
+        server = interaction.guild.name
         # Sort the database for the highest 10 scoring on the server
         cursor = db.levels.find({"guild": server})
         leaders = cursor.sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
