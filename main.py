@@ -35,6 +35,9 @@ def main():
         for filename in os.listdir('./cogs'):
             if filename.endswith('.py'):
                 bot.load_extension(f'cogs.{filename[:-3]}')
+        # Ensure all commands are added and synced
+        bot.add_all_application_commands()
+        await bot.sync_all_application_commands()
 
         await bot.change_presence(activity = nextcord.Activity(
         type=nextcord.ActivityType.listening, 
@@ -96,14 +99,6 @@ def main():
                 if word.lower() in message.content.lower():
                     await message.channel.send(random.choice(options))
                     break
-    
-    @bot.slash_command()
-    @application_checks.is_owner()
-    async def sync(self, interaction: nextcord.Interaction):
-        """Manually syncs all application commands with Discord"""
-        self.bot.add_all_application_commands()
-        await self.bot.sync_all_application_commands()
-        await interaction.send("Commands synced!")
 
     # Tell the bot to store logs in nextcord.log
     log()
