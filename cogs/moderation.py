@@ -32,6 +32,14 @@ class Moderation(commands.Cog, name="Moderation"):
         await interaction.channel.purge(limit=amount)
         await interaction.send(f"Cleared {amount} messages.", ephemeral = True)
 
+    @nextcord.slash_command(guild_ids=[686394755009347655])
+    @application_checks.is_owner()
+    async def intents(self, interaction: Interaction):
+        """Checks all enabled intents"""
+        ints = self.bot.intents
+        print(ints)
+        await interaction.send("Checking intents, check logs!")
+
     @nextcord.slash_command()
     @application_checks.has_permissions(kick_members=True)
     async def kick(self, interaction: Interaction, member: nextcord.Member, *, reason: str = None):
