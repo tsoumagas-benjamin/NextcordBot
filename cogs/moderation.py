@@ -38,6 +38,7 @@ class Moderation(commands.Cog, name="Moderation"):
         """Checks all enabled intents"""
         ints = self.bot.intents
         print(ints)
+        print(dict(self.bot.intents))
         await interaction.send("Checking intents, check logs!")
 
     @nextcord.slash_command()
