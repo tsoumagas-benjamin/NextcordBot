@@ -1,4 +1,5 @@
-import nextcord, requests
+import nextcord
+import requests
 from nextcord import Interaction
 from nextcord.ext import commands
 import PIL.Image, PIL.ImageFilter

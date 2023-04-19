@@ -4,9 +4,7 @@ import pymongo
 import random
 import config
 from nextcord.ext import commands
-from nextcord.ext import application_checks
 from log import log
-
 
 # Allows privileged intents for monitoring members joining, roles editing, and role assignments
 # These need to be enabled in the developer portal as well
@@ -29,6 +27,9 @@ bot = commands.AutoShardedBot(
 
 # Name our access to our client database
 db = client.NextcordBot   
+
+#Get all the existing collections
+collections = db.list_collection_names()
     
 # Define bot behaviour on start up
 @bot.event
@@ -86,21 +87,19 @@ async def word_filter(message):
     if message.author.bot:
         return
 
-    # Check bot responsiveness for inspiration commands
+    # If responding is on, remove messages with filtered words,
+    # and respond to sad messages
     respond = db.keywords.find_one({"_id": message.guild.id})
     if respond["status"]:
-        options = respond["encouragements"]
-        sad_words = respond["sad"]
-        filter_words = respond["filter"]
-
-        for word in filter_words:
+        
+        for word in respond["filter"]:
             if word.lower() in message.content.lower(): 
                 await message.delete()
                 break
 
-        for word in sad_words:
+        for word in respond["sad"]:
             if word.lower() in message.content.lower():
-                await message.channel.send(random.choice(options))
+                await message.channel.send(random.choice(respond["encouragements"]))
                 break
 
 # Tell the bot to store logs in nextcord.log
@@ -108,4 +107,3 @@ log()
 
 # Run Discord bot
 bot.run(os.getenv('DISCORD_TOKEN'))
-

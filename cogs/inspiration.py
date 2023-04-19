@@ -1,16 +1,10 @@
-import nextcord, pymongo, os
+import nextcord
+import os
+import json
+import requests
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-import json, requests
-
-#Set up our mongodb client
-client = pymongo.MongoClient(os.getenv('CONN_STRING'))
-
-#Name our access to our client database
-db = client.NextcordBot
-
-#Get all the existing collections
-collections = db.list_collection_names()
+from NextcordBot.main import db, collections
 
 #Function to fetch the quote from an API
 def get_quote():

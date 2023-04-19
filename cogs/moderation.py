@@ -1,7 +1,8 @@
 import nextcord
+import humanfriendly
+import datetime
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-import humanfriendly, datetime
 
 #Create a cog for information commands
 class Moderation(commands.Cog, name="Moderation"):

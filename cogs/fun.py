@@ -1,16 +1,17 @@
 import nextcord
+import random
+import aiohttp
+import os
+import re
+import requests
+import json
+import datetime
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
 import urllib.request as request
-import random, aiohttp, os, re, requests, json, pymongo, datetime
 from io import BytesIO
-
-#Set up our mongodb client
-client = pymongo.MongoClient(os.getenv('CONN_STRING'))
-
-#Name our access to our client database
-db = client.NextcordBot
+from NextcordBot.main import db
 
 daily_channel_id = 793685161635741712
 
@@ -96,9 +97,6 @@ class Fun(commands.Cog, name="Fun"):
                 bday_list.append(f"{user.name}: {user.mention}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
-            print(bday_message)
-        else:
-            print("No birthdays")
 
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):

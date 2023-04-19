@@ -1,12 +1,8 @@
-import nextcord, pymongo, os
+import nextcord
+import os
 from nextcord import Interaction
 from nextcord.ext import commands
-
-#Set up our mongodb client
-client = pymongo.MongoClient(os.getenv('CONN_STRING'))
-
-#Name our access to our client database
-db = client.NextcordBot
+from NextcordBot.main import db
 
 # Generates xp for a given message
 def give_xp(message: nextcord.Message):
@@ -82,7 +78,7 @@ class Progress(commands.Cog, name="Progress"):
         server = interaction.guild
         # Sort the database for the highest 10 scoring on the server
         cursor = db.levels.find({"guild": server})
-        leaders = cursor.sort([("level", pymongo.DESCENDING), ("xp", pymongo.DESCENDING)]).limit(10)
+        leaders = cursor.sort([("level", -1), ("xp", -1)]).limit(10)
         embed = nextcord.Embed(title=f"{server.name} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10

@@ -1,16 +1,11 @@
-import nextcord, pymongo, os
+import nextcord
+import os
+import asyncio
+import InfixParser
+import time
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-import asyncio, InfixParser, time
-
-#Set up our mongodb client
-client = pymongo.MongoClient(os.getenv('CONN_STRING'))
-
-#Name our access to our client database
-db = client.NextcordBot
-
-#Get all the existing collections
-collections = db.list_collection_names()
+from NextcordBot.main import db
 
 #Create a list of poll choices to use below
 poll_choices = ["1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️", "9️", "🔟"]
