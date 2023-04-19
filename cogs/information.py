@@ -51,7 +51,6 @@ class Information(commands.Cog, name = "Information"):
         image = nextcord.File(file, filename="poll.png")
         p.embed.set_image(url=f"attachment://poll.png")
         await p.msg.edit(embed=p.embed)
-
     
     @nextcord.slash_command()
     async def calculate(self, interaction: Interaction, *, equation: str):
