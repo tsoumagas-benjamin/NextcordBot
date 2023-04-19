@@ -2,12 +2,16 @@ import nextcord
 import asyncio
 import InfixParser
 import time
+import os
+import pymongo
 import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-from progress import db
+
+client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+db = client.NextcordBot 
 
 # Class to store poll variables
 class Poll:

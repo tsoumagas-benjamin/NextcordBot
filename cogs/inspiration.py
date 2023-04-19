@@ -1,9 +1,13 @@
 import nextcord
 import json
 import requests
+import pymongo
+import os
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-from progress import db
+
+client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+db = client.NextcordBot 
 
 #Function to fetch the quote from an API
 def get_quote():

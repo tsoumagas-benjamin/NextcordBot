@@ -6,12 +6,15 @@ import re
 import requests
 import json
 import datetime
+import pymongo
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
-from progress import db
+
+client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+db = client.NextcordBot 
 
 daily_channel_id = 793685161635741712
 
