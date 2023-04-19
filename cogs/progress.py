@@ -12,10 +12,8 @@ db = client.NextcordBot
 def give_xp(message: nextcord.Message):
     words = message.content.split()
     if len(words) > 5:
-        print(5)
         return 5
     else:
-        print(len(words))
         return len(words)
 
 # Determines whether the user levels up or not
@@ -56,13 +54,11 @@ class Progress(commands.Cog, name="Progress"):
         user = db.levels.find_one(target)
         xp = user["xp"] + give_xp(message)
         level = user["level"]
-        await channel.send(f"user={user} give_xp={give_xp(message)} xp={xp} level={level} message={message} content={message.content}")
         if level_up(xp, level):
             level += 1
             xp = 0
             await channel.send(f"{author} reached level {level} on {guild}!")
         db.levels.replace_one(target, {"_id": author.id, "guild": guild.id, "level": level, "xp": xp})
-        await channel.send("Updated XP")
 
     @nextcord.slash_command()
     async def level(self, interaction: Interaction, person: nextcord.Member | nextcord.User | None = None):
