@@ -3,12 +3,24 @@ import os
 import asyncio
 import InfixParser
 import time
+import matplotlib.pyplot as plt
+import numpy as np
+from io import BytesIO
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 from NextcordBot.main import db
 
-#Create a list of poll choices to use below
-poll_choices = ["1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️", "9️", "🔟"]
+# Class to store poll variables
+class Poll:
+    def __init__(self):
+        self.title: str = ""
+        self.embed: nextcord.Embed = None
+        self.msg: nextcord.PartialInteractionMessage | nextcord.WebhookMessage = None
+        self.count: list[int] = [0,0]
+        self.colors: list[str] = ["g", "r"]
+        
+p = Poll()
+
 #Create a cog for information commands
 class Information(commands.Cog, name = "Information"):
     """Commands to give you more information"""
@@ -17,6 +29,29 @@ class Information(commands.Cog, name = "Information"):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener("on_reaction_add")
+    async def update_chart(reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
+        if user.bot or reaction.message.id is p.msg.id:
+            return
+        # Update count based on reaction
+        elif reaction.emoji == "✅":
+            p.count[0] += 1
+        elif reaction.emoji == "❌":
+            p.count[1] += 1
+        # Make the pie chart, save and close it after
+        pie = np.array(p.count)
+        plt.pie(pie, colors=p.colors, startangle = 90)
+        plt.title(p.title)
+        plt.savefig('../poll.png')
+        plt.close()
+        
+        with open("../poll.png", "rb") as f:
+            file = BytesIO(f.read())
+        image = nextcord.File(file, filename="poll.png")
+        p.embed.set_image(url=f"attachment://poll.png")
+        await p.msg.edit(embed=p.embed)
+
     
     @nextcord.slash_command()
     async def calculate(self, interaction: Interaction, *, equation: str):
@@ -83,30 +118,23 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def poll(self, interaction: Interaction, question: str, *, responses: str):
-        """Create a poll question, list valid responses, and see results. 
-        Separate responses (max. 10) by commas and a space, i.e. "A, B".
-        Defaults to ✅/❌"""
+    async def poll(self, interaction: Interaction, question: str):
+        """Create a poll question and have people vote yes or no"""
         # Format embed response to resemble a poll question
         if question[-1] != "?":
             question += "?"
-        poll = nextcord.Embed(title=f"Poll: {question.capitalize()}", color=nextcord.Colour.from_rgb(214, 60, 26))
-        response_list = responses.split(", ")
-        # Default reactions
-        if not responses:
-            poll.add_field(name="Yes", value="✅", inline=True)
-            poll.add_field(name="No", value="❌", inline=True)
-            await interaction.send(embed=poll)
-            await poll.add_reaction("✅")
-            await poll.add_reaction("❌")
-        elif len(response_list) > 10:
-            await interaction.send("Too many responses, the maximum is 10!")
-        else:
-            for count, resp in enumerate(responses):
-                poll.add_field(name=resp, value=poll_choices[count], inline=True)
-            await interaction.send(embed=poll)
-            for i in range(len(response_list)):
-                await poll.add_reaction(poll_choices[i])
+        poll_title = f"Poll: {question.capitalize()}"
+        poll = nextcord.Embed(title=poll_title, color=nextcord.Colour.from_rgb(214, 60, 26))
+        poll.add_field(name="Yes", value="✅", inline=True)
+        poll.add_field(name="No", value="❌", inline=True)
+        msg = await interaction.send(embed=poll)
+        await msg.add_reaction("✅")
+        await msg.add_reaction("❌")
+        # Reset poll variables
+        p.title = poll_title
+        p.embed = poll
+        p.msg = msg
+        p.count = [0,0]
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):
