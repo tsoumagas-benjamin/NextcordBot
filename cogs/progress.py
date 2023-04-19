@@ -1,5 +1,4 @@
 import nextcord
-import os
 from nextcord import Interaction
 from nextcord.ext import commands
 from NextcordBot.main import db
