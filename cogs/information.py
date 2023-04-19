@@ -1,5 +1,4 @@
 import nextcord
-import os
 import asyncio
 import InfixParser
 import time
@@ -8,7 +7,7 @@ import numpy as np
 from io import BytesIO
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-from NextcordBot.main import db
+from progress import db
 
 # Class to store poll variables
 class Poll:

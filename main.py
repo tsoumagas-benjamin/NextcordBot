@@ -3,11 +3,8 @@ import os
 import pymongo
 import random
 import config
-import sys
 from nextcord.ext import commands
 from log import log
-
-sys.path.append('C:\\Personal_Projects\\NextcordBot')
 
 # Allows privileged intents for monitoring members joining, roles editing, and role assignments
 # These need to be enabled in the developer portal as well
@@ -20,7 +17,7 @@ my_intents.presences = True
 client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
 
 # Instantiate the bot
-bot = commands.AutoShardedBot(
+bot = commands.Aupbot.dbutoShardedBot(
     intents=my_intents,
     status=nextcord.Status.online,
     activity=nextcord.Activity(

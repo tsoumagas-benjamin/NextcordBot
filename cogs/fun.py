@@ -11,11 +11,11 @@ from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
-from NextcordBot.main import db
+from progress import db
 
 daily_channel_id = 793685161635741712
 
-def animal_task():
+def animal_task(self):
     choices = ["shibes", "cats", "birds"]
     choice = random.choice(choices)
     url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
@@ -23,7 +23,7 @@ def animal_task():
     result = response.text[2:-2]
     return result
 
-def birthday_task():
+def birthday_task(self):
     date = str(datetime.date.today()).split("-")
     month = int(date[1].lstrip("0"))
     day = int(date[2].lstrip("0"))
@@ -86,7 +86,7 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_birthday(self):
         # Gets daily birthday, if any
         daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        user_list = birthday_task()
+        user_list = birthday_task(self)
         bday_message = f"🥳\tHappy Birthday!\t🎉\n"
         # Get all user names and mentions formatted
         bday_list = []

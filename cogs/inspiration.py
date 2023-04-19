@@ -1,10 +1,9 @@
 import nextcord
-import os
 import json
 import requests
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-from NextcordBot.main import db
+from progress import db
 
 #Function to fetch the quote from an API
 def get_quote():
@@ -14,14 +13,14 @@ def get_quote():
   return quote
 
 #Functions to update entries in keywords
-def append_entry(id, category: str, content: str):
+def append_entry(self, id, category: str, content: str):
     db.keywords.update_one({"_id": id}, {'$push': {category: content}})
 
-def remove_entry(id, category: str, content: str):
+def remove_entry(self, id, category: str, content: str):
     db.keywords.update_one({"_id": id}, {'$pull': {category: content}})
 
 #Function to check if an entry exists and add/remove it
-def find_entry(id, category: str, content: str):  
+def find_entry(self, id, category: str, content: str):  
     if db.keywords.find_one({"_id": id, category: content}):
         remove_entry(id, category, content)
         return "Deleted"
@@ -49,14 +48,14 @@ class Inspiration(commands.Cog, name="Inspiration"):
     @application_checks.has_permissions(administrator=True)
     async def encouragement(self, interaction: Interaction, *, message: str):
         """Command to add an encouragement or remove it if it already exists"""
-        action = find_entry(interaction.guild.id, "encouragements", message)
+        action = find_entry(self, interaction.guild.id, "encouragements", message)
         await interaction.send(f"{action} encouragement: {message}.")
 
     @nextcord.slash_command()
     @application_checks.has_permissions(administrator=True)
     async def filtered(self, interaction: Interaction, *, message: str):
         """Command to add an filtered word or remove it if it already exists"""
-        action = find_entry(interaction.guild.id, "filter", message)
+        action = find_entry(self, interaction.guild.id, "filter", message)
         await interaction.send(f"{action} filter for: {message}.")
 
     @nextcord.slash_command()
@@ -105,7 +104,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
     @application_checks.has_permissions(administrator=True)
     async def sad(self, interaction: Interaction, *, message: str):
         """Command to add a sad word or remove it if it already exists"""
-        action = find_entry(interaction.guild.id, "sad", message)
+        action = find_entry(self, interaction.guild.id, "sad", message)
         await interaction.send(f"{action} sad word: {message}.")
     
 def setup(bot):

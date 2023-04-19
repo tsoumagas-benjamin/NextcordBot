@@ -1,7 +1,14 @@
 import nextcord
+import pymongo
+import os
 from nextcord import Interaction
 from nextcord.ext import commands
-from NextcordBot.main import db
+
+# Database config
+client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+
+# Name our access to our client database
+db = client.NextcordBot 
 
 # Generates xp for a given message
 def give_xp(message: nextcord.Message):
