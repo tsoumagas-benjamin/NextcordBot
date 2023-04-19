@@ -17,7 +17,7 @@ my_intents.presences = True
 client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
 
 # Instantiate the bot
-bot = commands.Aupbot.dbutoShardedBot(
+bot = commands.AutoShardedBot(
     intents=my_intents,
     status=nextcord.Status.online,
     activity=nextcord.Activity(
