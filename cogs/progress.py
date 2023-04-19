@@ -11,7 +11,6 @@ db = client.NextcordBot
 # Generates xp for a given message
 def give_xp(message: nextcord.Message):
     words = message.content.split()
-    print("give xp", message.content, words, len(words))
     if len(words) > 5:
         print(5)
         return 5
@@ -55,11 +54,9 @@ class Progress(commands.Cog, name="Progress"):
         
         # Increase user xp and level as necessary
         user = db.levels.find_one(target)
-        print(user, give_xp(message))
-        print(message)
         xp = user["xp"] + give_xp(message)
         level = user["level"]
-        await channel.send(f"{give_xp(message)} | {xp} | {level}")
+        await channel.send(f"user={user} give_xp={give_xp(message)} xp={xp} level={level} message={message} content={message.content}")
         if level_up(xp, level):
             level += 1
             xp = 0
