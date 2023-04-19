@@ -1,110 +1,111 @@
-import nextcord, os, pymongo, random, config
-from nextcord.ext import commands, application_checks
+import nextcord
+import os
+import pymongo
+import random
+import config
+from nextcord.ext import commands
+from nextcord.ext import application_checks
 from log import log
 
-def main():
-    # Allows privileged intents for monitoring members joining, roles editing, and role assignments
-    # These need to be enabled in the developer portal as well
-    intents = nextcord.Intents.all()   
 
-    # Database config
-    client = pymongo.MongoClient(os.getenv('CONN_STRING'))
+# Allows privileged intents for monitoring members joining, roles editing, and role assignments
+# These need to be enabled in the developer portal as well
+my_intents = nextcord.Intents.default()   
+my_intents.message_content = True
+my_intents.members = True
+my_intents.presences = True
 
-    # Name our access to our client database
-    db = client.NextcordBot    
+# Database config
+client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
 
-    # Subclass our bot instance
-    class NextcordBot(commands.AutoShardedBot):
-        def __init__(self, **kwargs):
-            super().__init__()
+# Instantiate the bot
+bot = commands.AutoShardedBot(
+    intents=my_intents,
+    status=nextcord.Status.online,
+    activity=nextcord.Activity(
+    type=nextcord.ActivityType.listening, 
+    name="/commands for help!"
+    ))  
+
+# Name our access to our client database
+db = client.NextcordBot   
     
-    # Instantiate the bot
-    bot = NextcordBot(intents=intents)  
-        
-    # Define bot behaviour on start up
-    @bot.event
-    async def on_ready():
-        """When bot is connected to Discord"""
-        # Initialize default collections
-        collections = db.list_collection_names()
-        for c in ['birthdays', 'rules', 'keywords', 'Viktor', 'levels']:
-            if c not in collections:
-                db.create_collection(c)
-        
-        # Add functionality from cogs
-        for filename in os.listdir('./cogs'):
-            if filename.endswith('.py'):
-                bot.load_extension(f'cogs.{filename[:-3]}')
-        # Ensure all commands are added and synced
-        bot.add_all_application_commands()
-        await bot.sync_all_application_commands()
-
-        await bot.change_presence(activity = nextcord.Activity(
-        type=nextcord.ActivityType.listening, 
-        name="/commands for help!"
-        ))
-        print(f"Collections: {collections}")
-        print(f"Intents: {intents}")
-        print(f'We have logged in as {bot.user}')
+# Define bot behaviour on start up
+@bot.event
+async def on_ready():
+    """When bot is connected to Discord"""
+    # Initialize default collections
+    collections = db.list_collection_names()
+    for c in ['birthdays', 'rules', 'keywords', 'Viktor', 'levels']:
+        if c not in collections:
+            db.create_collection(c)
     
-    # Initialize starter words when joining a new server.
-    @bot.event
-    async def on_guild_join(guild):
-        # Add an entry for starter keywords
-        if db.keywords.find_one({"_id": guild.id}) == None:
-            db.keywords.insert_one({
-                "_id": guild.id, 
-                "sad": config.sad_words, 
-                "filter": config.filter_words, 
-                "encouragements": config.encouragements,
-                "status": False})
-        
-    # When leaving a server, delete all collections pertaining to that server.
-    @bot.event
-    async def on_guild_remove(guild):
-        for collection in db.list_collection_names():
-            mycol = db[collection]
-            mycol.delete_many({"_id": guild.id})
+    # Add functionality from cogs
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            bot.load_extension(f'cogs.{filename[:-3]}')
 
-    # Remove user from birthdays if they no longer share servers with the bot.
-    @bot.event
-    async def on_member_remove(member):
-        if member.mutual_guilds is None:
-            if db.birthdays.find_one({"_id": member.id}):
-                db.birthdays.delete_many({"_id": member.id})
-                
-    # Defining bot behaviour when a message is sent
-    @bot.event
-    async def on_message(message):
-        # If the message is from a bot, don't react
-        if message.author.bot:
-            return
+    # Ensure all commands are added and synced
+    bot.add_all_application_commands()
+    await bot.sync_all_application_commands()
 
-        # Tells the bot to also look for commands in messages
-        await bot.process_commands(message)
+    print(f"Collections: {collections}")
+    print(f"Intents: {dict(bot.intents)}")
+    print(f'We have logged in as {bot.user}')
 
-        # Check bot responsiveness for inspiration commands
-        respond = db.keywords.find_one({"_id": message.guild.id})
-        if respond["status"]:
-            options = respond["encouragements"]
-            sad_words = respond["sad"]
-            filter_words = respond["filter"]
+# Initialize starter words when joining a new server.
+@bot.event
+async def on_guild_join(guild):
+    # Add an entry for starter keywords
+    if db.keywords.find_one({"_id": guild.id}) == None:
+        db.keywords.insert_one({
+            "_id": guild.id, 
+            "sad": config.sad_words, 
+            "filter": config.filter_words, 
+            "encouragements": config.encouragements,
+            "status": False})
+    
+# When leaving a server, delete all collections pertaining to that server.
+@bot.event
+async def on_guild_remove(guild):
+    for collection in db.list_collection_names():
+        mycol = db[collection]
+        mycol.delete_many({"_id": guild.id})
 
-            for word in filter_words:
-                if word.lower() in message.content.lower(): 
-                    await message.delete()
-                    break
+# Remove user from birthdays if they no longer share servers with the bot.
+@bot.event
+async def on_member_remove(member):
+    if member.mutual_guilds is None:
+        if db.birthdays.find_one({"_id": member.id}):
+            db.birthdays.delete_many({"_id": member.id})
+            
+# Defining bot behaviour when a message is sent
+@bot.listen("on_message")
+async def word_filter(message):
+    # If the message is from a bot, don't react
+    if message.author.bot:
+        return
 
-            for word in sad_words:
-                if word.lower() in message.content.lower():
-                    await message.channel.send(random.choice(options))
-                    break
+    # Check bot responsiveness for inspiration commands
+    respond = db.keywords.find_one({"_id": message.guild.id})
+    if respond["status"]:
+        options = respond["encouragements"]
+        sad_words = respond["sad"]
+        filter_words = respond["filter"]
 
-    # Tell the bot to store logs in nextcord.log
-    log()
+        for word in filter_words:
+            if word.lower() in message.content.lower(): 
+                await message.delete()
+                break
 
-    # Run Discord bot
-    bot.run(os.getenv('DISCORD_TOKEN'))
+        for word in sad_words:
+            if word.lower() in message.content.lower():
+                await message.channel.send(random.choice(options))
+                break
 
-if __name__ == "__main__":
-    main()
+# Tell the bot to store logs in nextcord.log
+log()
+
+# Run Discord bot
+bot.run(os.getenv('DISCORD_TOKEN'))
+
