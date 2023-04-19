@@ -4,7 +4,7 @@ import json
 import requests
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
-from NextcordBot.main import db, collections
+from NextcordBot.main import db
 
 #Function to fetch the quote from an API
 def get_quote():

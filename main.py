@@ -3,8 +3,11 @@ import os
 import pymongo
 import random
 import config
+import sys
 from nextcord.ext import commands
 from log import log
+
+sys.path.append('C:\Personal_Projects\NextcordBot')
 
 # Allows privileged intents for monitoring members joining, roles editing, and role assignments
 # These need to be enabled in the developer portal as well
@@ -43,7 +46,7 @@ async def on_ready():
     
     # Add functionality from cogs
     for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
+        if filename.endswith('.py') and '__init__' not in filename:
             bot.load_extension(f'cogs.{filename[:-3]}')
 
     # Ensure all commands are added and synced
