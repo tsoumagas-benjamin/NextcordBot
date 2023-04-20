@@ -34,7 +34,7 @@ class Information(commands.Cog, name = "Information"):
         self.bot = bot
 
     @commands.Cog.listener("on_reaction_add")
-    async def update_chart(reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
+    async def update_chart(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
         if user.bot or reaction.message.id is p.msg.id:
             return
         # Update count based on reaction
