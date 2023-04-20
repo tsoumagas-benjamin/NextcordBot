@@ -18,7 +18,7 @@ class Poll:
     def __init__(self):
         self.title: str = ""
         self.embed: nextcord.Embed = None
-        self.msg: nextcord.PartialInteractionMessage | nextcord.WebhookMessage = None
+        self.msg: nextcord.InteractionMessage = None
         self.count: list[int] = [0,0]
         self.colors: list[str] = ["g", "r"]
         
@@ -125,11 +125,14 @@ class Information(commands.Cog, name = "Information"):
         # Format embed response to resemble a poll question
         if question[-1] != "?":
             question += "?"
+        # Create and send the initial poll embed
         poll_title = f"Poll: {question.capitalize()}"
         poll = nextcord.Embed(title=poll_title, color=nextcord.Colour.from_rgb(214, 60, 26))
         poll.add_field(name="Yes", value="✅", inline=True)
         poll.add_field(name="No", value="❌", inline=True)
-        msg = await interaction.send(embed=poll)
+        await interaction.send(embed=poll)
+        # Fetch the embed and set initial reactions
+        msg = await interaction.original_message()
         await msg.add_reaction("✅")
         await msg.add_reaction("❌")
         # Reset poll variables
