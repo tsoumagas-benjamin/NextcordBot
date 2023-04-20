@@ -6,7 +6,6 @@ import os
 import pymongo
 import matplotlib.pyplot as plt
 import numpy as np
-from io import BytesIO
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 
@@ -34,7 +33,7 @@ class Information(commands.Cog, name = "Information"):
         self.bot = bot
 
     @commands.Cog.listener("on_reaction_add")
-    async def update_chart(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
+    async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
         if user.bot or reaction.message.id is p.msg.id:
             return
         # Update count based on reaction
@@ -42,18 +41,16 @@ class Information(commands.Cog, name = "Information"):
             p.count[0] += 1
         elif reaction.emoji == "❌":
             p.count[1] += 1
-        # Make the pie chart, save and close it after
-        pie = np.array(p.count)
-        plt.pie(pie, colors=p.colors, startangle = 90)
-        plt.title(p.title)
-        plt.savefig('../poll.png')
-        plt.close()
-        
-        with open("../poll.png", "rb") as f:
-            file = BytesIO(f.read())
-        image = nextcord.File(file, filename="poll.png")
-        p.embed.set_image(url=f"attachment://poll.png")
-        await p.msg.edit(embed=p.embed)
+    
+    @commands.Cog.listener("on_reaction_remove")
+    async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
+        if user.bot or reaction.message.id is p.msg.id:
+            return
+        # Update count based on reaction
+        elif reaction.emoji == "✅":
+            p.count[0] -= 1
+        elif reaction.emoji == "❌":
+            p.count[1] -= 1
     
     @nextcord.slash_command()
     async def calculate(self, interaction: Interaction, *, equation: str):
@@ -140,6 +137,16 @@ class Information(commands.Cog, name = "Information"):
         p.embed = poll
         p.msg = msg
         p.count = [0,0]
+    
+    @nextcord.slash_command()
+    async def pollresults(self, interaction: Interaction):
+        # Make the pie chart, save and close it after
+        pie = np.array(p.count)
+        plt.pie(pie, colors=p.colors, startangle = 90)
+        plt.title(label=p.title, color='w')
+        plt.savefig('../poll.png', transparent=True)
+        plt.close()
+        await interaction.send(file="../poll.png")
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):
