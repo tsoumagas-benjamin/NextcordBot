@@ -140,13 +140,18 @@ class Information(commands.Cog, name = "Information"):
     
     @nextcord.slash_command()
     async def pollresults(self, interaction: Interaction):
+        """Create a chart of the most recent poll's results"""
         # Make the pie chart, save and close it after
         pie = np.array(p.count)
         plt.pie(pie, colors=p.colors, startangle = 90)
         plt.title(label=p.title, color='w')
         plt.savefig('../poll.png', transparent=True)
         plt.close()
-        await interaction.send(file="../poll.png")
+        # Open, send, and close the chart file
+        with open("../poll.png", 'rb') as f:
+            results = nextcord.File(f)
+        await interaction.send(file=results)
+        f.close()
 
     @nextcord.slash_command()
     async def rule(self, interaction: Interaction, number: int):
