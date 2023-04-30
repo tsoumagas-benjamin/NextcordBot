@@ -47,7 +47,7 @@ class Trivia(commands.Cog, name="Trivia"):
     COG_EMOJI = "🎲"
 
     # Initialize all the default variables we need for trivia
-    def __init__(self) -> None:
+    def __init__(self, bot) -> None:
         self.bot = bot
         self.url = f'https://the-trivia-api.com/api/questions/'
         self.categories: list[str] = []
@@ -65,7 +65,7 @@ class Trivia(commands.Cog, name="Trivia"):
     async def trivia(self, interaction: Interaction):
         """Play 10 rounds of trivia with friends"""
         # Instantiate a Trivia object
-        t = Trivia()
+        t = Trivia(self.bot)
 
         # Get trivia content from the API
         async with aiohttp.ClientSession() as cs:
