@@ -47,7 +47,7 @@ class Trivia(commands.Cog, name="Trivia"):
     COG_EMOJI = "🎲"
 
     # Initialize all the default variables we need for trivia
-    def __init__(self, bot) -> None:
+    def __init__(self) -> None:
         self.bot = bot
         self.url = f'https://the-trivia-api.com/api/questions/'
         self.categories: list[str] = []
