@@ -15,7 +15,7 @@ class Answers(nextcord.ui.Select):
         selects: list[nextcord.SelectOption] = []
         for w in self.wrong:
             selects.append(nextcord.SelectOption(label = w))
-        selects.append(nextcord.SlashOption(label = right))
+        selects.append(nextcord.SelectOption(label = right))
         # Shuffle options so the last one is not always the correct one
         selects = random.shuffle(selects)
         super().__init__(
