@@ -88,7 +88,7 @@ class Trivia(commands.Cog, name="Trivia"):
         # Each round takes 10 seconds
         for x in range(0,10):
             content = f"**{t.questions[x]}**\n> {t.categories[x]} - {t.difficulties[x].title()}"
-            await msg.edit(content=content, view=TriviaView(t.incorrects[x], t.corrects[x], t.score))
+            await msg.edit(content=content, view=TriviaView(t.incorrects[x], t.corrects[x], t.score, 10))
             await asyncio.sleep(10)
         # Sort player scores in descending order and convert back to dictionary
         sorted_score = sorted(t.score.items(), key=lambda x:x[1], reverse=True)
