@@ -75,7 +75,7 @@ class Trivia(commands.Cog, name="Trivia"):
                     t.categories.append(res[question]['category'])
                     t.corrects.append(res[question]['correctAnswer'])
                     t.incorrects.append(res[question]['incorrectAnswers'])
-                    t.questions.append(res[question]['questions'])
+                    t.questions.append(res[question]['question'])
                     t.difficulties.append(res[question]['difficulty'])
                 await cs.close()
         
