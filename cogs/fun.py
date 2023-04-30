@@ -7,6 +7,7 @@ import requests
 import json
 import datetime
 import pymongo
+import asyncio
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
@@ -308,7 +309,7 @@ class Fun(commands.Cog, name="Fun"):
                     value=f"Posted by u/{author} [here]({post_url})")
                 await interaction.send(embed=embed)
                 await cs.close()
-
+      
     @nextcord.slash_command()
     async def viktor(self, interaction: Interaction):
         """Gets a random Viktor quote."""
