@@ -36,19 +36,13 @@ class Answers(nextcord.ui.Select):
             await interaction.response.send_message(f"{self.values[0]} is incorrect!", ephemeral=True)
 
 class TriviaView(nextcord.ui.View):
-    def __init__(self, *, wrong: list[str], right: str, score: dict, timeout = 10):
+    def __init__(self, wrong: list[str], right: str, score: dict, timeout: int):
         super().__init__(timeout=timeout)
-        self.add_item(Trivia.Answers(wrong, right, score))
+        self.add_item(Answers(wrong, right, score))
 
-#Create a cog for image manipulation
-class Trivia(commands.Cog, name="Trivia"):
-    """Commands related to trivia."""
-
-    COG_EMOJI = "🎲"
-
-    # Initialize all the default variables we need for trivia
-    def __init__(self, bot) -> None:
-        self.bot = bot
+# Class to handle trivia setup and initialization
+class TriviaSetup:
+    def __init__(self):
         self.url = f'https://the-trivia-api.com/api/questions/'
         self.categories: list[str] = []
         self.corrects: list[str] = []
@@ -60,12 +54,22 @@ class Trivia(commands.Cog, name="Trivia"):
             title = "Trivia Results", 
             color=nextcord.Colour.from_rgb(214, 60, 26)
             )
-    
+        
+#Create a cog for image manipulation
+class Trivia(commands.Cog, name="Trivia"):
+    """Commands related to trivia."""
+
+    COG_EMOJI = "🎲"
+
+    # Initialize all the default variables we need for trivia
+    def __init__(self, bot) -> None:
+        self.bot = bot
+        
     @nextcord.slash_command()
     async def trivia(self, interaction: Interaction):
         """Play 10 rounds of trivia with friends"""
-        # Instantiate a Trivia object
-        t = Trivia(self.bot)
+        # Instantiate a TriviaSetup object
+        t = TriviaSetup()
 
         # Get trivia content from the API
         async with aiohttp.ClientSession() as cs:
