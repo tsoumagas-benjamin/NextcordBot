@@ -36,7 +36,7 @@ class Answers(nextcord.ui.Select):
             await interaction.response.send_message(f"{self.values[0]} is incorrect!", ephemeral=True)
 
 class TriviaView(nextcord.ui.View):
-    def __init__(self, wrong: list[str], right: str, score: dict, timeout: int):
+    def __init__(self, wrong: list[str], right: str, score: dict, timeout = 10):
         super().__init__(timeout=timeout)
         self.add_item(Answers(wrong, right, score))
 
