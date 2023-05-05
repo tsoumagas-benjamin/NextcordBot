@@ -30,7 +30,7 @@ class Answers(nextcord.ui.Select):
             if interaction.user in self.score:
                 self.score[interaction.user] += 1
             else:
-                self.score[interaction.user] = 0
+                self.score[interaction.user] = 1
             await interaction.response.send_message(f"{self.values[0]} is correct!", ephemeral=True)
         else:
             await interaction.response.send_message(f"{self.values[0]} is incorrect!", ephemeral=True)
