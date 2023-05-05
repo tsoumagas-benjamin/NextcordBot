@@ -17,12 +17,12 @@ class Answers(nextcord.ui.Select):
             selects.append(nextcord.SelectOption(label = w))
         selects.append(nextcord.SelectOption(label = right))
         # Shuffle options so the last one is not always the correct one
-        selects = random.shuffle(selects)
+        random_selects = random.sample(selects, k=len(selects))
         super().__init__(
             placeholder="Select an answer", 
             max_values=1, 
             min_values=1, 
-            options=selects
+            options=random_selects
             )
     # Let the user know if they were correct or not and update score
     async def callback(self, interaction: nextcord.Interaction):
@@ -84,11 +84,10 @@ class Trivia(commands.Cog, name="Trivia"):
                 await cs.close()
         
         await interaction.send("Trivia Time!")
-        msg = await interaction.original_message()
         # Each round takes 10 seconds
         for x in range(0,10):
             content = f"**{t.questions[x]}**\n> {t.categories[x]} - {t.difficulties[x].title()}"
-            await msg.edit(content=content, view=TriviaView(t.incorrects[x], t.corrects[x], t.score, 10))
+            await interaction.edit_original_message(content=content, view=TriviaView(t.incorrects[x], t.corrects[x], t.score, 10))
             await asyncio.sleep(10)
         # Sort player scores in descending order and convert back to dictionary
         sorted_score = sorted(t.score.items(), key=lambda x:x[1], reverse=True)
@@ -96,10 +95,10 @@ class Trivia(commands.Cog, name="Trivia"):
         # Add each player and their score to game results embed
         for k, v in sorted_dict.items():
             score = str(v) + "pts"
-            self.embed.add_field(name=k, value=score)
+            t.embed.add_field(name=k, value=score)
         # Send game results embed
-        self.embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon.url)
-        await msg.edit(embed=self.embed)
+        t.embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon.url)
+        await interaction.edit_original_message(embed=t.embed)
 
 
 #Add the cog to the bot
