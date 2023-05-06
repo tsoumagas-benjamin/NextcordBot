@@ -98,7 +98,7 @@ class Trivia(commands.Cog, name="Trivia"):
             t.embed.add_field(name=k, value=score)
         # Send game results embed
         t.embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon.url)
-        await interaction.edit_original_message(embed=t.embed)
+        await interaction.edit_original_message(content = None, view = None, embed=t.embed)
 
 
 #Add the cog to the bot
