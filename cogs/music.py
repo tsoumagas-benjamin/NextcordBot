@@ -1,7 +1,7 @@
 # Credit to https://github.com/seyo00/music_bot for the Music Player code
 import nextcord
 import os
-import wavelink as nextwave
+import wavelink
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 
@@ -40,7 +40,7 @@ class Music_Buttons(nextcord.ui.View):
                 return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
         except:
             return await interaction.response.send_message("I am not connected to voice!", ephemeral=True)
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
         if vc.is_paused():
             await vc.resume()
             return await interaction.response.send_message(f"**{vc.track.title}** is now playing!", ephemeral=True)
@@ -54,7 +54,7 @@ class Music_Buttons(nextcord.ui.View):
                 return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
         except:
             return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
         try:
             next_song = vc.queue.get()
             await vc.play(next_song)
@@ -69,7 +69,7 @@ class Music_Buttons(nextcord.ui.View):
                 return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
         except:
             return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
         if vc.queue.is_empty:
             return await interaction.send("Queue is empty!")
         queue = vc.queue.copy()
@@ -87,7 +87,7 @@ class Music_Buttons(nextcord.ui.View):
                 return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
         except:
             return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
         if not vc.loop:
             vc.loop ^= True
             await interaction.response.send_message(f"**{vc.track.title}** is now looping!", ephemeral=True)
@@ -105,7 +105,7 @@ class Music_Buttons(nextcord.ui.View):
                 return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
         except:
             return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
         await vc.disconnect()
         await interaction.response.send_message(f"I have left the voice channel!", ephemeral=True)
         self.value = True
@@ -120,7 +120,7 @@ class Music(commands.Cog, name="Music"):
 
     async def node_connect(self):
         await self.bot.wait_until_ready()
-        await nextwave.NodePool.create_node(bot=self.bot, host='lavalink.sneakynodes.com', port=2333, password='sneakynodes.com')
+        await wavelink.NodePool.create_node(bot=self.bot, host='lavalink.sneakynodes.com', port=2333, password='sneakynodes.com')
 
     @commands.Cog.listener()
     async def on_ready(self):   
@@ -129,21 +129,21 @@ class Music(commands.Cog, name="Music"):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if member.id == bot_ID and before.channel is not None and after.channel is None:
-            vc: nextwave.Player = member.guild.voice_client
+            vc: wavelink.Player = member.guild.voice_client
             vc.queue.clear()
             await vc.disconnect()
     
     @nextcord.slash_command()
     async def play(self, interaction: Interaction, song: str):
         view = Music_Buttons()
-        search = await nextwave.YouTubeTrack.search(query=song, return_first=True)
+        search = await wavelink.YouTubeTrack.search(query=song, return_first=True)
         text = search.title
         if not interaction.guild.voice_client:
-            vc : nextwave.Player = await interaction.user.voice.channel.connect(cls=nextwave.Player)
+            vc : wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         elif not interaction.user.voice:
             return await interaction.send("Please enter a voice channel!")
         else:
-            vc: nextwave.Player = interaction.guild.voice_client
+            vc: wavelink.Player = interaction.guild.voice_client
         if vc.queue.is_empty and not vc.is_playing():
             await vc.play(search)
             embed = nextcord.Embed(title=f"Started playing {text}!",
@@ -164,7 +164,7 @@ class Music(commands.Cog, name="Music"):
     @nextcord.slash_command()
     @application_checks.application_command_before_invoke(voice_ensure)
     async def loop(self, interaction: Interaction):
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
 
         if not vc.loop:
             vc.loop ^= True
@@ -180,7 +180,7 @@ class Music(commands.Cog, name="Music"):
     @nextcord.slash_command()
     @application_checks.application_command_before_invoke(voice_ensure)
     async def queue(self, interaction: Interaction):
-        vc: nextwave.Player = interaction.guild.voice_client
+        vc: wavelink.Player = interaction.guild.voice_client
 
         if vc.queue.is_empty:
             return await interaction.send("There are no songs in the queue!")
@@ -195,7 +195,7 @@ class Music(commands.Cog, name="Music"):
         return await interaction.send(embed=embed)
 
     @commands.Cog.listener() 
-    async def on_wavelink_track_end(player: nextwave.Player, track: nextwave.Track, reason):
+    async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track, reason):
         vc: player = player
         if vc.loop:
             return await vc.play(track)
