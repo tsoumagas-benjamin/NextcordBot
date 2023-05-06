@@ -7,7 +7,6 @@ import requests
 import json
 import datetime
 import pymongo
-import asyncio
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
