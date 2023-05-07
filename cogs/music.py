@@ -119,8 +119,8 @@ class Music(commands.Cog, name="Music"):
         self.pool = mafic.NodePool(self)
         self.ready_ran = False
 
-    @commands.Cog.listener()
-    async def on_ready(self):
+    @commands.Cog.listener('on_ready')
+    async def startup(self):
         if self.ready_ran:
             return
         
