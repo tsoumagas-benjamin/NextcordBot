@@ -11,4 +11,4 @@ pycparser==2.21
 Pillow==9.5.0
 matplotlib==3.7.1
 numpy==1.24.2
-Wavelink==2.1.0
+mafic==2.3.0
