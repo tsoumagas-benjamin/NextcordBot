@@ -43,9 +43,9 @@ class Music_Buttons(nextcord.ui.View):
         vc: wavelink.Player = interaction.guild.voice_client
         if vc.is_paused():
             await vc.resume()
-            return await interaction.response.send_message(f"**{vc.track.title}** is now playing!", ephemeral=True)
+            return await interaction.response.send_message(f"**{vc.current.title}** is now playing!", ephemeral=True)
         await vc.pause()
-        await interaction.response.send_message(f"**{vc.track.title}** is now paused!", ephemeral=True)
+        await interaction.response.send_message(f"**{vc.current.title}** is now paused!", ephemeral=True)
 
     @nextcord.ui.button(label="⏭️ Skip", style=nextcord.ButtonStyle.blurple)
     async def skip(self, button: nextcord.ui.Button, interaction:Interaction):
@@ -58,7 +58,7 @@ class Music_Buttons(nextcord.ui.View):
         try:
             next_song = vc.queue.get()
             await vc.play(next_song)
-            return await interaction.response.send_message(f"**{vc.track.title}** was skipped! Now playing: {next_song}", ephemeral=True)
+            return await interaction.response.send_message(f"**{vc.current.title}** was skipped! Now playing: {next_song}", ephemeral=True)
         except:
             return await interaction.response.send_message(f"Queue is empty!", ephemeral=True)
     
@@ -90,11 +90,11 @@ class Music_Buttons(nextcord.ui.View):
         vc: wavelink.Player = interaction.guild.voice_client
         if not vc.loop:
             vc.loop ^= True
-            await interaction.response.send_message(f"**{vc.track.title}** is now looping!", ephemeral=True)
+            await interaction.response.send_message(f"**{vc.current.title}** is now looping!", ephemeral=True)
         else:
             setattr(vc, "loop", False)
             vc.loop ^= True
-            await interaction.response.send_message(f"**{vc.track.title}** is no longer looping!", ephemeral=True)
+            await interaction.response.send_message(f"**{vc.current.title}** is no longer looping!", ephemeral=True)
         
         self.value = True
     
@@ -118,13 +118,10 @@ class Music(commands.Cog, name="Music"):
     def __init__(self, bot):
         self.bot = bot
 
-    async def node_connect(self):
+    async def setup_hook(self):
         await self.bot.wait_until_ready()
-        await wavelink.NodePool.create_node(bot=self.bot, host='lavalink.sneakynodes.com', port=2333, password='sneakynodes.com')
-
-    @commands.Cog.listener()
-    async def on_ready(self):   
-        self.bot.loop.create_task(Music.node_connect(self))
+        node: wavelink.Node = wavelink.Node(uri='lavalink.sneakynodes.com:2333', password='sneakynodes.com')
+        await wavelink.NodePool.connect(client=self.bot, nodes=[node])
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
