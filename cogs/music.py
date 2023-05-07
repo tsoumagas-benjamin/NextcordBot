@@ -134,7 +134,7 @@ class Music(commands.Cog, name="Music"):
         self.ready_ran = True
 
     @nextcord.slash_command()
-    async def play(interaction: Interaction, song: str):
+    async def play(self, interaction: Interaction, song: str):
         """Play a song"""
         assert interaction.guild is not None
 
@@ -145,7 +145,7 @@ class Music(commands.Cog, name="Music"):
 
         player: MyPlayer = (
             interaction.guild.voice_client
-        )  # pyright: ignore[reportGeneralTypeIssues]
+        )
 
         tracks = await player.fetch_tracks(song)
 
