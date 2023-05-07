@@ -165,16 +165,16 @@ class Music(commands.Cog, name="Music"):
         await view.wait()
 
     @commands.Cog.listener()
-    async def on_track_end(event: mafic.TrackEndEvent):
+    async def on_track_end(self, event: mafic.TrackEndEvent):
         assert isinstance(event.player, MyPlayer)
 
         if event.player.queue:
             await event.player.play(event.player.queue.pop(0))
 
     @commands.Cog.listener()
-    async def on_application_command_error(inter: Interaction[commands.Bot], error: Exception):
+    async def on_application_command_error(self, interaction: Interaction, error: Exception):
         traceback.print_exception(type(error), error, error.__traceback__)
-        await inter.send(f"An error occurred: {error}")
+        await interaction.send(f"An error occurred: {error}")
   
 def setup(bot):
     bot.add_cog(Music(bot))
