@@ -1,113 +1,76 @@
-# Credit to https://github.com/seyo00/music_bot for the Music Player code
+# Credit to https://github.com/chand1012/BeatBot for the Music Player code
 # Credit to https://github.com/ooliver1/mafic/blob/master/examples/simple.py for boilerplate
 import nextcord
-import mafic
-import traceback
+import asyncio
+import youtube_dl
 from nextcord import Interaction
 from nextcord.ext import commands
 
-class MyPlayer(mafic.Player[commands.Bot]):
-    def __init__(self, client: commands.Bot, channel: nextcord.abc.Connectable) -> None:
-        super().__init__(client, channel)
-
-        self.queue: list[mafic.Track] = []
-
-class Music_Buttons(nextcord.ui.View):
+class MyQueue:
     def __init__(self):
-        super().__init__()
-        self.value = None
-
-    @nextcord.ui.button(label = "⏯️ Play/Pause", style = nextcord.ButtonStyle.blurple)
-    async def pause(self, button : nextcord.ui.Button, interaction : Interaction):
-        if not interaction.guild.voice_client:
-            return await interaction.response.send_message("Please join the voice channel!", ephemeral=True)
-        elif not interaction.user.voice:
-            return await interaction.response.send_message("Please join the voice channel!", ephemeral=True)
-        try:
-            if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
-                return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
-        except:
-            return await interaction.response.send_message("I am not connected to voice!", ephemeral=True)
-        player: MyPlayer = (interaction.guild.voice_client)
-        if player.paused:
-            await player.resume()
-            return await interaction.response.send_message(f"**{player.current.title}** is now playing!", ephemeral=True)
-        await player.pause()
-        await interaction.response.send_message(f"**{player.current.title}** is now paused!", ephemeral=True)
-
-    @nextcord.ui.button(label="⏭️ Skip", style=nextcord.ButtonStyle.blurple)
-    async def skip(self, button: nextcord.ui.Button, interaction:Interaction):
-        try:
-            if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
-                return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
-        except:
-            return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        player: MyPlayer = (interaction.guild.voice_client)
-        try:
-            next_song = player.queue.get()
-            await player.play(next_song)
-            return await interaction.response.send_message(f"**{player.current.title}** was skipped! Now playing: {next_song}", ephemeral=True)
-        except:
-            return await interaction.response.send_message(f"Queue is empty!", ephemeral=True)
+        self.items = []
     
-    @nextcord.ui.button(label = "🔁 Queue", style = nextcord.ButtonStyle.green)
-    async def queue(self, button : nextcord.ui.Button, interaction : Interaction):
-        try:
-            if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
-                return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
-        except:
-            return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        player: MyPlayer = (interaction.guild.voice_client)
-        if player.queue.is_empty:
-            return await interaction.send("Queue is empty!")
-        queue = player.queue.copy()
-        song_count = 0
-        msg = ""
-        for song in queue:
-            song_count += 1
-            msg += f"**{song_count}**: **{song.title}**\n"
-        return await interaction.response.send_message(f"__Queue__\n{msg}", ephemeral=True)
-
-    @nextcord.ui.button(label = "🔁 Loop", style = nextcord.ButtonStyle.green)
-    async def loop(self, button : nextcord.ui.Button, interaction : Interaction):
-        try:
-            if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
-                return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
-        except:
-            return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        player: MyPlayer = (interaction.guild.voice_client)
-        if not player.loop:
-            player.loop ^= True
-            await interaction.response.send_message(f"**{player.current.title}** is now looping!", ephemeral=True)
-        else:
-            setattr(player, "loop", False)
-            player.loop ^= True
-            await interaction.response.send_message(f"**{player.current.title}** is no longer looping!", ephemeral=True)
-        
-        self.value = True
+    def isEmpty(self):
+        return self.items == []
     
-    @nextcord.ui.button(label = "⏹️ Stop", style = nextcord.ButtonStyle.red)
-    async def disconnect(self, button : nextcord.ui.Button, interaction : Interaction):
-        try:
-            if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
-                return await interaction.response.send_message("We must be in the same voice channel!", ephemeral=True)
-        except:
-            return await interaction.response.send_message("You or I am not in the voice channel!", ephemeral=True)
-        await interaction.guild.voice_client.disconnect()
-        await interaction.response.send_message(f"I have left the voice channel!", ephemeral=True)
-        self.value = True
+    def push(self, item):
+        self.items.insert(0, item)
 
-async def join(interaction: Interaction):
-    """Join your voice channel"""
-    assert isinstance(interaction.user, nextcord.Member)
+    def pop(self):
+        if self.isEmpty():
+            return None
+        return self.items.pop()
+    
+    def size(self):
+        return len(self.items)
+    
+    def clear(self):
+        self.items = []
 
-    if not interaction.user.voice or not interaction.user.voice.channel:
-        return await interaction.response.send_message("You are not in a voice channel.")
+# Suppress noise about console usage from errors
+youtube_dl.utils.bug_reports_message = lambda: ''
 
-    channel = interaction.user.voice.channel
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
 
-    await channel.connect(cls=MyPlayer)
-    await interaction.send(f"Joined {channel.mention}.")
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+class YTDLSource(nextcord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+
+        self.data = data
+
+        self.title = data.get('title')
+        self.url = data.get('url')
+        self.duration = data.get('duration')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(nextcord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 class Music(commands.Cog, name="Music"):
     """Commands for playing music in voice channels"""
@@ -116,65 +79,90 @@ class Music(commands.Cog, name="Music"):
 
     def __init__(self, bot):
         self.bot = bot
-        self.pool = mafic.NodePool(self)
-        self.ready_ran = False
-
-    @commands.Cog.listener('on_ready')
-    async def startup(self):
-        if self.ready_ran:
-            return
-        
-        await self.pool.create_node(
-            host="lavalink.sneakynodes.com",
-            port=2333,
-            label="MAIN",
-            password="sneakynodes.com"
-        )
-
-        self.ready_ran = True
+        self.queue = MyQueue()
+        self.bg_task = None
+        self.vc: nextcord.VoiceClient = None
 
     @nextcord.slash_command()
-    async def play(self, interaction: Interaction, song: str):
-        """Play a song"""
-        assert interaction.guild is not None
+    async def join(self, interaction: Interaction):
+        """Join your voice channel"""
+        if not interaction.user.voice.channel:
+            return await interaction.response.send_message("You are not in a voice channel.")
 
-        if not interaction.guild.voice_client:
-            await join(interaction)
+        vc: nextcord.VoiceChannel = interaction.user.voice.channel
 
-        view = Music_Buttons()
+        await interaction.send(f"Joining {vc.mention}.")
+        self.vc = await vc.connect()
 
-        player: MyPlayer = (
-            interaction.guild.voice_client
-        )
+    @nextcord.slash_command()
+    async def play(self, interaction: Interaction, *, song: str):
+        """Plays a song"""
 
-        tracks = await player.fetch_tracks(song)
+        async with interaction.channel.typing():
+            self.queue.push(song)
+            if not self.vc.is_playing():
+                self.play_songs(interaction)
+        
+        await interaction.send(f'Added to queue!')
+    
+    @nextcord.slash_command()
+    async def skip(self, interaction: Interaction):
+        """Skips the current song"""
 
-        if not tracks:
-            return await interaction.send("No tracks found.")
+        if self.vc.is_playing():
+            self.vc.stop()
+            await interaction.send('Skipped!')
+            self.play_songs(interaction)
 
-        if isinstance(tracks, mafic.Playlist):
-            tracks = tracks.tracks
-            if len(tracks) > 1:
-                player.queue.extend(tracks[1:])
+    @nextcord.slash_command()
+    async def volume(self, interaction: Interaction, volume: int):
+        """Changes the player's volume"""
 
-        track = tracks[0]
-        await player.play(track)
-        embed = nextcord.Embed(title=f"Added {track} to the queue!",
-            color=nextcord.Colour.from_rgb(214, 60, 26))
-        await interaction.send(embed=embed, view=view)
-        await view.wait()
+        if self.vc is None:
+            return await interaction.send("Not connected to a voice channel.")
 
-    @commands.Cog.listener()
-    async def on_track_end(self, event: mafic.TrackEndEvent):
-        assert isinstance(event.player, MyPlayer)
+        self.vc.source.volume = volume / 100
+        await interaction.send(f"Changed volume to {volume}%")
 
-        if event.player.queue:
-            await event.player.play(event.player.queue.pop(0))
+    @nextcord.slash_command()
+    async def stop(self, interaction: Interaction):
+        """Stops and disconnects the bot from voice"""
 
-    @commands.Cog.listener()
-    async def on_application_command_error(self, interaction: Interaction, error: Exception):
-        traceback.print_exception(type(error), error, error.__traceback__)
-        await interaction.send(f"An error occurred: {error}")
+        self.queue.clear()
+        await self.vc.disconnect()
+        self.vc = None
+
+    @play.before_invoke
+    async def ensure_voice(self, interaction: Interaction):
+        if self.vc is None:
+            if interaction.user.voice:
+                await interaction.user.voice.channel.connect()
+            else:
+                await interaction.send("You are not connected to a voice channel.")
+                raise commands.CommandError("Author not connected to a voice channel.")
+
+    def play_songs(self, interaction: Interaction):
+        self.bg_task = self.bot.loop.create_task(self.play_songs_task(interaction))
+    
+    async def play_songs_task(self, interaction: Interaction):
+        if not self.queue.isEmpty():
+            try:
+                url = self.queue.pop()
+                print(url)
+                if self.vc.is_playing() or url is None:
+                    return
+                player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+                print(f'[{player.title}] playing...')
+                self.vc.play(player, after=lambda e: print(f'Player error: {e}') if e else self.play_songs(interaction))
+                await interaction.send(f'Now playing: {player.title}')
+            except Exception as e:
+                print(e)
+                await interaction.send(f'An error occured: {e}')
+        else:
+            print('Queue empty, stopping...')
+            await interaction.send('Queue empty, goodbye!')
+            await self.vc.disconnect()
+            self.vc = None
   
 def setup(bot):
     bot.add_cog(Music(bot))
