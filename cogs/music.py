@@ -125,6 +125,7 @@ class Music(commands.Cog, name="Music"):
 
         self.queue.clear()
         await self.vc.disconnect()
+        await interaction.send(f"Leaving {interaction.user.voice.channel.mention}")
         self.vc = None
 
     def play_songs(self, interaction: Interaction):
