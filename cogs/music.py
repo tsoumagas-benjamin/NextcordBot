@@ -84,26 +84,21 @@ class Music(commands.Cog, name="Music"):
         self.vc: nextcord.VoiceClient = None
 
     @nextcord.slash_command()
-    async def join(self, interaction: Interaction):
-        """Join your voice channel"""
-        if not interaction.user.voice.channel:
-            return await interaction.response.send_message("You are not in a voice channel.")
-
-        vc: nextcord.VoiceChannel = interaction.user.voice.channel
-
-        await interaction.send(f"Joining {vc.mention}.")
-        self.vc = await vc.connect()
-
-    @nextcord.slash_command()
     async def play(self, interaction: Interaction, *, song: str):
         """Plays a song"""
+        if self.vc is None:
+            if interaction.user.voice:
+                self.vc = await interaction.user.voice.channel.connect()
+            else:
+                await interaction.send("You are not connected to a voice channel.")
+                raise commands.CommandError("Author not connected to a voice channel.")
 
         async with interaction.channel.typing():
             self.queue.push(song)
             if not self.vc.is_playing():
                 self.play_songs(interaction)
         
-        await interaction.send(f'Added to queue!')
+        await interaction.send(f'Added {song.title()} to queue!')
     
     @nextcord.slash_command()
     async def skip(self, interaction: Interaction):
@@ -131,15 +126,6 @@ class Music(commands.Cog, name="Music"):
         self.queue.clear()
         await self.vc.disconnect()
         self.vc = None
-
-    @play.before_invoke
-    async def ensure_voice(self, interaction: Interaction):
-        if self.vc is None:
-            if interaction.user.voice:
-                await interaction.user.voice.channel.connect()
-            else:
-                await interaction.send("You are not connected to a voice channel.")
-                raise commands.CommandError("Author not connected to a voice channel.")
 
     def play_songs(self, interaction: Interaction):
         self.bg_task = self.bot.loop.create_task(self.play_songs_task(interaction))
