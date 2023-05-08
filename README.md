@@ -47,10 +47,6 @@ If you require additional API keys or variables specific to an enviroment, they 
 
 For automatic deploys, you will need to get your Fly.io auth token with `flyctl auth token` and put it under Settings>Secrets>Actions as FLY_API_Token. More details on this can be found here https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/ and https://youtu.be/6u9BrDaSHJc.
 
-## Heroku
-
-`runtime.txt` and `Procfile` are used for Heroku configuration and can be deleted in case you do not plan on hosting there.
-
 ## Fly.io
 
 Check out `Dockerfile`, `fly.toml`, and `fly.yml` under workflows under .github. You can follow along with the official documentation here: https://fly.io/docs/getting-started/ or watch Jonah Lawrence's video if you prefer a video guide: https://youtu.be/J7Fm7MdZn_E.
