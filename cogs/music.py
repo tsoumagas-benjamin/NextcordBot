@@ -139,14 +139,17 @@ class Music(commands.Cog, name="Music"):
     @application_checks.application_command_before_invoke(voice_ensure)
     async def play(self, interaction: Interaction, *, song: str):
         """Play a song"""
-        view = Music_Buttons()
-        search = await wavelink.YouTubeTrack.search(song, return_first=True)
-        if not interaction.guild.voice_client:
-            vc : wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
-        elif not interaction.user.voice:
+        # Ensure bot can connect to voice channel
+        if not interaction.user.voice:
             return await interaction.send("Please enter a voice channel!")
+        elif not interaction.guild.voice_client:
+            vc : wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         else:
             vc: wavelink.Player = interaction.guild.voice_client
+            
+        view = Music_Buttons()
+        search = await wavelink.YouTubeTrack.search(song, return_first=True)
+
         if vc.queue.is_empty and not vc.is_playing():
             await vc.play(search)
             embed = nextcord.Embed(title=f"Started playing {vc.current.title}!",
