@@ -4,22 +4,6 @@ import wavelink
 from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 
-#Functions to ensure the command can execute correctly
-async def voice_ensure(interaction: Interaction):
-    if not interaction.guild.voice_client or not interaction.user.voice:
-            embed = nextcord.Embed(title=f"Please join the voice channel!",
-            color = nextcord.Colour.from_rgb(214, 60, 26))
-            return await interaction.send(embed=embed)
-    try:
-        if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
-            embed = nextcord.Embed(title=f"You or I am not in the voice channel!",
-            color = nextcord.Colour.from_rgb(214, 60, 26))
-            return await interaction.send(embed=embed)
-    except:
-        embed = nextcord.Embed(title=f"I am not in a voice channel!",
-        color = nextcord.Colour.from_rgb(214, 60, 26))
-        return await interaction.send(embed=embed)
-
 class Music_Buttons(nextcord.ui.View):
     def __init__(self):
         super().__init__()
@@ -136,7 +120,6 @@ class Music(commands.Cog, name="Music"):
         await vc.play(next_song)
     
     @nextcord.slash_command()
-    @application_checks.application_command_before_invoke(voice_ensure)
     async def play(self, interaction: Interaction, *, song: str):
         """Play a song"""
         # Ensure bot can connect to voice channel
@@ -146,7 +129,7 @@ class Music(commands.Cog, name="Music"):
             vc : wavelink.Player = await interaction.user.voice.channel.connect(cls=wavelink.Player)
         else:
             vc: wavelink.Player = interaction.guild.voice_client
-            
+
         view = Music_Buttons()
         search = await wavelink.YouTubeTrack.search(song, return_first=True)
 
