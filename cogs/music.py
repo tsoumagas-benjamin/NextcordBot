@@ -8,16 +8,16 @@ from nextcord.ext import commands, application_checks
 async def voice_ensure(interaction: Interaction):
     if not interaction.guild.voice_client or not interaction.user.voice:
             embed = nextcord.Embed(title=f"Please join the voice channel!",
-            color=nextcord.Colour.from_rgb(214, 60, 26))
+            color = nextcord.Colour.from_rgb(214, 60, 26))
             return await interaction.send(embed=embed)
     try:
         if interaction.user.voice.channel.id != interaction.guild.me.voice.channel.id:
             embed = nextcord.Embed(title=f"You or I am not in the voice channel!",
-            color=nextcord.Colour.from_rgb(214, 60, 26))
+            color = nextcord.Colour.from_rgb(214, 60, 26))
             return await interaction.send(embed=embed)
     except:
         embed = nextcord.Embed(title=f"I am not in a voice channel!",
-        color=nextcord.Colour.from_rgb(214, 60, 26))
+        color = nextcord.Colour.from_rgb(214, 60, 26))
         return await interaction.send(embed=embed)
 
 class Music_Buttons(nextcord.ui.View):
