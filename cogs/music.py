@@ -99,8 +99,14 @@ class Music(commands.Cog, name="Music"):
 
     @commands.Cog.listener('on_ready')
     async def node_connect(self):   
-        node: wavelink.Node = wavelink.Node(uri='lavalink.sneakynodes.com:2333', password = 'sneakynodes.com')
-        await wavelink.NodePool.connect(client=self, nodes=[node])
+        node_list: list[wavelink.Node] = [
+            wavelink.Node(uri='http://lavalink.sneakynodes.com:2333', password = 'sneakynodes.com'),
+            wavelink.Node(uri='http://narco.buses.rocks:2269', password = 'glasshost1984'),
+            wavelink.Node(uri='http://lavalink.alexanderof.xyz:2333', password = 'lavalink'),
+            wavelink.Node(uri='http://lavalink2.devamop.in:8830', password = 'DevamOP'),
+            wavelink.Node(uri='http://lavalink1.albinhakanson.se:1141', password = 'albinhakanson.se')
+            ]
+        await wavelink.NodePool.connect(client=self, nodes=[node_list])
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: nextcord.Member, before: nextcord.VoiceState, after: nextcord.VoiceState):
