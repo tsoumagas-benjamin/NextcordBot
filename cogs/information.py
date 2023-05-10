@@ -68,7 +68,9 @@ class Information(commands.Cog, name = "Information"):
         for c in cogs:
             cog: commands.Cog = self.bot.get_cog(c)
             cog_cmds = cog.get_commands()
+            print(cog_cmds)
             for cmd in cog_cmds:
+                print(cmd.qualified_name)
                 cmd_list[c].append(cmd.qualified_name)
             print(c, cmd_list[c])
         print(cmd_list)
@@ -80,7 +82,6 @@ class Information(commands.Cog, name = "Information"):
         for cog in cmd_list:
             cmd_list[cog].sort()
             cmd_str = ", ".join(cmd_list[cog])
-            print(cmd_str)
             embed.add_field(name=f"{cog}", value=f"{cmd_str}", inline=False)
         await interaction.send(embed=embed)  
 
