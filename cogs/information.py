@@ -64,9 +64,11 @@ class Information(commands.Cog, name = "Information"):
         """Get a list of commands for the bot"""
         cogs = self.bot.cogs
         cmd_list = {key: [] for key in cogs}
-        commands_list = self.bot.get_application_commands()
-        for cmd in commands_list:
-            cmd_list[cmd.cog].append(cmd.qualified_name)
+        for c in cogs:
+            cog: commands.Cog = self.bot.get_cog(c)
+            cog_cmds = cog.get_commands()
+            for cmd in cog_cmds:
+                cmd_list[c].append(cmd.qualified_name)
         embed = nextcord.Embed(
             title=f"{self.bot.user.name} Commands",
             color=nextcord.Colour.from_rgb(214, 60, 26))
