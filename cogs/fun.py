@@ -97,7 +97,7 @@ class Fun(commands.Cog, name="Fun"):
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
                 user = await self.bot.fetch_user(user_id)
-                bday_list.append(f"{user.name}: {user.mention}")
+                bday_list.append(f"{user.display_name}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
 

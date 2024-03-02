@@ -10,14 +10,14 @@ db = client.NextcordBot
 # Generates xp for a given message
 def give_xp(message: nextcord.Message):
     words = message.content.split()
-    if len(words) > 5:
+    if len(words) < 5:
         return 5
     else:
         return len(words)
 
 # Determines whether the user levels up or not
 def level_up(xp: int, level: int):
-    threshold = level * 25 + 100
+    threshold = level * 25
     if xp >= threshold:
         return True
     else:
@@ -56,7 +56,7 @@ class Progress(commands.Cog, name="Progress"):
         if level_up(xp, level):
             level += 1
             xp = 0
-            await channel.send(f"{author} reached level {level} on {guild}!")
+            await channel.send(f"{author.display_name} reached level {level} on {guild}!")
         db.levels.replace_one(target, {"_id": author.id, "guild": guild.id, "level": level, "xp": xp})
 
     @nextcord.slash_command()
@@ -69,11 +69,11 @@ class Progress(commands.Cog, name="Progress"):
 
         # Return XP and level or nothing if user is not registered
         if not record:
-            return await interaction.send(f"{person} has no levels or XP!")
+            return await interaction.send(f"{person.display_name} has no levels or XP!")
         else:
             xp = record["xp"]
             level = record["level"]
-            return await interaction.send(f"{person} is level {level} with {xp} XP!")
+            return await interaction.send(f"{person.display_name} is level {level} with {xp} XP!")
         
     @nextcord.slash_command()
     async def leaderboard(self, interaction: Interaction):
@@ -87,10 +87,11 @@ class Progress(commands.Cog, name="Progress"):
             # Get relevant information for each of the top 10
             uid = leader["_id"]
             user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
+            username = user.display_name if self.bot.get_user(uid) else uid
             xp = leader["xp"]
             level = leader["level"]
-            threshold = level * 25 + 100
-            embed.add_field(name=f"{position+1}. {user} Level: {level}", value=f"{xp}/{threshold}XP", inline=False)
+            threshold = level * 25
+            embed.add_field(name=f"{position+1}. {username} Level: {level}", value=f"{xp}/{threshold} XP", inline=False)
         embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
 
