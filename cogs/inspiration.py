@@ -49,14 +49,14 @@ class Inspiration(commands.Cog, name="Inspiration"):
         self.bot = bot
     
     @nextcord.slash_command()
-    @application_checks.has_permissions(administrator=True)
+    @application_checks.has_permissions(manage_guild=True)
     async def encouragement(self, interaction: Interaction, *, message: str):
         """Command to add an encouragement or remove it if it already exists"""
         action = find_entry(self, interaction.guild.id, "encouragements", message)
         await interaction.send(f"{action} encouragement: {message}.")
 
     @nextcord.slash_command()
-    @application_checks.has_permissions(administrator=True)
+    @application_checks.has_permissions(manage_guild=True)
     async def filtered(self, interaction: Interaction, *, message: str):
         """Command to add an filtered word or remove it if it already exists"""
         action = find_entry(self, interaction.guild.id, "filter", message)
@@ -96,7 +96,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_guild=True)
     async def responding(self, interaction: Interaction):
         """Command to change the bot's responding status on/off to keywords"""
         current = db.keywords.find_one({"_id": interaction.guild.id})
@@ -105,7 +105,7 @@ class Inspiration(commands.Cog, name="Inspiration"):
         await interaction.send(f"Responding is {new_status}.")
 
     @nextcord.slash_command()
-    @application_checks.has_permissions(administrator=True)
+    @application_checks.has_permissions(manage_guild=True)
     async def sad(self, interaction: Interaction, *, message: str):
         """Command to add a sad word or remove it if it already exists"""
         action = find_entry(self, interaction.guild.id, "sad", message)
