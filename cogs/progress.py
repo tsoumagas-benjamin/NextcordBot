@@ -39,7 +39,7 @@ class Progress(commands.Cog, name="Progress"):
         author = message.author
         guild = message.guild
         channel = message.channel
-        target = {"_id": author.id, "guild": guild.id}
+        target = {"uid": author.id, "guild": guild.id}
 
         # If xp collection doesn't exist for server, make one
         if "levels" not in db.list_collection_names():
@@ -47,7 +47,7 @@ class Progress(commands.Cog, name="Progress"):
 
         # If member is not registered, create an entry for them
         if not db.levels.find_one(target):
-            db.levels.insert_one({"_id": author.id, "guild": guild.id, "level": 0, "xp": 0})
+            db.levels.insert_one({"uid": author.id, "guild": guild.id, "level": 0, "xp": 0})
         
         # Increase user xp and level as necessary
         user = db.levels.find_one(target)
@@ -57,14 +57,14 @@ class Progress(commands.Cog, name="Progress"):
             level += 1
             xp = 0
             await channel.send(f"{author.display_name} reached level {level} on {guild}!")
-        db.levels.replace_one(target, {"_id": author.id, "guild": guild.id, "level": level, "xp": xp})
+        db.levels.replace_one(target, {"uid": author.id, "guild": guild.id, "level": level, "xp": xp})
 
     @nextcord.slash_command()
     async def level(self, interaction: Interaction, person: nextcord.Member | nextcord.User | None = None):
         """Check level of a person, defaults to checking your own level"""
         if person is None:
             person = interaction.user
-        target = {"_id": person.id, "guild": interaction.guild.id}
+        target = {"uid": person.id, "guild": interaction.guild.id}
         record = db.levels.find_one(target)
 
         # Return XP and level or nothing if user is not registered
@@ -85,7 +85,7 @@ class Progress(commands.Cog, name="Progress"):
         embed = nextcord.Embed(title=f"{server.name} Leaderboard", color=nextcord.Colour.from_rgb(214, 60, 26))
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10
-            uid = leader["_id"]
+            uid = leader["uid"]
             user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
             username = user.display_name if self.bot.get_user(uid) else uid
             xp = leader["xp"]
