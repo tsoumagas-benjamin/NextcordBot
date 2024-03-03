@@ -183,7 +183,7 @@ class Information(commands.Cog, name = "Information"):
             await interaction.send("You must first set your rules with /setrules!")
 
     @nextcord.slash_command()
-    @application_checks.has_permissions(administrator=True)
+    @application_checks.has_permissions(manage_guild=True)
     async def setrules(self, interaction: Interaction, *, rules: str):
         """Takes the given string as rules for the bot to read. Each rule is punctuated by a semicolon `;`."""
         rule_arr = rules.split("; ")
