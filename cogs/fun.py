@@ -18,6 +18,21 @@ db = client.NextcordBot
 
 daily_channel_id = 793685161635741712
 
+calendar = {
+    1: 31,
+    2: 28,
+    3: 31,
+    4: 30,
+    5: 31,
+    6: 30,
+    7: 31,
+    8: 31,
+    9: 30,
+    10: 31,
+    11: 30,
+    12: 31
+}
+
 def animal_task():
     choices = ["shibes", "cats", "birds"]
     choice = random.choice(choices)
@@ -147,11 +162,13 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(result)
 
     @nextcord.slash_command()
-    @application_checks.has_permissions(administrator=True)
     async def birthday(self, interaction: Interaction, member: nextcord.Member, month: int, day: int):
-        """Allows you to store/overwrite a person's birthdate for this server."""
+        """Allows you to store/overwrite a person's birthdate for this server. If your birthday is February 29th, please write it as February 28th!"""
+        if interaction.user is not member and not interaction.user.guild_permissions.administrator:
+            return await interaction.send("You cannot set someone else's birthday without admin privileges.")
         if month < 1 or month > 12:
             await interaction.send("Invalid month.")
+        elif month is 1 or 3 or 5 or
         elif day < 1 or day > 31:
             await interaction.send("Invalid day.")
         else:
