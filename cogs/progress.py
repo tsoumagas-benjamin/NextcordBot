@@ -17,7 +17,7 @@ def give_xp(message: nextcord.Message):
 
 # Determines whether the user levels up or not
 def level_up(xp: int, level: int):
-    threshold = level * 25
+    threshold = (level + 1) * 25
     if xp >= threshold:
         return True
     else:
@@ -90,7 +90,7 @@ class Progress(commands.Cog, name="Progress"):
             username = user.display_name if self.bot.get_user(uid) else uid
             xp = leader["xp"]
             level = leader["level"]
-            threshold = level * 25
+            threshold = (level + 1) * 25
             embed.add_field(name=f"{position+1}. {username} Level: {level}", value=f"{xp}/{threshold} XP", inline=False)
         embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
