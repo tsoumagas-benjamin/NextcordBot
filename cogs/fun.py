@@ -168,8 +168,7 @@ class Fun(commands.Cog, name="Fun"):
             return await interaction.send("You cannot set someone else's birthday without admin privileges.")
         if month < 1 or month > 12:
             await interaction.send("Invalid month.")
-        elif month is 1 or 3 or 5 or
-        elif day < 1 or day > 31:
+        elif day < 1 or day > calendar[month]:
             await interaction.send("Invalid day.")
         else:
             input = {"_id": member.id, "month":month, "day":day}
