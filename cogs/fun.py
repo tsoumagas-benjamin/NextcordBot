@@ -194,15 +194,17 @@ class Fun(commands.Cog, name="Fun"):
             # Gets all birthday users ID's
             for member in bday:
                 print(member)
+                # Get user from ID and check they are still in a server with the bot
+                user: nextcord.User = self.bot.get_user(member["_id"])
+                if not user:
+                    user: nextcord.User = self.bot.fetch_user(member["_id"])
                 # Prune user birthday if no mutual servers exist
-                if member.mutual_guilds is None:
-                    if db.birthdays.find_one({"_id": member.id}):
-                        db.birthdays.delete_one({"_id": member.id})
+                if user.mutual_guilds is None:
+                    if db.birthdays.find_one({"_id": member["_id"]}):
+                        db.birthdays.delete_one({"_id": member["_id"]})
                 else:
                     member_list.append(member['_id'])
-            return await interaction.send("Birthday found")
-        else:
-            return await interaction.send("No birthdays today!")
+            print(member_list)
 
 
 
