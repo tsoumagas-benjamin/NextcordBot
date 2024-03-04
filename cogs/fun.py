@@ -41,6 +41,31 @@ def animal_task():
     result = response.text[2:-2]
     return result
 
+async def bday_check(self, interaction: Interaction):
+        """Testing only: Used to check for today's birthdays"""
+        date = str(datetime.date.today()).split("-")
+        month = int(date[1].lstrip("0"))
+        day = int(date[2].lstrip("0"))
+        print(date, month, day)
+        #Checks if this day/month combo has a match in the database
+        if db.birthdays.find_one({"month": month, "day": day}):
+            bday = db.birthdays.find({"month": month, "day": day})
+            member_list = []
+            # Gets all birthday users ID's
+            for member in bday:
+                print(member)
+                # Get user from ID and check they are still in a server with the bot
+                user: nextcord.User = self.bot.get_user(member["_id"])
+                if not user:
+                    user: nextcord.User = self.bot.fetch_user(member["_id"])
+                # Prune user birthday if no mutual servers exist
+                if user.mutual_guilds is None:
+                    if db.birthdays.find_one({"_id": member["_id"]}):
+                        db.birthdays.delete_one({"_id": member["_id"]})
+                else:
+                    member_list.append(member['_id'])
+            print(member_list)
+
 def birthday_task():
     date = str(datetime.date.today()).split("-")
     month = int(date[1].lstrip("0"))
@@ -51,6 +76,10 @@ def birthday_task():
         member_list = []
         # Gets all birthday users ID's
         for member in bday:
+            # Get user from ID and check they are still in a server with the bot
+            user: nextcord.User = self.bot.get_user(member["_id"])
+            if not user:
+                user: nextcord.User = self.bot.fetch_user(member["_id"])
             # Prune user birthday if no mutual servers exist
             if member.mutual_guilds is None:
                 if db.birthdays.find_one({"_id": member.id}):
@@ -116,6 +145,10 @@ class Fun(commands.Cog, name="Fun"):
                 user = await self.bot.get_user(user_id)
                 if user is None:
                     user = await self.bot.fetch_user(user_id)
+                # Prune user birthday if no mutual servers exist
+                if user.mutual_guilds is None:
+                    if db.birthdays.find_one({"_id": user_id}):
+                        db.birthdays.delete_one({"_id": user_id})
                 bday_list.append(f"{user.display_name}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
@@ -215,8 +248,6 @@ class Fun(commands.Cog, name="Fun"):
                 else:
                     member_list.append(member['_id'])
             print(member_list)
-
-
 
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
