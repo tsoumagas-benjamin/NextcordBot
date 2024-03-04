@@ -103,7 +103,9 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
-        daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        daily_channel = await self.bot.get_channel(daily_channel)
+        if daily_channel is None:
+            daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
         bday_message = f"🥳\tHappy Birthday!\t🎉\n"
         # Get all user names and mentions formatted
@@ -111,7 +113,9 @@ class Fun(commands.Cog, name="Fun"):
         if user_list is not None:
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
-                user = await self.bot.fetch_user(user_id)
+                user = await self.bot.get_user(user_id)
+                if user is None:
+                    user = await self.bot.fetch_user(user_id)
                 bday_list.append(f"{user.display_name}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
@@ -119,13 +123,17 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
-        daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        daily_channel = await self.bot.get_channel(daily_channel_id)
+        if daily_channel is None:
+            daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(animal_task())
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        daily_channel = await self.bot.get_channel(daily_channel_id)
+        if daily_channel is None:
+            daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(embed=joke_task())
     
     @tasks.loop(time=datetime.time(0))
@@ -151,7 +159,9 @@ class Fun(commands.Cog, name="Fun"):
                 embed.add_field(
                     name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
                     value=f"Posted by u/{author} [here]({post_url})")
-                daily_channel = await self.bot.fetch_channel(daily_channel_id)
+                daily_channel = await self.bot.get_channel(daily_channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(daily_channel_id)
                 await daily_channel.send(embed=embed)
                 await cs.close()
 
