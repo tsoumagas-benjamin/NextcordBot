@@ -179,6 +179,33 @@ class Fun(commands.Cog, name="Fun"):
                 db['birthdays'].insert_one(input)
                 await interaction.send(f"Added birthday for {member.name}.")
 
+    #Remove this command later, for testing only!
+    @nextcord.slash_command()
+    async def bday_check(self, interaction: Interaction):
+        """Testing only: Used to check for today's birthdays"""
+        date = str(datetime.date.today()).split("-")
+        month = int(date[1].lstrip("0"))
+        day = int(date[2].lstrip("0"))
+        print(date, month, day)
+        #Checks if this day/month combo has a match in the database
+        if db.birthdays.find_one({"month": month, "day": day}):
+            bday = db.birthdays.find({"month": month, "day": day})
+            member_list = []
+            # Gets all birthday users ID's
+            for member in bday:
+                print(member)
+                # Prune user birthday if no mutual servers exist
+                if member.mutual_guilds is None:
+                    if db.birthdays.find_one({"_id": member.id}):
+                        db.birthdays.delete_one({"_id": member.id})
+                else:
+                    member_list.append(member['_id'])
+            return await interaction.send("Birthday found")
+        else:
+            return await interaction.send("No birthdays today!")
+
+
+
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
         """Get some activity to cure your boredom"""
