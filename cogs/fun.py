@@ -106,7 +106,7 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
-        daily_channel = await self.bot.get_channel(daily_channel_id)
+        daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
@@ -116,7 +116,7 @@ class Fun(commands.Cog, name="Fun"):
         if user_list is not None:
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
-                user: nextcord.User = await self.bot.get_user(user_id)
+                user: nextcord.User = self.bot.get_user(user_id)
                 if user is None:
                     user: nextcord.User = await self.bot.fetch_user(user_id)
                 # Prune user birthday if no mutual servers exist
@@ -131,7 +131,7 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
-        daily_channel = await self.bot.get_channel(daily_channel_id)
+        daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(animal_task())
@@ -139,7 +139,7 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        daily_channel = await self.bot.get_channel(daily_channel_id)
+        daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(embed=joke_task())
@@ -167,7 +167,7 @@ class Fun(commands.Cog, name="Fun"):
                 embed.add_field(
                     name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
                     value=f"Posted by u/{author} [here]({post_url})")
-                daily_channel = await self.bot.get_channel(daily_channel_id)
+                daily_channel = self.bot.get_channel(daily_channel_id)
                 if daily_channel is None:
                     daily_channel = await self.bot.fetch_channel(daily_channel_id)
                 await daily_channel.send(embed=embed)
@@ -202,7 +202,7 @@ class Fun(commands.Cog, name="Fun"):
     async def bday_check(self, interaction: nextcord.Interaction):
         """Testing only: Used to check for today's birthdays"""
         # Gets daily birthday, if any
-        daily_channel = await self.bot.get_channel(daily_channel_id)
+        daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
@@ -212,7 +212,7 @@ class Fun(commands.Cog, name="Fun"):
         if user_list is not None:
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
-                user: nextcord.User = await self.bot.get_user(user_id)
+                user: nextcord.User = self.bot.get_user(user_id)
                 if user is None:
                     user: nextcord.User = await self.bot.fetch_user(user_id)
                 # Prune user birthday if no mutual servers exist
