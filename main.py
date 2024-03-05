@@ -41,7 +41,7 @@ async def on_ready():
 
     # Initialize default collections
     collections = db.list_collection_names()
-    for c in ['birthdays', 'rules', 'keywords', 'Viktor', 'levels']:
+    for c in ['birthdays', 'rules', 'Viktor', 'levels']:
         if c not in collections:
             db.create_collection(c)
     
@@ -53,18 +53,6 @@ async def on_ready():
     print(f"Collections: {collections}")
     print(f"Intents: {dict(bot.intents)}")
     print(f'We have logged in as {bot.user}')
-
-# Initialize starter words when joining a new server.
-@bot.event
-async def on_guild_join(guild):
-    # Add an entry for starter keywords
-    if db.keywords.find_one({"_id": guild.id}) == None:
-        db.keywords.insert_one({
-            "_id": guild.id, 
-            "sad": config.sad_words, 
-            "filter": config.filter_words, 
-            "encouragements": config.encouragements,
-            "status": False})
     
 # When leaving a server, delete all collections pertaining to that server.
 @bot.event
@@ -79,28 +67,6 @@ async def on_member_remove(member):
     if member.mutual_guilds is None:
         if db.birthdays.find_one({"_id": member.id}):
             db.birthdays.delete_many({"_id": member.id})
-            
-# Defining bot behaviour when a message is sent
-@bot.listen("on_message")
-async def word_filter(message):
-    # If the message is from a bot, don't react
-    if message.author.bot:
-        return
-
-    # If responding is on, remove messages with filtered words,
-    # and respond to sad messages
-    respond = db.keywords.find_one({"_id": message.guild.id})
-    if respond["status"]:
-        
-        for word in respond["filter"]:
-            if word.lower() in message.content.lower(): 
-                await message.delete()
-                break
-
-        for word in respond["sad"]:
-            if word.lower() in message.content.lower():
-                await message.channel.send(random.choice(respond["encouragements"]))
-                break
 
 # Tell the bot to store logs in nextcord.log
 log()
