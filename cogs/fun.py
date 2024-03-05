@@ -78,6 +78,13 @@ def joke_task():
         embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
     return embed
 
+#Function to fetch the quote from an API
+def get_quote():
+  response = requests.get("https://zenquotes.io/api/random")
+  json_data = json.loads(response.text)
+  quote = f"*{json_data[0]['q']}*  -  ***{json_data[0]['a']}***"
+  return quote
+
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
 
@@ -328,6 +335,13 @@ class Fun(commands.Cog, name="Fun"):
         for country in nation_data['country']:
             country_id, country_prob = country['country_id'], country['probability']
             embed.add_field(name=f'Country {country_id}', value=f'Probability: {country_prob}', inline=False)
+        await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
+    async def inspire(self, interaction: Interaction):
+        """Command to return an inspirational quote"""
+        quote = get_quote()
+        embed = nextcord.Embed(title='', description=quote, color=nextcord.Colour.from_rgb(214, 60, 26))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
