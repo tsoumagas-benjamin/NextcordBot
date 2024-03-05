@@ -35,6 +35,10 @@ collections = db.list_collection_names()
 @bot.event
 async def on_ready():
     """When bot is connected to Discord"""
+    # Ensure all commands are added and synced
+    bot.add_all_application_commands()
+    await bot.sync_all_application_commands()
+
     # Initialize default collections
     collections = db.list_collection_names()
     for c in ['birthdays', 'rules', 'keywords', 'Viktor', 'levels']:
@@ -45,10 +49,6 @@ async def on_ready():
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
-
-    # Ensure all commands are added and synced
-    bot.add_all_application_commands()
-    await bot.sync_all_application_commands()
 
     print(f"Collections: {collections}")
     print(f"Intents: {dict(bot.intents)}")
