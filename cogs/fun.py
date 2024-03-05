@@ -106,7 +106,7 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
         # Gets daily birthday, if any
-        daily_channel = await self.bot.get_channel(daily_channel)
+        daily_channel = await self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
@@ -202,7 +202,7 @@ class Fun(commands.Cog, name="Fun"):
     async def bday_check(self, interaction: nextcord.Interaction):
         """Testing only: Used to check for today's birthdays"""
         # Gets daily birthday, if any
-        daily_channel = await self.bot.get_channel(daily_channel)
+        daily_channel = await self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
