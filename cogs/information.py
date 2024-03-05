@@ -17,7 +17,7 @@ class Poll:
     def __init__(self):
         self.title: str = ""
         self.embed: nextcord.Embed = None
-        self.msg: nextcord.InteractionMessage = None
+        self.msg: nextcord.InteractionMessage
         self.count: list[int] = [0,0]
         self.colors: list[str] = ["g", "r"]
         
@@ -32,24 +32,24 @@ class Information(commands.Cog, name = "Information"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener("on_reaction_add")
-    async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is p.msg.id:
+    @commands.Cog.listener("on_raw_reaction_add")
+    async def vote_add(self, payload: nextcord.RawReactionActionEvent):
+        if payload.member.bot or payload.message_id is p.msg.id:
             return
         # Update count based on reaction
-        elif reaction.emoji == "✅":
+        elif payload.emoji == "✅":
             p.count[0] += 1
-        elif reaction.emoji == "❌":
+        elif payload.emoji == "❌":
             p.count[1] += 1
     
-    @commands.Cog.listener("on_reaction_remove")
-    async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is p.msg.id:
+    @commands.Cog.listener("on_raw_reaction_remove")
+    async def vote_remove(self, payload: nextcord.RawReactionActionEvent):
+        if payload.member.bot or payload.message_id is p.msg.id:
             return
         # Update count based on reaction
-        elif reaction.emoji == "✅":
+        elif payload.emoji == "✅":
             p.count[0] -= 1
-        elif reaction.emoji == "❌":
+        elif payload.emoji == "❌":
             p.count[1] -= 1
     
     @nextcord.slash_command()
