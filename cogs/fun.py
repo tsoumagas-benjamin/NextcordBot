@@ -192,7 +192,7 @@ class Fun(commands.Cog, name="Fun"):
 
     #Remove this command later, for testing only!
     @nextcord.slash_command()
-    async def bday_check(self):
+    async def bday_check(self, interaction: nextcord.Interaction):
         """Testing only: Used to check for today's birthdays"""
         # Gets daily birthday, if any
         daily_channel = await self.bot.get_channel(daily_channel)
@@ -216,31 +216,6 @@ class Fun(commands.Cog, name="Fun"):
                     bday_list.append(f"{user.display_name}")
             bday_message += ("\n".join(bday_list))
             await daily_channel.send(bday_message)
-    
-    async def daily_birthday(self):
-        # Gets daily birthday, if any
-        daily_channel = await self.bot.get_channel(daily_channel)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        user_list = birthday_task()
-        bday_message = f"🥳\tHappy Birthday!\t🎉\n"
-        # Get all user names and mentions formatted
-        bday_list = []
-        if user_list is not None:
-            # Collect birthday users belonging to the main guild
-            for user_id in user_list:
-                user: nextcord.User = await self.bot.get_user(user_id)
-                if user is None:
-                    user: nextcord.User = await self.bot.fetch_user(user_id)
-                # Prune user birthday if no mutual servers exist
-                if user.mutual_guilds is None:
-                    if db.birthdays.find_one({"_id": user_id}):
-                        db.birthdays.delete_one({"_id": user_id})
-                else:
-                    bday_list.append(f"{user.display_name}")
-            bday_message += ("\n".join(bday_list))
-            await daily_channel.send(bday_message)
-
         
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
