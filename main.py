@@ -1,8 +1,6 @@
 import nextcord
 import os
 import pymongo
-import random
-import config
 from nextcord.ext import commands
 from log import log
 
