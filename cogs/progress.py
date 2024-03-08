@@ -40,7 +40,7 @@ class Progress(commands.Cog, name="Progress"):
         # Get user information from ID
         target = db.levels.find({"uid": uid, "guild": guild_id})
         user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
-        username = user.display_name if self.bot.get_user(uid) else uid
+        username = user.display_name.capitalize() if self.bot.get_user(uid) else uid
         avatar_url = user.avatar.url if self.bot.get_user(uid) else None
         level = target["level"]
         xp = target["xp"]
@@ -102,7 +102,7 @@ class Progress(commands.Cog, name="Progress"):
         if level_up(xp, level):
             level += 1
             xp = 0
-            await channel.send(f"**{author.display_name}** reached level {level} on {guild}!")
+            await channel.send(f"**{author.display_name.capitalize()}** reached level {level} on {guild}!")
         db.levels.replace_one(target, {"uid": author.id, "guild": guild.id, "level": level, "xp": xp})
 
     @nextcord.slash_command()
@@ -115,11 +115,12 @@ class Progress(commands.Cog, name="Progress"):
 
         # Return XP and level or nothing if user is not registered
         if not record:
-            return await interaction.send(f"{person.display_name} has no levels or XP!")
+            return await interaction.send(f"{person.display_name.capitalize()} has no levels or XP!")
         else:
-            xp = record["xp"]
-            level = record["level"]
-            return await interaction.send(f"**{person.display_name}** is level {level} with {xp} XP!")
+            # xp = record["xp"]
+            # level = record["level"]
+            # return await interaction.send(f"**{person.display_name.capitalize()}** is level {level} with {xp} XP!")
+            return await Progress.card_maker(self, interaction, person.id, interaction.guild.id)
         
     @nextcord.slash_command()
     async def leaderboard(self, interaction: Interaction):
@@ -138,7 +139,7 @@ class Progress(commands.Cog, name="Progress"):
             level = leader["level"]
             threshold = (level + 1) * 25
             embed.add_field(name=f"{position+1}. {username} Level: {level}", value=f"{xp}/{threshold} XP", inline=False)
-        embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.guild.icon.url)
+        embed.set_footer(text=f"Requested by {interaction.user.display_name.capitalize()}", icon_url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
 
 #Add the cog to the bot
