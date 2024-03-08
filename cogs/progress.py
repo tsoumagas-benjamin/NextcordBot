@@ -51,7 +51,7 @@ class Progress(commands.Cog, name="Progress"):
         async with ClientSession() as c:
             async with c.get(avatar_url) as resp:
                 avatar = await resp.read()
-        avatar = Image.open(io.BytesIO(avatar)).resize(170, 170)
+        avatar = Image.open(io.BytesIO(avatar)).resize((170, 170))
         
         # Overlay the text card and avatar on the level card
         background = Image.open("../assets/levelcard.png")
