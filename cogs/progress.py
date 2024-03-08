@@ -38,7 +38,7 @@ class Progress(commands.Cog, name="Progress"):
     # Code inspired 
     async def card_maker(self, interaction: Interaction, uid: int, guild_id: int):
         # Get user information from ID
-        target = db.levels.find({"uid": uid, "guild": guild_id})
+        target = db.levels.find_one({"uid": uid, "guild": guild_id})
         user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
         username = user.display_name.capitalize() if self.bot.get_user(uid) else uid
         avatar_url = user.avatar.url if self.bot.get_user(uid) else None
