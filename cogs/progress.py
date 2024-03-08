@@ -70,7 +70,7 @@ class Progress(commands.Cog, name="Progress"):
         img = Image.new("RGB", (870, 50), (0, 0, 0))
         draw = ImageDraw.Draw(img, "RGBA")
         draw.rounded_rectangle((0, 0, 870, 50), 25, fill=(255, 255, 255, 50))
-        draw.rounded_rectangle((0, 0, progress, 50), 30, fill=(153, 0, 153))
+        draw.rounded_rectangle((0, 0, progress, 50), 30, fill=(0, 128, 255))
         background.paste(img, (15, 75))
 
         # Create and save the file and send it 
