@@ -125,7 +125,7 @@ class Fun(commands.Cog, name="Fun"):
                 else:
                     bday_list.append(f"**{user.display_name.capitalize()}**\n")
             bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", description=bday_list, colour=nextcord.Colour.from_rgb(0, 128, 255))
-            await daily_channel.send(bday_message)
+            await daily_channel.send(embed=bday_message)
 
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
@@ -201,9 +201,6 @@ class Fun(commands.Cog, name="Fun"):
     async def bday_check(self, interaction: nextcord.Interaction):
         """Testing only: Used to check for today's birthdays"""
         # Gets daily birthday, if any
-        daily_channel = self.bot.get_channel(daily_channel_id)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
         # Get all user names and mentions formatted
         bday_list = []
@@ -220,7 +217,7 @@ class Fun(commands.Cog, name="Fun"):
                 else:
                     bday_list.append(f"**{user.display_name.capitalize()}**\n")
             bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", description=bday_list, colour=nextcord.Colour.from_rgb(0, 128, 255))
-            await interaction.send(bday_message)
+            await interaction.send(embed=bday_message)
         else:
             return await interaction.send("No Birthdays today :(")
         
