@@ -222,7 +222,7 @@ class Fun(commands.Cog, name="Fun"):
                 else:
                     bday_list.append(f"{user.display_name}")
             bday_message += ("\n".join(bday_list))
-            await daily_channel.send(bday_message)
+            await interaction.send(bday_message)
         
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
