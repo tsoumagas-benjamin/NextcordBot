@@ -52,7 +52,7 @@ class TriviaSetup:
         self.score: dict = dict()
         self.embed: nextcord.Embed = nextcord.Embed(
             title = "Trivia Results", 
-            color=nextcord.Colour.from_rgb(214, 60, 26)
+            color=nextcord.Colour.from_rgb(0, 128, 255)
             )
         
 #Create a cog for image manipulation

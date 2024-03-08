@@ -68,7 +68,7 @@ def joke_task():
     response = requests.request("GET", url, headers=headers, params=querystring).json()
     jokeType = response["type"]
     jokeCategory = response["category"]
-    embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(214, 60, 26))
+    embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(0, 128, 255))
     if jokeType == "single":
         joke = response["joke"]
         embed.description = joke
@@ -162,7 +162,7 @@ class Fun(commands.Cog, name="Fun"):
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=description,
-                    color=nextcord.Colour.from_rgb(214, 60, 26))
+                    color=nextcord.Colour.from_rgb(0, 128, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
                     name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
@@ -233,13 +233,13 @@ class Fun(commands.Cog, name="Fun"):
         json_data = json.loads(response.text)
         activity = json_data['activity'].title()
         category = json_data['type'].title()
-        embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',color=nextcord.Colour.from_rgb(214, 60, 26))
+        embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',color=nextcord.Colour.from_rgb(0, 128, 255))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def embed(self, interaction: Interaction, *, message: str=None):
         """Turn your message into an embed"""
-        embed = nextcord.Embed(title='', description=message, color=nextcord.Colour.from_rgb(214, 60, 26))
+        embed = nextcord.Embed(title='', description=message, color=nextcord.Colour.from_rgb(0, 128, 255))
         embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
     
@@ -261,7 +261,7 @@ class Fun(commands.Cog, name="Fun"):
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=description,
-                    color=nextcord.Colour.from_rgb(214, 60, 26))
+                    color=nextcord.Colour.from_rgb(0, 128, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
                     name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
@@ -306,7 +306,7 @@ class Fun(commands.Cog, name="Fun"):
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=description,
-                    color=nextcord.Colour.from_rgb(214, 60, 26))
+                    color=nextcord.Colour.from_rgb(0, 128, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
                     name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
@@ -319,7 +319,7 @@ class Fun(commands.Cog, name="Fun"):
         """The bot will guess user age, gender, and nationality based on their name using various APIs."""
         #Create results embed
         embed = nextcord.Embed(title=f'Results for {name.title()}',
-        description='',color=nextcord.Colour.from_rgb(214, 60, 26))
+        description='',color=nextcord.Colour.from_rgb(0, 128, 255))
         #Guess user age
         response = requests.get(f"https://api.agify.io/?name={name}")
         age_data = json.loads(response.text)
@@ -343,7 +343,7 @@ class Fun(commands.Cog, name="Fun"):
     async def inspire(self, interaction: Interaction):
         """Command to return an inspirational quote"""
         quote = get_quote()
-        embed = nextcord.Embed(title='', description=quote, color=nextcord.Colour.from_rgb(214, 60, 26))
+        embed = nextcord.Embed(title='', description=quote, color=nextcord.Colour.from_rgb(0, 128, 255))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
@@ -371,7 +371,7 @@ class Fun(commands.Cog, name="Fun"):
                 embed = nextcord.Embed(
                     title=post_title, 
                     description=description,
-                    color=nextcord.Colour.from_rgb(214, 60, 26))
+                    color=nextcord.Colour.from_rgb(0, 128, 255))
                 embed.set_image(url=post_url)
                 embed.add_field(
                     name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
@@ -385,7 +385,7 @@ class Fun(commands.Cog, name="Fun"):
         object = db['Viktor'].aggregate([{ "$sample": { "size": 1 }}])
         for x in object:
             quote = x['quote']
-        embed = nextcord.Embed(title="Viktor:", description=f"*{quote}*", color=nextcord.Colour.from_rgb(214, 60, 26))
+        embed = nextcord.Embed(title="Viktor:", description=f"*{quote}*", color=nextcord.Colour.from_rgb(0, 128, 255))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
