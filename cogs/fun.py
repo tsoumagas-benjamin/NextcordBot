@@ -110,9 +110,8 @@ class Fun(commands.Cog, name="Fun"):
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
-        bday_message = f"🥳\tHappy Birthday!\t🎉\n"
+        bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", colour=nextcord.Colour.from_rgb(0, 128, 255))
         # Get all user names and mentions formatted
-        bday_list = []
         if user_list is not None:
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
@@ -124,8 +123,7 @@ class Fun(commands.Cog, name="Fun"):
                     if db.birthdays.find_one({"_id": user_id}):
                         db.birthdays.delete_one({"_id": user_id})
                 else:
-                    bday_list.append(f"{user.display_name}")
-            bday_message += ("\n".join(bday_list))
+                    bday_message.add_field(name=f"{user.display_name.capitalize()}")
             await daily_channel.send(bday_message)
 
     @tasks.loop(time=datetime.time(16))
@@ -206,9 +204,8 @@ class Fun(commands.Cog, name="Fun"):
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
-        bday_message = f"🥳\tHappy Birthday!\t🎉\n"
+        bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", colour=nextcord.Colour.from_rgb(0, 128, 255))
         # Get all user names and mentions formatted
-        bday_list = []
         if user_list is not None:
             # Collect birthday users belonging to the main guild
             for user_id in user_list:
@@ -220,11 +217,10 @@ class Fun(commands.Cog, name="Fun"):
                     if db.birthdays.find_one({"_id": user_id}):
                         db.birthdays.delete_one({"_id": user_id})
                 else:
-                    bday_list.append(f"{user.display_name}")
-            bday_message += ("\n".join(bday_list))
-            await interaction.send(bday_message)
+                    bday_message.add_field(name=f"{user.display_name.capitalize()}")
+            await daily_channel.send(bday_message)
         else:
-            await interaction.send("No birthdays today :(")
+            return await interaction.send("No Birthdays today :(")
         
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
