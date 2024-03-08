@@ -3,6 +3,9 @@ import pymongo
 import os
 from nextcord import Interaction
 from nextcord.ext import commands
+from PIL import Image, ImageDraw, ImageFont
+import io
+from aiohttp import ClientSession
 
 client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
 db = client.NextcordBot 
@@ -32,6 +35,49 @@ class Progress(commands.Cog, name="Progress"):
     def __init__(self, bot) -> None:
       self.bot = bot
 
+    # Code inspired 
+    async def card_maker(self, interaction: Interaction, uid: int, guild_id: int):
+        # Get user information from ID
+        target = db.levels.find({"uid": uid, "guild": guild_id})
+        user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
+        username = user.display_name if self.bot.get_user(uid) else uid
+        avatar_url = user.avatar.url if self.bot.get_user(uid) else None
+        level = target["level"]
+        xp = target["xp"]
+        threshold = (level + 1) * 25
+        progress = (xp / threshold) * 870
+
+        # Get the avatar of the target user from URL
+        async with ClientSession() as c:
+            async with c.get(avatar_url) as resp:
+                avatar = await resp.read()
+        avatar = Image.open(io.BytesIO(avatar_url)).resize(170, 170)
+        
+        # Overlay the text card and avatar on the level card
+        background = Image.open("../assets/levelcard.png")
+        overlay = Image.open("../assets/textcard.png")
+        background.paste(overlay, (200,300), overlay)
+        background.paste(avatar, (15, 285), avatar)
+
+        # Print username, level, and xp on the level card
+        nameFont = ImageFont.truetype("../assets/RobotoSlab-Regular.ttf", 40)
+        subFont = ImageFont.truetype("../assets/RobotoSlab-Regular.ttf", 30)
+        draw = ImageDraw.Draw(background)
+        draw.text((220, 280), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+        draw.text((220, 200), f"Level - {level}\t\t{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+
+        # Draw progress bar on the level card
+        img = Image.new("RGB", (870, 50), (0, 0, 0))
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.rounded_rectangle((0, 0, 870, 50), 25, fill=(255, 255, 255, 50))
+        draw.rounded_rectangle((0, 0, progress, 50), 30, fill=(153, 0, 153))
+        background.paste(img, (15, 75))
+
+        # Create and save the file and send it 
+        file = open("../assets/level.png", "wb")
+        background.save(file, "PNG")
+        await interaction.send(file)     
+
     @commands.Cog.listener("on_message")
     async def xp(self, message: nextcord.Message):
         if message.author.bot:
@@ -56,7 +102,7 @@ class Progress(commands.Cog, name="Progress"):
         if level_up(xp, level):
             level += 1
             xp = 0
-            await channel.send(f"{author.display_name} reached level {level} on {guild}!")
+            await channel.send(f"**{author.display_name}** reached level {level} on {guild}!")
         db.levels.replace_one(target, {"uid": author.id, "guild": guild.id, "level": level, "xp": xp})
 
     @nextcord.slash_command()
@@ -73,7 +119,7 @@ class Progress(commands.Cog, name="Progress"):
         else:
             xp = record["xp"]
             level = record["level"]
-            return await interaction.send(f"{person.display_name} is level {level} with {xp} XP!")
+            return await interaction.send(f"**{person.display_name}** is level {level} with {xp} XP!")
         
     @nextcord.slash_command()
     async def leaderboard(self, interaction: Interaction):
