@@ -60,8 +60,8 @@ class Progress(commands.Cog, name="Progress"):
         background.paste(avatar, (15, 285), avatar)
 
         # Print username, level, and xp on the level card
-        nameFont = ImageFont.truetype("../assets/RobotoSlab-Regular.ttf", 40)
-        subFont = ImageFont.truetype("../assets/RobotoSlab-Regular.ttf", 30)
+        nameFont = ImageFont.truetype("./../assets/RobotoSlab-Regular.ttf", 40)
+        subFont = ImageFont.truetype("./../assets/RobotoSlab-Regular.ttf", 30)
         draw = ImageDraw.Draw(background)
         draw.text((220, 280), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
         draw.text((220, 200), f"Level - {level}\t\t{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
@@ -74,9 +74,9 @@ class Progress(commands.Cog, name="Progress"):
         background.paste(img, (15, 75))
 
         # Create and save the file and send it 
-        file = open("../assets/level.png", "wb")
+        file = open("./../assets/level.png", "wb")
         background.save(file, "PNG")
-        await interaction.send(file)     
+        await interaction.send(file="./../assets/level.png")     
 
     @commands.Cog.listener("on_message")
     async def xp(self, message: nextcord.Message):
