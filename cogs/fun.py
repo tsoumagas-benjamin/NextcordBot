@@ -223,6 +223,8 @@ class Fun(commands.Cog, name="Fun"):
                     bday_list.append(f"{user.display_name}")
             bday_message += ("\n".join(bday_list))
             await interaction.send(bday_message)
+        else:
+            await interaction.send("No birthdays today :(")
         
     @nextcord.slash_command()
     async def bored(self, interaction: Interaction):
