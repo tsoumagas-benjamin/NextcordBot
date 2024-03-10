@@ -6,6 +6,7 @@ from nextcord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 import io
 from aiohttp import ClientSession
+from pathlib import Path
 
 client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
 db = client.NextcordBot 
@@ -46,6 +47,9 @@ class Progress(commands.Cog, name="Progress"):
         xp = target["xp"]
         threshold = (level + 1) * 25
         progress = (xp / threshold) * 870
+        textcard = Path("NextcordBot/assets/textcard.png").resolve()
+        levelcard = Path("NextcordBot/assets/levelcard.png").resolve()
+        font = Path("NextcordBot/assets/RobotoSlab-Regular.ttf").resolve()
 
         # Get the avatar of the target user from URL
         async with ClientSession() as c:
@@ -54,14 +58,14 @@ class Progress(commands.Cog, name="Progress"):
         avatar = Image.open(io.BytesIO(avatar)).resize((170, 170))
         
         # Overlay the text card and avatar on the level card
-        background = Image.open("./../assets/levelcard.png")
-        overlay = Image.open("./../assets/textcard.png")
+        background = Image.open(levelcard)
+        overlay = Image.open(textcard)
         background.paste(overlay, (200,300), overlay)
         background.paste(avatar, (15, 285), avatar)
 
         # Print username, level, and xp on the level card
-        nameFont = ImageFont.truetype("./../assets/RobotoSlab-Regular.ttf", 40)
-        subFont = ImageFont.truetype("./../assets/RobotoSlab-Regular.ttf", 30)
+        nameFont = ImageFont.truetype(font=font, size=40)
+        subFont = ImageFont.truetype(font=font, size=30)
         draw = ImageDraw.Draw(background)
         draw.text((220, 280), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
         draw.text((220, 200), f"Level - {level}\t\t{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
@@ -74,9 +78,9 @@ class Progress(commands.Cog, name="Progress"):
         background.paste(img, (15, 75))
 
         # Create and save the file and send it 
-        file = open("./../assets/level.png", "wb")
+        file = open("./assets/level.png", "wb")
         background.save(file, "PNG")
-        await interaction.send(file="./../assets/level.png")     
+        await interaction.send(file="./assets/level.png")     
 
     @commands.Cog.listener("on_message")
     async def xp(self, message: nextcord.Message):
