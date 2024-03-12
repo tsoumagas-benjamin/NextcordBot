@@ -47,6 +47,10 @@ class Progress(commands.Cog, name="Progress"):
         xp = target["xp"]
         threshold = (level + 1) * 25
         progress = (xp / threshold) * 870
+        print(Path.cwd())
+        print(Path.parent)
+        p = Path("NextcordBot/assets/levelcard.png").resolve()
+        print(f"PATH={p}")
         textcard = Path("NextcordBot/assets/textcard.png").resolve()
         levelcard = Path("NextcordBot/assets/levelcard.png").resolve()
         font = Path("NextcordBot/assets/RobotoSlab-Regular.ttf").resolve()
