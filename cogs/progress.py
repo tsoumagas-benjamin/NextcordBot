@@ -6,7 +6,6 @@ from nextcord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 import io
 from aiohttp import ClientSession
-from pathlib import Path
 
 client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
 db = client.NextcordBot 
@@ -47,14 +46,6 @@ class Progress(commands.Cog, name="Progress"):
         xp = target["xp"]
         threshold = (level + 1) * 25
         progress = (xp / threshold) * 870
-        #Debugging
-        print(Path.cwd())
-        print(os.path.abspath(os.path.join(os.getcwd(), os.pardir)))
-        subfolders = [ f.path for f in os.scandir(os.getcwd()) if f.is_dir() ]
-        print(subfolders)
-        p = Path("NextcordBot/assets/levelcard.png").resolve()
-        print(f"PATH={p}")
-        #Debugging ends
         textcard = "/main/assets/textcard.png"
         levelcard = "/main/assets/levelcard.png"
         font = "/main/assets/RobotoSlab-Regular.ttf"
@@ -89,7 +80,7 @@ class Progress(commands.Cog, name="Progress"):
         # Create and save the file and send it 
         file = open(result, "wb")
         background.save(file, "PNG")
-        await interaction.send(file=result)     
+        await interaction.send(file=nextcord.File(result))     
 
     @commands.Cog.listener("on_message")
     async def xp(self, message: nextcord.Message):
