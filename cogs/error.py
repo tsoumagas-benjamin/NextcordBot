@@ -43,10 +43,6 @@ class Error(commands.Cog):
             message = (
                 "You are trying to run the same command too often. Please wait a bit before retrying."
             )
-
-        #Error if the command gets caught by deep checks
-        elif isinstance(error, commands.errors.CheckFailure):
-            print(f"Check failure for command {interaction.application_command}")
         
         else:
           raise error
