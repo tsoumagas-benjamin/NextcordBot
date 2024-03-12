@@ -197,7 +197,7 @@ class Fun(commands.Cog, name="Fun"):
 
     #Remove this command later, for testing only!
     @nextcord.slash_command()
-    async def bday_check(self, interaction: nextcord.nextcord.Interaction):
+    async def bday_check(self, interaction: nextcord.Interaction):
         """Testing only: Used to check for today's birthdays"""
         # Gets daily birthday, if any
         user_list = birthday_task()

@@ -1,6 +1,6 @@
 import nextcord
 import os
-import pymongo
+from pymongo import  MongoClient
 from nextcord.ext import commands
 from log import log
 
@@ -12,7 +12,7 @@ my_intents.members = True
 my_intents.presences = True
 
 # Database config
-client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+client = MongoClient(os.getenv('CONN_STRING')) 
 
 # Instantiate the bot
 bot = commands.AutoShardedBot(
