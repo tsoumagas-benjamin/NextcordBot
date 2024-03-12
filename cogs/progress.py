@@ -55,9 +55,10 @@ class Progress(commands.Cog, name="Progress"):
         p = Path("NextcordBot/assets/levelcard.png").resolve()
         print(f"PATH={p}")
         #Debugging ends
-        textcard = Path("NextcordBot/assets/textcard.png").resolve()
-        levelcard = Path("NextcordBot/assets/levelcard.png").resolve()
-        font = Path("NextcordBot/assets/RobotoSlab-Regular.ttf").resolve()
+        textcard = "/main/assets/textcard.png"
+        levelcard = "/main/assets/levelcard.png"
+        font = "/main/assets/RobotoSlab-Regular.ttf"
+        result = "/main/assets/result.png"
 
         # Get the avatar of the target user from URL
         async with ClientSession() as c:
@@ -72,8 +73,8 @@ class Progress(commands.Cog, name="Progress"):
         background.paste(avatar, (15, 285), avatar)
 
         # Print username, level, and xp on the level card
-        nameFont = ImageFont.truetype(font=font, size=40)
-        subFont = ImageFont.truetype(font=font, size=30)
+        nameFont = ImageFont.truetype(font, 40)
+        subFont = ImageFont.truetype(font, 30)
         draw = ImageDraw.Draw(background)
         draw.text((220, 280), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
         draw.text((220, 200), f"Level - {level}\t\t{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
@@ -86,9 +87,9 @@ class Progress(commands.Cog, name="Progress"):
         background.paste(img, (15, 75))
 
         # Create and save the file and send it 
-        file = open("./assets/level.png", "wb")
+        file = open(result, "wb")
         background.save(file, "PNG")
-        await interaction.send(file="./assets/level.png")     
+        await interaction.send(file=result)     
 
     @commands.Cog.listener("on_message")
     async def xp(self, message: nextcord.Message):
