@@ -6,10 +6,7 @@ from log import log
 
 # Allows privileged intents for monitoring members joining, roles editing, and role assignments
 # These need to be enabled in the developer portal as well
-my_intents = nextcord.Intents.default()   
-my_intents.message_content = True
-my_intents.members = True
-my_intents.presences = True
+my_intents = nextcord.Intents.all()
 
 # Database config
 client = MongoClient(os.getenv('CONN_STRING')) 
