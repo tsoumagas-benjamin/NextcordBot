@@ -1,15 +1,14 @@
 import nextcord
-import asyncio
-import InfixParser
-import time
-import os
-import pymongo
+from asyncio import sleep
+from InfixParser import Evaluator
+from time import time
+from os import getenv
+from pymongo import MongoClient
 import matplotlib.pyplot as plt
 import numpy as np
-from nextcord import Interaction
 from nextcord.ext import commands, application_checks
 
-client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
 
 # Class to store poll variables
@@ -53,14 +52,14 @@ class Information(commands.Cog, name = "Information"):
             p.count[1] -= 1
     
     @nextcord.slash_command()
-    async def calculate(self, interaction: Interaction, *, equation: str):
+    async def calculate(self, interaction: nextcord.Interaction, *, equation: str):
         """Calculates user input and returns the output"""
         equation = equation.replace(" ", "")
-        evaluator = InfixParser.Evaluator()
+        evaluator = Evaluator()
         await interaction.send(f' Result of {equation} is {evaluator.eval(equation)}')
     
     @nextcord.slash_command()
-    async def commands(self, interaction: Interaction):
+    async def commands(self, interaction: nextcord.Interaction):
         """Get a list of commands for the bot"""
         commands_list = self.bot.get_application_commands()
         cmds = []
@@ -75,7 +74,7 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(embed=embed)  
 
     @nextcord.slash_command()
-    async def info(self, interaction: Interaction, member: nextcord.Member):
+    async def info(self, interaction: nextcord.Interaction, member: nextcord.Member):
         """Get information on a user"""
         embed = nextcord.Embed(title=member.display_name,
                                description=member.mention,
@@ -105,11 +104,11 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def ping(self, interaction: Interaction):
+    async def ping(self, interaction: nextcord.Interaction):
         """Gets bot ping and API response time"""
-        start_time = time.time()
+        start_time = time()
         embed = nextcord.Embed(title="Response Times", color=nextcord.Colour.from_rgb(0, 128, 255))
-        end_time = time.time()
+        end_time = time()
 
         embed.add_field(name=f"Ping:", value=f"{round(self.bot.latency * 1000)}ms")
         embed.add_field(name=f"API:", value=f"{round((end_time - start_time) * 1000)}ms")
@@ -117,7 +116,7 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def poll(self, interaction: Interaction, question: str):
+    async def poll(self, interaction: nextcord.Interaction, question: str):
         """Create a poll question and have people vote yes or no"""
         # Format embed response to resemble a poll question
         if question[-1] != "?":
@@ -139,7 +138,7 @@ class Information(commands.Cog, name = "Information"):
         p.count = [0,0]
     
     @nextcord.slash_command()
-    async def pollresults(self, interaction: Interaction):
+    async def pollresults(self, interaction: nextcord.Interaction):
         """Create a chart of the most recent poll's results"""
         # Make the pie chart, save and close it after
         pie = np.array(p.count)
@@ -154,7 +153,7 @@ class Information(commands.Cog, name = "Information"):
         f.close()
 
     @nextcord.slash_command()
-    async def rule(self, interaction: Interaction, number: int):
+    async def rule(self, interaction: nextcord.Interaction, number: int):
         """Returns a numbered server rule"""
         if db.rules.find_one({"_id": interaction.guild.id}) != None:
             output = db.rules.find_one({"_id": interaction.guild.id})
@@ -169,7 +168,7 @@ class Information(commands.Cog, name = "Information"):
             await interaction.send("You must first set your rules with /setrules!")
 
     @nextcord.slash_command()
-    async def rules(self, interaction: Interaction):
+    async def rules(self, interaction: nextcord.Interaction):
         """Returns all server rules"""
         if db.rules.find_one({"_id": interaction.guild.id}) != None:
             output = db.rules.find_one({"_id": interaction.guild.id})
@@ -184,7 +183,7 @@ class Information(commands.Cog, name = "Information"):
 
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_guild=True)
-    async def setrules(self, interaction: Interaction, *, rules: str):
+    async def setrules(self, interaction: nextcord.Interaction, *, rules: str):
         """Takes the given string as rules for the bot to read. Each rule is punctuated by a semicolon `;`."""
         rule_arr = rules.split("; ")
         db.rules.replace_one({"_id": interaction.guild.id},{"_id": interaction.guild.id, "rules": rule_arr}, upsert=True)
@@ -194,7 +193,7 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command(guild_ids=[793685160931098696])
-    async def socials(self, interaction: Interaction):
+    async def socials(self, interaction: nextcord.Interaction):
         """Returns links to Ben's socials"""
         embed = nextcord.Embed(title=f"Ben's Socials", color=nextcord.Colour.from_rgb(0, 128, 255))
         embed.add_field(
@@ -217,7 +216,7 @@ class Information(commands.Cog, name = "Information"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def statistics(self, interaction: Interaction):
+    async def statistics(self, interaction: nextcord.Interaction):
         """Returns statistics about the bot"""
         server_count = len(self.bot.guilds)
         total_members = 0
@@ -245,7 +244,7 @@ class Information(commands.Cog, name = "Information"):
 
     @nextcord.slash_command()
     async def timer(self,
-                    interaction: Interaction,
+                    interaction: nextcord.Interaction,
                     amount: int,
                     unit: str, *,
                     description: str = None):
@@ -257,13 +256,13 @@ class Information(commands.Cog, name = "Information"):
         letter = unit[:1]
         await interaction.send(f"Timer {description}set for {amount} {unit}.")
         if letter == "s":
-            await asyncio.sleep(amount)
+            await sleep(amount)
             await interaction.followup.send(f"Timer {description}is done.")
         elif letter == "m":
-            await asyncio.sleep(amount * 60)
+            await sleep(amount * 60)
             await interaction.followup.send(f"Timer {description}is done.")
         elif letter == "h":
-            await asyncio.sleep(amount * 3600)
+            await sleep(amount * 3600)
             await interaction.followup.send(f"Timer {description}is done.")
         else:
             await interaction.followup.send("Please enter a valid unit of time.")

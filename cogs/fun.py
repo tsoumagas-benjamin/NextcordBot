@@ -1,19 +1,18 @@
 import nextcord
 import random
-import aiohttp
-import os
-import re
+from aiohttp import ClientSession
+from os import getenv
+from re import findall
 import requests
 import json
 import datetime
-import pymongo
-from nextcord import Interaction
+from pymongo import MongoClient
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
 
-client = pymongo.MongoClient(os.getenv('CONN_STRING')) 
+client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
 
 daily_channel_id = 793685161635741712
@@ -43,7 +42,7 @@ def animal_task():
 
 # Return list of user ID's who have a birthday today
 def birthday_task():
-    date = str(datetime.date.today()).split("-")
+    date = str(date.today()).split("-")
     month = int(date[1].lstrip("0"))
     day = int(date[2].lstrip("0"))
     #Checks if this day/month combo has a match in the database
@@ -60,7 +59,7 @@ def birthday_task():
 def joke_task():
     url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
     querystring = {"format":"json","blacklistFlags":"nsfw,racist","safe-mode":"true"}
-    key = os.getenv('JOKE_KEY')
+    key = getenv('JOKE_KEY')
     headers = {
         "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
         "X-RapidAPI-Key": key
@@ -147,7 +146,7 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_meme(self):
         # Gets daily meme
         base_url = f'https://www.reddit.com/r/memes/hot.json'
-        async with aiohttp.ClientSession() as cs:
+        async with ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
@@ -173,13 +172,13 @@ class Fun(commands.Cog, name="Fun"):
                 await cs.close()
 
     @nextcord.slash_command()
-    async def animal(self, interaction: Interaction):
+    async def animal(self, interaction: nextcord.Interaction):
         """Get a random animal picture"""
         result = animal_task()
         await interaction.send(result)
 
     @nextcord.slash_command()
-    async def birthday(self, interaction: Interaction, member: nextcord.Member, month: int, day: int):
+    async def birthday(self, interaction: nextcord.Interaction, member: nextcord.Member, month: int, day: int):
         """Allows you to store/overwrite a person's birthdate for this server. If your birthday is February 29th, please write it as February 28th!"""
         if interaction.user is not member and not interaction.user.guild_permissions.administrator:
             return await interaction.send("You cannot set someone else's birthday without admin privileges.")
@@ -198,7 +197,7 @@ class Fun(commands.Cog, name="Fun"):
 
     #Remove this command later, for testing only!
     @nextcord.slash_command()
-    async def bday_check(self, interaction: nextcord.Interaction):
+    async def bday_check(self, interaction: nextcord.nextcord.Interaction):
         """Testing only: Used to check for today's birthdays"""
         # Gets daily birthday, if any
         user_list = birthday_task()
@@ -222,7 +221,7 @@ class Fun(commands.Cog, name="Fun"):
             return await interaction.send("No Birthdays today :(")
         
     @nextcord.slash_command()
-    async def bored(self, interaction: Interaction):
+    async def bored(self, interaction: nextcord.Interaction):
         """Get some activity to cure your boredom"""
         response = requests.get("http://www.boredapi.com/api/activity/")
         json_data = json.loads(response.text)
@@ -232,17 +231,17 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def embed(self, interaction: Interaction, *, message: str=None):
+    async def embed(self, interaction: nextcord.Interaction, *, message: str=None):
         """Turn your message into an embed"""
         embed = nextcord.Embed(title='', description=message, color=nextcord.Colour.from_rgb(0, 128, 255))
         embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
         await interaction.send(embed=embed)
     
     @nextcord.slash_command()
-    async def food(self, interaction: Interaction):
+    async def food(self, interaction: nextcord.Interaction):
         """Search r/food for a random post"""
         base_url = f'https://www.reddit.com/r/food/hot.json'
-        async with aiohttp.ClientSession() as cs:
+        async with ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
@@ -266,9 +265,9 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_emojis=True)
-    async def getemoji(self, interaction: Interaction, url: str, *, name: str):
+    async def getemoji(self, interaction: nextcord.Interaction, url: str, *, name: str):
         """Add an emoji to the server"""
-        async with aiohttp.ClientSession() as ses:
+        async with ClientSession() as ses:
             async with ses.get(url) as r:
                 try:
                     media = BytesIO(await r.read())
@@ -283,11 +282,11 @@ class Fun(commands.Cog, name="Fun"):
                 await ses.close()
 
     @nextcord.slash_command()
-    async def getpost(self, interaction: Interaction, message: str):
+    async def getpost(self, interaction: nextcord.Interaction, message: str):
         """Search a subreddit for a random post"""
         embed = nextcord.Embed(title='', description='')
         base_url = f'https://www.reddit.com/r/{message}/hot.json'
-        async with aiohttp.ClientSession() as cs:
+        async with ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
@@ -310,7 +309,7 @@ class Fun(commands.Cog, name="Fun"):
                 await cs.close()
     
     @nextcord.slash_command()
-    async def guessme(self, interaction: Interaction, *, name: str):
+    async def guessme(self, interaction: nextcord.Interaction, *, name: str):
         """The bot will guess user age, gender, and nationality based on their name using various APIs."""
         #Create results embed
         embed = nextcord.Embed(title=f'Results for {name.title()}',
@@ -335,24 +334,24 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def inspire(self, interaction: Interaction):
+    async def inspire(self, interaction: nextcord.Interaction):
         """Command to return an inspirational quote"""
         quote = get_quote()
         embed = nextcord.Embed(title='', description=quote, color=nextcord.Colour.from_rgb(0, 128, 255))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def joke(self, interaction: Interaction):
+    async def joke(self, interaction: nextcord.Interaction):
         """Gets a random joke from a joke API"""
         result = joke_task()
         await interaction.send(embed=result)
 
     @nextcord.slash_command()
-    async def meme(self, interaction: Interaction):
+    async def meme(self, interaction: nextcord.Interaction):
         """Gets a random meme from r/memes"""
         embed = nextcord.Embed(title='', description='')
         base_url = f'https://www.reddit.com/r/memes/hot.json'
-        async with aiohttp.ClientSession() as cs:
+        async with ClientSession() as cs:
             async with cs.get(base_url) as r:
                 res = await r.json()
                 num = random.randint(0, 24)
@@ -375,7 +374,7 @@ class Fun(commands.Cog, name="Fun"):
                 await cs.close()
       
     @nextcord.slash_command()
-    async def viktor(self, interaction: Interaction):
+    async def viktor(self, interaction: nextcord.Interaction):
         """Gets a random Viktor quote."""
         object = db['Viktor'].aggregate([{ "$sample": { "size": 1 }}])
         for x in object:
@@ -384,12 +383,12 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def youtube(self, interaction: Interaction, *, message: str):
+    async def youtube(self, interaction: nextcord.Interaction, *, message: str):
         """Search youtube for a video"""
         query_string = parse.urlencode({'search_query': message})
         html_content = request.urlopen('http://www.youtube.com/results?' + query_string)
         search_content = html_content.read().decode()
-        search_results = re.findall(r'\/watch\?v=\w+', search_content)
+        search_results = findall(r'\/watch\?v=\w+', search_content)
         await interaction.send('https://www.youtube.com' + search_results[0])
 
 def setup(bot):

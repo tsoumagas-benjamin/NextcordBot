@@ -1,8 +1,7 @@
 import nextcord
-import aiohttp
-import random
-import asyncio
-from nextcord import Interaction
+from aiohttp import ClientSession
+from random import sample
+from asyncio import sleep
 from nextcord.ext import commands
 
 # Dropdown classes for Trivia
@@ -17,7 +16,7 @@ class Answers(nextcord.ui.Select):
             selects.append(nextcord.SelectOption(label = w))
         selects.append(nextcord.SelectOption(label = right))
         # Shuffle options so the last one is not always the correct one
-        random_selects = random.sample(selects, k=len(selects))
+        random_selects = sample(selects, k=len(selects))
         super().__init__(
             placeholder="Select an answer", 
             max_values=1, 
@@ -66,13 +65,13 @@ class Trivia(commands.Cog, name="Trivia"):
         self.bot = bot
         
     @nextcord.slash_command()
-    async def trivia(self, interaction: Interaction):
+    async def trivia(self, interaction: nextcord.Interaction):
         """Play 10 rounds of trivia with friends"""
         # Instantiate a TriviaSetup object
         t = TriviaSetup()
 
         # Get trivia content from the API
-        async with aiohttp.ClientSession() as cs:
+        async with ClientSession() as cs:
             async with cs.get(t.url) as r:
                 res = await r.json()
                 for question in range(0,10):
@@ -88,7 +87,7 @@ class Trivia(commands.Cog, name="Trivia"):
         for x in range(0,10):
             content = f"**{t.questions[x]}**\n> {t.categories[x]} - {t.difficulties[x].title()}"
             await interaction.edit_original_message(content=content, view=TriviaView(t.incorrects[x], t.corrects[x], t.score, 10))
-            await asyncio.sleep(10)
+            await sleep(10)
         # Sort player scores in descending order and convert back to dictionary
         sorted_score = sorted(t.score.items(), key=lambda x:x[1], reverse=True)
         sorted_dict = dict(sorted_score)

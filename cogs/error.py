@@ -1,5 +1,4 @@
 import nextcord
-from nextcord import Interaction
 from nextcord.ext import commands
 
 #Create a cog for error handling
@@ -9,7 +8,7 @@ class Error(commands.Cog):
 
     #Occurs whenever an error appears from a command
     @commands.Cog.listener()
-    async def on_command_error(self, interaction: Interaction, error):
+    async def on_command_error(self, interaction: nextcord.Interaction, error):
 
         #Error if user misses a necessary command parameter
         if isinstance(error, commands.MissingRequiredArgument):

@@ -1,6 +1,5 @@
 import nextcord
-import requests
-from nextcord import Interaction
+from requests import get
 from nextcord.ext import commands
 import PIL.Image, PIL.ImageFilter
             
@@ -38,9 +37,9 @@ class Image(commands.Cog, name="Image"):
       self.bot = bot
 
     @nextcord.slash_command(name="contrast")
-    async def contrast_image(self, interaction: Interaction, url: str, value: float = 1.5):
+    async def contrast_image(self, interaction: nextcord.Interaction, url: str, value: float = 1.5):
         """Increase image contrast by choosing a high value, decrease by choosing a low value, given its URL"""
-        img_data = requests.get(url).content
+        img_data = get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
         im = PIL.Image.open('../image.jpg')
@@ -52,9 +51,9 @@ class Image(commands.Cog, name="Image"):
             await interaction.send("Could not load the image, sorry!")
     
     @nextcord.slash_command(name="convert")
-    async def convert_image(self, interaction: Interaction, url: str, style: str = "Greyscale"):
+    async def convert_image(self, interaction: nextcord.Interaction, url: str, style: str = "Greyscale"):
         """Convert an image to greyscale, given its URL"""
-        img_data = requests.get(url).content
+        img_data = get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
         im = PIL.Image.open('../image.jpg')
@@ -66,9 +65,9 @@ class Image(commands.Cog, name="Image"):
             await interaction.send("Could not load the image, sorry!")
     
     @nextcord.slash_command(name="filter")
-    async def filter_image(self, interaction: Interaction, url: str, filter: str = nextcord.SlashOption(name="filters", description="Choose a filter to apply to the image", choices=filters.keys())):
+    async def filter_image(self, interaction: nextcord.Interaction, url: str, filter: str = nextcord.SlashOption(name="filters", description="Choose a filter to apply to the image", choices=filters.keys())):
         """Apply filters to an image, given its URL"""
-        img_data = requests.get(url).content
+        img_data = get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
         im = PIL.Image.open('../image.jpg')
@@ -80,9 +79,9 @@ class Image(commands.Cog, name="Image"):
             await interaction.send("Could not load the image, sorry!")
     
     @nextcord.slash_command(name="flip")
-    async def flip_image(self, interaction: Interaction, url: str, style: str = nextcord.SlashOption(name="orientation", description="Flip vertically or horizontally", choices=["Vertical", "Horizontal"])):
+    async def flip_image(self, interaction: nextcord.Interaction, url: str, style: str = nextcord.SlashOption(name="orientation", description="Flip vertically or horizontally", choices=["Vertical", "Horizontal"])):
         """Flip an image vertically or horizontally, given its URL"""
-        img_data = requests.get(url).content
+        img_data = get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
         im = PIL.Image.open('../image.jpg')
@@ -97,9 +96,9 @@ class Image(commands.Cog, name="Image"):
             await interaction.send("Could not load the image, sorry!")
     
     @nextcord.slash_command(name="invert")
-    async def invert_image(self, interaction: Interaction, url: str):
+    async def invert_image(self, interaction: nextcord.Interaction, url: str):
         """Invert the colours of an colour image, given its URL"""
-        img_data = requests.get(url).content
+        img_data = get(url).content
         with open('../image.jpg', 'wb') as handler:
             handler.write(img_data)
         im = PIL.Image.open('../image.jpg')
