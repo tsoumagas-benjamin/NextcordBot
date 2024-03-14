@@ -72,7 +72,7 @@ class Progress(commands.Cog, name="Progress"):
         draw.text((570, 100), f"{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
 
         # Draw progress bar on the level card
-        img = Image.new("RGB", (870, 50), (0, 0, 0))
+        img = Image.new("RGBA", (870, 50), (0, 0, 0))
         draw = ImageDraw.Draw(img, "RGBA")
         draw.rounded_rectangle((0, 0, 870, 50), 25, fill=(255, 255, 255, 50))
         draw.rounded_rectangle((0, 0, progress, 50), 30, fill=(0, 128, 255))
