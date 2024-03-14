@@ -1,7 +1,6 @@
 import nextcord
 from pymongo import MongoClient
 from os import getenv
-from nextcord import Interaction
 from nextcord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
@@ -36,7 +35,7 @@ class Progress(commands.Cog, name="Progress"):
       self.bot = bot
 
     # Code inspired 
-    async def card_maker(self, interaction: Interaction, uid: int, guild_id: int):
+    async def card_maker(self, interaction: nextcord.Interaction, uid: int, guild_id: int):
         # Get user information from ID
         target = db.levels.find_one({"uid": uid, "guild": guild_id})
         user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
@@ -120,7 +119,7 @@ class Progress(commands.Cog, name="Progress"):
         db.levels.replace_one(target, {"uid": author.id, "guild": guild.id, "level": level, "xp": xp})
 
     @nextcord.slash_command()
-    async def level(self, interaction: Interaction, person: nextcord.Member | nextcord.User | None = None):
+    async def level(self, interaction: nextcord.Interaction, person: nextcord.Member | nextcord.User | None = None):
         """Check level of a person, defaults to checking your own level"""
         if person is None:
             person = interaction.user
@@ -134,7 +133,7 @@ class Progress(commands.Cog, name="Progress"):
             return await Progress.card_maker(self, interaction, person.id, interaction.guild.id)
         
     @nextcord.slash_command()
-    async def leaderboard(self, interaction: Interaction):
+    async def leaderboard(self, interaction: nextcord.Interaction):
         """Gets the top 10 highest ranked people on the server"""
         server = interaction.guild
         # Sort the database for the highest 10 scoring on the server
