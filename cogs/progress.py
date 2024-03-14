@@ -60,22 +60,23 @@ class Progress(commands.Cog, name="Progress"):
         # Overlay the text card and avatar on the level card
         background = Image.open(levelcard)
         overlay = Image.open(textcard)
-        background.paste(overlay, (200,300), overlay)
-        background.paste(avatar, (15, 285), avatar)
+        background.paste(overlay, (200,0), overlay)
+        background.paste(avatar, (15, 15), avatar)
 
         # Print username, level, and xp on the level card
         nameFont = ImageFont.truetype(font, 40)
         subFont = ImageFont.truetype(font, 30)
         draw = ImageDraw.Draw(background)
-        draw.text((220, 280), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
-        draw.text((220, 200), f"Level - {level}\t\t{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+        draw.text((220, 20), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+        draw.text((220, 100), f"Level - {level}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+        draw.text((570, 100), f"{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
 
         # Draw progress bar on the level card
         img = Image.new("RGB", (870, 50), (0, 0, 0))
         draw = ImageDraw.Draw(img, "RGBA")
         draw.rounded_rectangle((0, 0, 870, 50), 25, fill=(255, 255, 255, 50))
         draw.rounded_rectangle((0, 0, progress, 50), 30, fill=(0, 128, 255))
-        background.paste(img, (15, 75))
+        background.paste(img, (15, 225), img)
 
         # Create and save the file and send it 
         file = open(result, "wb")
