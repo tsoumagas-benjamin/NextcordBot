@@ -50,6 +50,8 @@ class Progress(commands.Cog, name="Progress"):
         levelcard = "/main/assets/levelcard.png"
         font = "/main/assets/RobotoSlab-Regular.ttf"
         result = "/main/assets/result.png"
+        avatar_mask = "/main/assets/avatar_mask.png"
+        bar_mask = "/main/assets/bar_mask.png"
 
         # Get the avatar of the target user from URL
         async with ClientSession() as c:
@@ -61,22 +63,24 @@ class Progress(commands.Cog, name="Progress"):
         background = Image.open(levelcard)
         overlay = Image.open(textcard)
         background.paste(overlay, (200,0), overlay)
-        background.paste(avatar, (15, 15), avatar)
+        a_mask = Image.open(avatar_mask).convert("L").resize((170,170))
+        background.paste(avatar, (15, 15), a_mask)
 
         # Print username, level, and xp on the level card
         nameFont = ImageFont.truetype(font, 40)
         subFont = ImageFont.truetype(font, 30)
         draw = ImageDraw.Draw(background)
         draw.text((220, 20), username, font=nameFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
-        draw.text((220, 100), f"Level - {level}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
-        draw.text((570, 100), f"{xp}/{threshold}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+        draw.text((220, 150), f"Level - {level}", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
+        draw.text((570, 150), f"{xp}/{threshold} XP", font=subFont, fill="white", stroke_width=1, stroke_fill=(0, 0, 0))
 
         # Draw progress bar on the level card
         img = Image.new("RGBA", (870, 50), (0, 0, 0))
         draw = ImageDraw.Draw(img, "RGBA")
         draw.rounded_rectangle((0, 0, 870, 50), 25, fill=(255, 255, 255, 50))
-        draw.rounded_rectangle((0, 0, progress, 50), 30, fill=(0, 128, 255))
-        background.paste(img, (15, 225), img)
+        draw.rounded_rectangle((0, 0, progress, 50), 25, fill=(0, 128, 255))
+        b_mask = Image.open(bar_mask).convert("L")
+        background.paste(img, (15, 225), b_mask)
 
         # Create and save the file and send it 
         file = open(result, "wb")
