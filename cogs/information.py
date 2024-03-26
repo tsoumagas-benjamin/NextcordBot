@@ -142,9 +142,10 @@ class Information(commands.Cog, name = "Information"):
         """Create a chart of the most recent poll's results"""
         # Make the pie chart, save and close it after
         pie = np.array(p.count)
+        print(pie)
         plt.pie(pie, colors=p.colors, startangle = 90)
         plt.title(label=p.title, color='w')
-        plt.savefig('../poll.png', transparent=True)
+        plt.savefig('../poll.png', bbox_inches=None, transparent=True)
         plt.close()
         # Open, send, and close the chart file
         with open("../poll.png", 'rb') as f:
