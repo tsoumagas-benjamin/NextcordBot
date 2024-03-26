@@ -31,24 +31,24 @@ class Information(commands.Cog, name = "Information"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener("on_raw_reaction_add")
-    async def vote_add(self, payload: nextcord.RawReactionActionEvent):
-        if payload.member.bot or payload.message_id is not p.msg.id:
+    @commands.Cog.listener("on_reaction_add")
+    async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
+        if user.bot or reaction.message.id is not p.msg.id:
             return
         # Update count based on reaction
-        elif payload.emoji == "✅":
+        elif reaction.emoji == "✅":
             p.count[0] += 1
-        elif payload.emoji == "❌":
+        elif reaction.emoji == "❌":
             p.count[1] += 1
     
-    @commands.Cog.listener("on_raw_reaction_remove")
-    async def vote_remove(self, payload: nextcord.RawReactionActionEvent):
-        if payload.member.bot or payload.message_id is not p.msg.id:
+    @commands.Cog.listener("on_reaction_remove")
+    async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
+        if user.bot or reaction.message.id is not p.msg.id:
             return
         # Update count based on reaction
-        elif payload.emoji == "✅":
+        elif reaction.emoji == "✅":
             p.count[0] -= 1
-        elif payload.emoji == "❌":
+        elif reaction.emoji == "❌":
             p.count[1] -= 1
     
     @nextcord.slash_command()
