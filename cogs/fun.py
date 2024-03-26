@@ -148,7 +148,7 @@ class Fun(commands.Cog, name="Fun"):
         base_url = f'https://www.reddit.com/r/memes/hot.json'
         async with ClientSession() as cs:
             async with cs.get(base_url) as r:
-                res = await r.json(content_type='text/html')
+                res = await r.json(content_type=None)
                 num = random.randint(0, 24)
                 post_data = res['data']['children'][num]['data']
                 post_title = post_data['title']
@@ -243,7 +243,7 @@ class Fun(commands.Cog, name="Fun"):
         base_url = f'https://www.reddit.com/r/food/hot.json'
         async with ClientSession() as cs:
             async with cs.get(base_url) as r:
-                res = await r.json(content_type='text/html')
+                res = await r.json(content_type=None)
                 num = random.randint(0, 24)
                 post_data = res['data']['children'][num]['data']
                 post_title = post_data['title']
@@ -288,7 +288,7 @@ class Fun(commands.Cog, name="Fun"):
         base_url = f'https://www.reddit.com/r/{message}/hot.json'
         async with ClientSession() as cs:
             async with cs.get(base_url) as r:
-                res = await r.json(content_type='text/html')
+                res = await r.json(content_type=None)
                 num = random.randint(0, 24)
                 post_data = res['data']['children'][num]['data']
                 post_title = post_data['title']
@@ -353,7 +353,7 @@ class Fun(commands.Cog, name="Fun"):
         base_url = f'https://www.reddit.com/r/memes/hot.json'
         async with ClientSession() as cs:
             async with cs.get(base_url) as r:
-                res = await r.json(content_type='text/html')
+                res = await r.json(content_type=None)
                 num = random.randint(0, 24)
                 post_data = res['data']['children'][num]['data']
                 post_title = post_data['title']
