@@ -27,28 +27,22 @@ class Information(commands.Cog, name = "Information"):
     @commands.Cog.listener("on_reaction_add")
     async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
         if user.bot or reaction.message.id != self.id:
-            print(f'{reaction.message.id}\t{self.id}')
-            print("returning")
             return
         # Update count based on reaction
         elif reaction.emoji == "✅":
             self.count[0] += 1
         elif reaction.emoji == "❌":
             self.count[1] += 1
-        print(self.count)
     
     @commands.Cog.listener("on_reaction_remove")
     async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
         if user.bot or reaction.message.id != self.id:
-            print(f'{reaction.message.id}\t{self.id}')
-            print("returning")
             return
         # Update count based on reaction
         elif reaction.emoji == "✅":
             self.count[0] -= 1
         elif reaction.emoji == "❌":
             self.count[1] -= 1
-        print(self.count)
     
     @nextcord.slash_command()
     async def calculate(self, interaction: nextcord.Interaction, *, equation: str):
@@ -133,7 +127,6 @@ class Information(commands.Cog, name = "Information"):
         # Reset poll variables
         self.title = poll_title
         self.id = msg.id
-        print(self.id)
         self.count = [0,0]
     
     @nextcord.slash_command()
