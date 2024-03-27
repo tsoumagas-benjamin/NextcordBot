@@ -26,7 +26,7 @@ class Information(commands.Cog, name = "Information"):
 
     @commands.Cog.listener("on_reaction_add")
     async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is not self.id:
+        if user.bot or reaction.message.id != self.id:
             print(f'{reaction.message.id}\t{self.id}')
             print("returning")
             return
@@ -39,7 +39,7 @@ class Information(commands.Cog, name = "Information"):
     
     @commands.Cog.listener("on_reaction_remove")
     async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is not self.id:
+        if user.bot or reaction.message.id != self.id:
             print(f'{reaction.message.id}\t{self.id}')
             print("returning")
             return
