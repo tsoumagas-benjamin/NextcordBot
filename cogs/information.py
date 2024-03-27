@@ -20,14 +20,14 @@ class Information(commands.Cog, name = "Information"):
     def __init__(self, bot):
         self.bot = bot
         self.title: str = ""
-        self.msg: nextcord.InteractionMessage = None
+        self.id: int = 0
         self.count: list[int] = [0,0]
         self.colors: list[str] = ["g", "r"]
 
     @commands.Cog.listener("on_reaction_add")
     async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is not self.msg.id:
-            print(f'{reaction.message.id}\t{self.msg.id}')
+        if user.bot or reaction.message.id is not self.id:
+            print(f'{reaction.message.id}\t{self.id}')
             print("returning")
             return
         # Update count based on reaction
@@ -39,8 +39,8 @@ class Information(commands.Cog, name = "Information"):
     
     @commands.Cog.listener("on_reaction_remove")
     async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is not self.msg.id:
-            print(f'{reaction.message.id}\t{self.msg.id}')
+        if user.bot or reaction.message.id is not self.id:
+            print(f'{reaction.message.id}\t{self.id}')
             print("returning")
             return
         # Update count based on reaction
@@ -132,7 +132,8 @@ class Information(commands.Cog, name = "Information"):
         await msg.add_reaction("❌")
         # Reset poll variables
         self.title = poll_title
-        self.msg = msg
+        self.id = msg.id
+        print(self.id)
         self.count = [0,0]
     
     @nextcord.slash_command()
