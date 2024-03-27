@@ -11,17 +11,6 @@ from nextcord.ext import commands, application_checks
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
 
-# Class to store poll variables
-class Poll:
-    def __init__(self):
-        self.title: str = ""
-        self.embed: nextcord.Embed = None
-        self.msg: nextcord.InteractionMessage = None
-        self.count: list[int] = [0,0]
-        self.colors: list[str] = ["g", "r"]
-        
-p = Poll()
-
 #Create a cog for information commands
 class Information(commands.Cog, name = "Information"):
     """Commands to give you more information"""
@@ -30,26 +19,30 @@ class Information(commands.Cog, name = "Information"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.title: str = ""
+        self.msg: nextcord.InteractionMessage = None
+        self.count: list[int] = [0,0]
+        self.colors: list[str] = ["g", "r"]
 
     @commands.Cog.listener("on_reaction_add")
     async def vote_add(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is not p.msg.id:
+        if user.bot or reaction.message.id is not self.msg.id:
             return
         # Update count based on reaction
         elif reaction.emoji == "✅":
-            p.count[0] += 1
+            self.count[0] += 1
         elif reaction.emoji == "❌":
-            p.count[1] += 1
+            self.count[1] += 1
     
     @commands.Cog.listener("on_reaction_remove")
     async def vote_remove(self, reaction: nextcord.Reaction, user: nextcord.User | nextcord.Member):
-        if user.bot or reaction.message.id is not p.msg.id:
+        if user.bot or reaction.message.id is not self.msg.id:
             return
         # Update count based on reaction
         elif reaction.emoji == "✅":
-            p.count[0] -= 1
+            self.count[0] -= 1
         elif reaction.emoji == "❌":
-            p.count[1] -= 1
+            self.count[1] -= 1
     
     @nextcord.slash_command()
     async def calculate(self, interaction: nextcord.Interaction, *, equation: str):
@@ -132,19 +125,18 @@ class Information(commands.Cog, name = "Information"):
         await msg.add_reaction("✅")
         await msg.add_reaction("❌")
         # Reset poll variables
-        p.title = poll_title
-        p.embed = poll
-        p.msg = msg
-        p.count = [0,0]
+        self.title = poll_title
+        self.msg = msg
+        self.count = [0,0]
     
     @nextcord.slash_command()
     async def pollresults(self, interaction: nextcord.Interaction):
         """Create a chart of the most recent poll's results"""
         # Make the pie chart, save and close it after
-        pie = np.array(p.count)
+        pie = np.array(self.count)
         print(pie)
-        plt.pie(pie, colors=p.colors, startangle = 90)
-        plt.title(label=p.title, color='w')
+        plt.pie(pie, colors=self.colors, startangle = 90)
+        plt.title(label=self.title, color='w')
         plt.savefig('../poll.png', bbox_inches=None, transparent=True)
         plt.close()
         # Open, send, and close the chart file
