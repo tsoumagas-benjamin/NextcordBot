@@ -158,7 +158,7 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def affirmation(self, interaction: nextcord.Interaction):
         """Get a random affirmation"""
-        response = requests.get("https://api.adviceslip.com/advice")
+        response = requests.get("https://www.affirmations.dev/")
         json_data = json.loads(response.text)
         affirmation = json_data['affirmation']
         embed = nextcord.Embed(title=f'Affirmation for {interaction.user.display_name}:',description=f'{affirmation}.',color=nextcord.Colour.from_rgb(0, 128, 255))
