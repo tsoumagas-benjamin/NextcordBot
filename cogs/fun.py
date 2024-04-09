@@ -94,13 +94,11 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_birthday.start()
         self.daily_animal.start()
         self.daily_joke.start()
-        self.daily_meme.start()
     
     def cog_unload(self):
         self.daily_birthday.cancel()
         self.daily_animal.cancel()
         self.daily_joke.cancel()
-        self.daily_meme.cancel()
 
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
@@ -147,6 +145,24 @@ class Fun(commands.Cog, name="Fun"):
         """Get a random animal picture"""
         result = animal_task()
         await interaction.send(result)
+
+    @nextcord.slash_command()
+    async def advice(self, interaction: nextcord.Interaction):
+        """Get a random piece of advice"""
+        response = requests.get("https://api.adviceslip.com/advice")
+        json_data = json.loads(response.text)
+        advice = json_data['slip']['advice']
+        embed = nextcord.Embed(title=f'Advice for {interaction.user.display_name}:',description=f'{advice}.',color=nextcord.Colour.from_rgb(0, 128, 255))
+        await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
+    async def affirmation(self, interaction: nextcord.Interaction):
+        """Get a random affirmation"""
+        response = requests.get("https://api.adviceslip.com/advice")
+        json_data = json.loads(response.text)
+        affirmation = json_data['affirmation']
+        embed = nextcord.Embed(title=f'Affirmation for {interaction.user.display_name}:',description=f'{affirmation}.',color=nextcord.Colour.from_rgb(0, 128, 255))
+        await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def birthday(self, interaction: nextcord.Interaction, member: nextcord.Member, month: int, day: int):
