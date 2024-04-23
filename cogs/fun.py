@@ -308,28 +308,66 @@ class Fun(commands.Cog, name="Fun"):
         """Gets a random meme from the r/memes subreddit"""
         base_url = f'https://www.reddit.com/r/memes/hot.json'
         resp = requests.get(base_url)
-        res = resp.json()
-        num = random.randint(1,25)
-        post_data = res['data']['children'][num]['data']
-        post_title = post_data['title']
-        author = post_data['author']
-        post_url = post_data['url']
-        description = post_data['selftext']
-        ups = post_data['ups']
-        ratio = post_data['upvote_ratio']
-        permalink = post_data['permalink']
-        if permalink is not None:
-            post_link = base_url.replace("/r/memes/hot.json", permalink)
-        print(post_title, author, post_url, description, ups, ratio, post_link)
-        embed = nextcord.Embed(
-            title=post_title, 
-            description=description,
-            color=nextcord.Colour.from_rgb(0, 128, 255))
-        embed.set_image(url=post_url)
-        embed.add_field(
-            name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
-            value=f"Posted by u/{author} [here]({post_link})")
-        await interaction.send(embed=embed)
+        # Error Handling for empty response body
+        resp.raise_for_status()
+        if resp.status_code != 204:
+            res = resp.json()
+            num = random.randint(1,25)
+            post_data = res['data']['children'][num]['data']
+            post_title = post_data['title']
+            author = post_data['author']
+            post_url = post_data['url']
+            description = post_data['selftext']
+            ups = post_data['ups']
+            ratio = post_data['upvote_ratio']
+            permalink = post_data['permalink']
+            if permalink is not None:
+                post_link = base_url.replace("/r/memes/hot.json", permalink)
+            print(post_title, author, post_url, description, ups, ratio, post_link)
+            embed = nextcord.Embed(
+                title=post_title, 
+                description=description,
+                color=nextcord.Colour.from_rgb(0, 128, 255))
+            embed.set_image(url=post_url)
+            embed.add_field(
+                name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
+                value=f"Posted by u/{author} [here]({post_link})")
+            await interaction.send(embed=embed)
+        else:
+            await interaction.send("Sorry, an error occurred getting your meme, please try again!")
+    
+    @nextcord.slash_command()
+    async def getpost(self, interaction: nextcord.Interaction, subreddit: str):
+        """Gets a random post from the given subreddit"""
+        base_url = f'https://www.reddit.com/r/{subreddit}/hot.json'
+        resp = requests.get(base_url)
+        # Error Handling for empty response body
+        resp.raise_for_status()
+        if resp.status_code != 204:
+            res = resp.json()
+            num = random.randint(1,25)
+            post_data = res['data']['children'][num]['data']
+            post_title = post_data['title']
+            author = post_data['author']
+            post_url = post_data['url']
+            description = post_data['selftext']
+            ups = post_data['ups']
+            ratio = post_data['upvote_ratio']
+            permalink = post_data['permalink']
+            if permalink is not None:
+                post_link = base_url.replace(f"/r/{subreddit}/hot.json", permalink)
+            print(post_title, author, post_url, description, ups, ratio, post_link)
+            embed = nextcord.Embed(
+                title=post_title, 
+                description=description,
+                color=nextcord.Colour.from_rgb(0, 128, 255))
+            embed.set_image(url=post_url)
+            embed.add_field(
+                name=f"🔺{ups} upvotes with a {int(ratio*100)}% upvote ratio", 
+                value=f"Posted by u/{author} [here]({post_link})")
+            await interaction.send(embed=embed)
+        else:
+            await interaction.send("Sorry, an error occurred getting your post, please try again!")
       
     @nextcord.slash_command()
     async def viktor(self, interaction: nextcord.Interaction):
