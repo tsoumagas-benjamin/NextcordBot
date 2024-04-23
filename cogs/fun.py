@@ -32,6 +32,18 @@ calendar = {
     12: 31
 }
 
+def advice_task():
+    response = requests.get("https://api.adviceslip.com/advice")
+    json_data = json.loads(response.text)
+    advice = json_data['slip']['advice']
+    return advice
+
+def affirm_task():
+    response = requests.get("https://www.affirmations.dev/")
+    json_data = json.loads(response.text)
+    affirmation = json_data['affirmation']
+    return affirmation
+
 def animal_task():
     choices = ["shibes", "cats", "birds"]
     choice = random.choice(choices)
@@ -123,6 +135,21 @@ class Fun(commands.Cog, name="Fun"):
                     bday_list.append(f"**{user.display_name.capitalize()}**\n")
             bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", description=bday_list, colour=nextcord.Colour.from_rgb(0, 128, 255))
             await daily_channel.send(embed=bday_message)
+    
+    @tasks.loop(time=datetime.time(12))
+    async def positive_post(self):
+        # Creates daily positivity post
+        daily_channel = self.bot.get_channel(daily_channel_id)
+        if daily_channel is None:
+            daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        advice = advice_task()
+        affirm = affirm_task()
+        quote = get_quote()
+        positivity = nextcord.Embed(title=f"😊\tHere's your reminder to stay positive today!\t😊", colour=nextcord.Colour.from_rgb(0, 128, 255))
+        positivity.add_field(name="Advice of the day:", value=f"{advice}")
+        positivity.add_field(name="Affirmation of the day:", value=f"{affirm}")
+        positivity.set_footer(text=quote)
+        await daily_channel.send(embed=positivity)
 
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
@@ -149,18 +176,14 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def advice(self, interaction: nextcord.Interaction):
         """Get a random piece of advice"""
-        response = requests.get("https://api.adviceslip.com/advice")
-        json_data = json.loads(response.text)
-        advice = json_data['slip']['advice']
+        advice = advice_task()
         embed = nextcord.Embed(title=f'Advice for {interaction.user.display_name}:',description=f'{advice}.',color=nextcord.Colour.from_rgb(0, 128, 255))
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def affirmation(self, interaction: nextcord.Interaction):
         """Get a random affirmation"""
-        response = requests.get("https://www.affirmations.dev/")
-        json_data = json.loads(response.text)
-        affirmation = json_data['affirmation']
+        affirmation = affirm_task()
         embed = nextcord.Embed(title=f'Affirmation for {interaction.user.display_name}:',description=f'{affirmation}.',color=nextcord.Colour.from_rgb(0, 128, 255))
         await interaction.send(embed=embed)
 
