@@ -106,11 +106,13 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_birthday.start()
         self.daily_animal.start()
         self.daily_joke.start()
+        self.daily_positivity.start()
     
     def cog_unload(self):
         self.daily_birthday.cancel()
         self.daily_animal.cancel()
         self.daily_joke.cancel()
+        self.daily_positivity.cancel()
 
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
@@ -137,7 +139,7 @@ class Fun(commands.Cog, name="Fun"):
             await daily_channel.send(embed=bday_message)
     
     @tasks.loop(time=datetime.time(12))
-    async def positive_post(self):
+    async def daily_positivity(self):
         # Creates daily positivity post
         daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
