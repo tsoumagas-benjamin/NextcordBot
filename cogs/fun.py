@@ -104,7 +104,8 @@ def meme_task():
     preview = res["preview"][-1]
     embed = nextcord.Embed(
         title=post_title, 
-        description=f"Posted by {post_author} on {post_subreddit} with 🔺{ups} upvotes.\n\nLink to post here: [{post_link}]({post_link})", 
+        description=f"Posted by {post_author} on {post_subreddit} with 🔺{ups} upvotes.", 
+        url=post_link,
         color=nextcord.Colour.from_rgb(0, 128, 255)
     )
     # Handling potentially mature/spoiler memes
