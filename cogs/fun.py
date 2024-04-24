@@ -150,6 +150,16 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_joke.cancel()
         self.daily_meme.cancel()
         self.daily_positivity.cancel()
+    
+    @tasks.loop(time=datetime.time(0))
+    async def daily_meme(self):
+        # Gets daily meme
+        daily_channel = self.bot.get_channel(daily_channel_id)
+        if daily_channel is None:
+            daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        msg = await daily_channel.send(embed=meme_task())
+        await msg.add_reaction("⬆️")
+        await msg.add_reaction("⬇️")
 
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
@@ -205,16 +215,6 @@ class Fun(commands.Cog, name="Fun"):
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         await daily_channel.send(embed=joke_task())
-
-    @tasks.loop(time=datetime.time(24))
-    async def daily_meme(self):
-        # Gets daily meme
-        daily_channel = self.bot.get_channel(daily_channel_id)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        msg = await daily_channel.send(embed=meme_task())
-        await msg.add_reaction("⬆️")
-        await msg.add_reaction("⬇️")
 
     @nextcord.slash_command()
     async def animal(self, interaction: nextcord.Interaction):
