@@ -121,7 +121,7 @@ def meme_task():
     if warning is not None:
         embed.add_field(name="Warning:", value=f"{warning}")
     embed.set_image(url=preview)
-    embed.set_footer(text=f"Link to post here: {post_link}")
+    embed.set_footer(text=f"Link to post here: [{post_link}]({post_link})")
     return embed
 
 #Function to fetch the quote from an API
