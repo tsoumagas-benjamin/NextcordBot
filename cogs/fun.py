@@ -89,6 +89,41 @@ def joke_task():
         embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
     return embed
 
+def meme_task():
+    # Get all info about the meme and take the last/best quality image preview
+    base_url = "https://meme-api.com/gimme"
+    resp = requests.get(base_url)
+    res = resp.json()
+    post_title = res["title"] if res["title"] is not None else " "
+    post_author = res["author"]
+    post_subreddit = "r/" + res["subreddit"]
+    post_link = res["postLink"]
+    nsfw = res["nsfw"]
+    spoiler = res["spoiler"]
+    ups = res["ups"]
+    preview = res["preview"][-1]
+    embed = nextcord.Embed(
+        title=post_title, 
+        description=f"Posted by {post_author} on {post_subreddit} with 🔺{ups} upvotes.", 
+        color=nextcord.Colour.from_rgb(0, 128, 255)
+    )
+    # Handling potentially mature/spoiler memes
+    if nsfw is True or spoiler is True:
+        preview = f"|| {preview} ||"
+    if nsfw is True and spoiler is True:
+        warning = "NSFW and spoiler content!"
+    elif nsfw is True and spoiler is False:
+        warning = "NSFW content!"
+    elif nsfw is False and spoiler is True:
+        warning = "Spoiler content!"
+    else:
+        warning = None
+    if warning is not None:
+        embed.add_field(name="Warning:", value=f"{warning}")
+    embed.set_image(url=preview)
+    embed.set_footer(text=f"Link to post here: {post_link}")
+    return embed
+
 #Function to fetch the quote from an API
 def get_quote():
   response = requests.get("https://zenquotes.io/api/random")
@@ -304,6 +339,14 @@ class Fun(commands.Cog, name="Fun"):
         """Gets a random joke from a joke API"""
         result = joke_task()
         await interaction.send(embed=result)
+
+    @nextcord.slash_command()
+    async def meme(self, interaction: nextcord.Interaction):
+        """Gets a random meme from r/memes, r/dankmemes, or r/me_irl"""
+        meme_post = meme_task()
+        msg = await interaction.send(embed=meme_post)
+        await msg.add_reaction("⬆️")
+        await msg.add_reaction("⬇️")
       
     @nextcord.slash_command()
     async def viktor(self, interaction: nextcord.Interaction):
