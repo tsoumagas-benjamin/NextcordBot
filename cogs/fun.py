@@ -104,7 +104,7 @@ def meme_task():
     preview = res["preview"][-1]
     embed = nextcord.Embed(
         title=post_title, 
-        description=f"Posted by {post_author} on {post_subreddit} with 🔺{ups} upvotes.", 
+        description=f"Posted by {post_author} on {post_subreddit} with 🔺{ups} upvotes.\n\nLink to post here: [{post_link}]({post_link})", 
         color=nextcord.Colour.from_rgb(0, 128, 255)
     )
     # Handling potentially mature/spoiler memes
@@ -121,7 +121,6 @@ def meme_task():
     if warning is not None:
         embed.add_field(name="Warning:", value=f"{warning}")
     embed.set_image(url=preview)
-    embed.set_footer(text=f"Link to post here: [{post_link}]({post_link})")
     return embed
 
 #Function to fetch the quote from an API
