@@ -288,10 +288,11 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def embed(self, interaction: nextcord.Interaction, *, message: str=None):
-        """Turn your message into an embed"""
-        embed = nextcord.Embed(title='', description=message, color=nextcord.Colour.from_rgb(0, 128, 255))
-        embed.set_footer(icon_url=interaction.user.display_avatar,text=f'Requested by {interaction.user.name}')
+    async def embed(self, interaction: nextcord.Interaction, *, title: str=None, message: str=None, icon: bool=False):
+        """Create an embed. Set icon to True if you want the server icon on your embed."""
+        embed = nextcord.Embed(title=title, description=message, color=nextcord.Colour.from_rgb(0, 128, 255))
+        if icon is True and interaction.guild.icon.url is not None:
+            embed.set_thumbnail(url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
