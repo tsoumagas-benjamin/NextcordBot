@@ -288,11 +288,13 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
-    async def embed(self, interaction: nextcord.Interaction, *, title: str=None, message: str=None, icon: bool=False):
-        """Create an embed. Set icon to True if you want the server icon on your embed."""
+    async def embed(self, interaction: nextcord.Interaction, *, title: str=None, message: str=None,):
+        """Create an embed. Type [] in your string to indicate any blank lines you want added to your message."""
+        # Allow users to add newlines to their embed messages
+        if message is not None:
+            split_message = message.split("[]")
+            message = "\n".join(split_message)
         embed = nextcord.Embed(title=title, description=message, color=nextcord.Colour.from_rgb(0, 128, 255))
-        if icon is True and interaction.guild.icon.url is not None:
-            embed.set_footer(icon_url=interaction.guild.icon.url)
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
