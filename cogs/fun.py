@@ -293,6 +293,8 @@ class Fun(commands.Cog, name="Fun"):
         embed = nextcord.Embed(title=title, description=message, color=nextcord.Colour.from_rgb(0, 128, 255))
         if icon is True and interaction.guild.icon.url is not None:
             embed.set_thumbnail(url=interaction.guild.icon.url)
+            embed.thumbnail.width = 200
+            embed.thumbnail.height = 200
         await interaction.send(embed=embed)
 
     @nextcord.slash_command()
