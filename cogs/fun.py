@@ -195,7 +195,7 @@ class Fun(commands.Cog, name="Fun"):
         positivity = nextcord.Embed(title=f"😊\tHere's your reminder to stay positive today!\t😊", colour=nextcord.Colour.from_rgb(0, 128, 255))
         positivity.add_field(name="Advice of the day:", value=f"{advice}")
         positivity.add_field(name="Affirmation of the day:", value=f"{affirm}")
-        positivity.set_footer(text=quote)
+        positivity.add_field(name="", value=quote, inline=True)
         await daily_channel.send(embed=positivity)
 
     @tasks.loop(time=datetime.time(16))
