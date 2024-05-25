@@ -45,11 +45,11 @@ def affirm_task():
     return affirmation
 
 def animal_task():
-    choices = ["shibes", "cats", "birds"]
+    choices = ["birb", "cats", "dogs", "sadcat", "sillycat"]
     choice = random.choice(choices)
-    url = f"http://shibe.online/api/{choice}?count=1&urls=true&httpsUrls=true"
+    url = f"https://api.alexflipnote.dev/{choice}"
     response = requests.get(url=url, allow_redirects=False, timeout=20)
-    result = response.text[2:-2]
+    result = response.json()["file"]
     return result
 
 # Return list of user ID's who have a birthday today
