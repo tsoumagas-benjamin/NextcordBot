@@ -204,7 +204,10 @@ class Fun(commands.Cog, name="Fun"):
         daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        await daily_channel.send(animal_task())
+        animal = nextcord.Embed(title=f"😊\tHere's your cute animal of the day!\t😊", colour=nextcord.Colour.from_rgb(0, 128, 255))
+        animal_url = animal_task()
+        animal.set_image(animal_url)
+        await daily_channel.send(embed=animal)
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
