@@ -54,7 +54,7 @@ def animal_task():
 
 # Return list of user ID's who have a birthday today
 def birthday_task():
-    date = str(date.today()).split("-")
+    date = str(datetime.date.today()).split("-")
     month = int(date[1].lstrip("0"))
     day = int(date[2].lstrip("0"))
     #Checks if this day/month combo has a match in the database
