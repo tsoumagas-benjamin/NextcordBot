@@ -167,9 +167,9 @@ class Fun(commands.Cog, name="Fun"):
             daily_channel = await self.bot.fetch_channel(daily_channel_id)
         user_list = birthday_task()
         # Get all user names and mentions formatted
-        bday_list = []
         if user_list is not None:
             # Collect birthday users belonging to the main guild
+            bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉", colour=nextcord.Colour.from_rgb(0, 128, 255))
             for user_id in user_list:
                 user: nextcord.User = self.bot.get_user(user_id)
                 if user is None:
@@ -179,8 +179,7 @@ class Fun(commands.Cog, name="Fun"):
                     if db.birthdays.find_one({"_id": user_id}):
                         db.birthdays.delete_one({"_id": user_id})
                 else:
-                    bday_list.append(f"**{user.display_name.capitalize()}**\n")
-            bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", description=bday_list, colour=nextcord.Colour.from_rgb(0, 128, 255))
+                    bday_message.add_field(name="", value=f"**{user.display_name.capitalize()}**")
             await daily_channel.send(embed=bday_message)
     
     @tasks.loop(time=datetime.time(12))
@@ -211,7 +210,6 @@ class Fun(commands.Cog, name="Fun"):
             await daily_channel.send(embed=animal)
         except Exception as e:
             print(f"The error is: {e}")
-
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
@@ -266,9 +264,9 @@ class Fun(commands.Cog, name="Fun"):
         # Gets daily birthday, if any
         user_list = birthday_task()
         # Get all user names and mentions formatted
-        bday_list = []
         if user_list is not None:
             # Collect birthday users belonging to the main guild
+            bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉", colour=nextcord.Colour.from_rgb(0, 128, 255))
             for user_id in user_list:
                 user: nextcord.User = self.bot.get_user(user_id)
                 if user is None:
@@ -278,8 +276,7 @@ class Fun(commands.Cog, name="Fun"):
                     if db.birthdays.find_one({"_id": user_id}):
                         db.birthdays.delete_one({"_id": user_id})
                 else:
-                    bday_list.append(f"**{user.display_name.capitalize()}**\n")
-            bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉\n", description=bday_list, colour=nextcord.Colour.from_rgb(0, 128, 255))
+                    bday_message.add_field(name="", value=f"**{user.display_name.capitalize()}**")
             await interaction.send(embed=bday_message)
         else:
             return await interaction.send("No Birthdays today :(")
