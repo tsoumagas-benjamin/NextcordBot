@@ -33,24 +33,30 @@ calendar = {
 }
 
 def advice_task():
-    response = requests.get(url="https://api.adviceslip.com/advice", allow_redirects=False, timeout=20)
-    json_data = json.loads(response.text)
-    advice = json_data['slip']['advice']
+    advice = None
+    while advice is None:
+        response = requests.get(url="https://api.adviceslip.com/advice", allow_redirects=False, timeout=20)
+        json_data = json.loads(response.text)
+        advice = json_data['slip']['advice']
     return advice
 
 def affirm_task():
-    response = requests.get(url="https://www.affirmations.dev/", allow_redirects=False, timeout=20)
-    json_data = json.loads(response.text)
-    affirmation = json_data['affirmation']
+    affirmation = None
+    while affirmation is None:
+        response = requests.get(url="https://www.affirmations.dev/", allow_redirects=False, timeout=20)
+        json_data = json.loads(response.text)
+        affirmation = json_data['affirmation']
     return affirmation
 
 def animal_task():
-    choices = ["birb", "cats", "dogs", "sadcat", "sillycat"]
-    choice = random.choice(choices)
-    url = f"https://api.alexflipnote.dev/{choice}"
-    response = requests.get(url=url, allow_redirects=False, timeout=20)
-    result = response.json()["file"]
-    return result
+    animal = None
+    while animal is None:
+        choices = ["birb", "cats", "dogs", "sadcat", "sillycat"]
+        choice = random.choice(choices)
+        url = f"https://api.alexflipnote.dev/{choice}"
+        response = requests.get(url=url, allow_redirects=False, timeout=20)
+        animal = response.json()["file"]
+    return animal
 
 # Return list of user ID's who have a birthday today
 def birthday_task():
