@@ -221,7 +221,7 @@ class Warframe(commands.Cog, name="Warframe"):
     async def steel_path_reward(self, interaction: nextcord.Interaction):
         """Finds the weekly reward from Teshin"""
         teshin_info = teshin_rotation(self.warframe_api)
-        teshin_time = f"Expires in {" ".join(teshin_info["remaining_time"])}"
+        teshin_time = f'Expires in {" ".join(teshin_info["remaining_time"])}'
         embed = nextcord.Embed(
             title = f"Teshin Weekly Reward:",
             description = f'{teshin_info["reward_name"]} for {teshin_info["reward_cost"]} Steel Essence'
