@@ -166,9 +166,12 @@ class Warframe(commands.Cog, name="Warframe"):
     async def baro(self, interaction: nextcord.Interaction):
         """Get information on Baro Ki'Teer"""
         baro_kiteer_info = baro_kiteer(self.warframe_api)
+        baro_location = baro_kiteer_info["location"]
+        baro_time = " ".join(baro_kiteer_info["time"])
+        baro_inventory = baro_kiteer_info['inventory']
         embed = nextcord.Embed(
-            title = f"Baro Ki'Teer will arrive at {baro_kiteer_info["location"]} in {" ".join(baro_kiteer_info["time"])}",
-            description = "\n".join(baro_kiteer_info["inventory"]) if baro_kiteer_info["inventory"] else "Inventory Unknown",
+            title = f"Baro Ki'Teer will arrive at {baro_location} in {baro_time}",
+            description = "\n".join(baro_inventory) if baro_inventory else "Inventory Unknown",
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
         await interaction.send(embed=embed)
@@ -177,13 +180,15 @@ class Warframe(commands.Cog, name="Warframe"):
     async def duviri(self, interaction: nextcord.Interaction):
         """Find information on the current Duviri cycle"""
         duviri_info = duviri_status(self.warframe_api)
+        duviri_regular = "\n".join(duviri_info["regular"])
+        duviri_steel_path = "\n".join(duviri_info["steel_path"])
         embed = nextcord.Embed(
             title = "Duviri Status",
             description = f"Current Cycle: {duviri_info["emotion"]}",
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
-        embed.add_field(name="Regular Rewards", value=f"\n".join(duviri_info["regular"]), inline=False)
-        embed.add_field(name="Steel Path Rewards", value=f"\n".join(duviri_info["steel_path"]), inline=False)
+        embed.add_field(name="Regular Rewards", value=duviri_regular, inline=False)
+        embed.add_field(name="Steel Path Rewards", value=duviri_steel_path, inline=False)
         await interaction.send(embed=embed)
     
     @nextcord.slash_command()
@@ -215,11 +220,12 @@ class Warframe(commands.Cog, name="Warframe"):
     async def steel_path_reward(self, interaction: nextcord.Interaction):
         """Finds the weekly reward from Teshin"""
         teshin_info = teshin_rotation(self.warframe_api)
+        teshin_time = " ".join(teshin_info["remaining_time"])
         embed = nextcord.Embed(
             title = f"Teshin Weekly Reward:",
             description = f"{teshin_info["reward_name"]} for {teshin_info["reward_cost"]} Steel Essence"
         )
-        embed.set_footer(f"Expires in {teshin_info["remaining_time"]}")
+        embed.set_footer(f"Expires in {teshin_time}.")
         await interaction.send(embed=embed)
 
 def setup(bot):
