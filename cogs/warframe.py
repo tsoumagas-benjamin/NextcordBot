@@ -184,7 +184,7 @@ class Warframe(commands.Cog, name="Warframe"):
         duviri_steel_path = "\n".join(duviri_info["steel_path"])
         embed = nextcord.Embed(
             title = "Duviri Status",
-            description = f"Current Cycle: {duviri_info["emotion"]}",
+            description = f'Current Cycle: {duviri_info["emotion"]}',
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
         embed.add_field(name="Regular Rewards", value=duviri_regular, inline=False)
@@ -201,17 +201,17 @@ class Warframe(commands.Cog, name="Warframe"):
         )
         embed.add_field(
             name = "Plains of Eidolon", 
-            value = f"{open_world_info["plains_state"]} - {open_world_info["plains_time"]}",
+            value = f'{open_world_info["plains_state"]} - {open_world_info["plains_time"]}',
             inline = False
         )
         embed.add_field(
             name = "Orb Vallis", 
-            value = f"{open_world_info["vallis_state"]} - {open_world_info["vallis_time"]}",
+            value = f'{open_world_info["vallis_state"]} - {open_world_info["vallis_time"]}',
             inline = False
         )
         embed.add_field(
             name = "Cambion Drift", 
-            value = f"{open_world_info["cambion_state"]} - {open_world_info["cambion_time"]}",
+            value = f'{open_world_info["cambion_state"]} - {open_world_info["cambion_time"]}',
             inline = False
         )
         await interaction.send(embed=embed)
@@ -223,7 +223,7 @@ class Warframe(commands.Cog, name="Warframe"):
         teshin_time = " ".join(teshin_info["remaining_time"])
         embed = nextcord.Embed(
             title = f"Teshin Weekly Reward:",
-            description = f"{teshin_info["reward_name"]} for {teshin_info["reward_cost"]} Steel Essence"
+            description = f'{teshin_info["reward_name"]} for {teshin_info["reward_cost"]} Steel Essence'
         )
         embed.set_footer(f"Expires in {teshin_time}.")
         await interaction.send(embed=embed)
