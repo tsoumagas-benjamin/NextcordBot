@@ -95,7 +95,7 @@ def open_worlds(url):
     vallis_status = wf_content['vallisCycle']
     vallis_state = vallis_status['state']
     vallis_time = vallis_status['timeLeft']
-    cambion_status = wf_content['cambionDrift']
+    cambion_status = wf_content['cambionCycle']
     cambion_state = cambion_status['state']
     cambion_time = cambion_status['timeLeft']
 
@@ -154,12 +154,13 @@ class Warframe(commands.Cog, name="Warframe"):
     async def archon(self, interaction: nextcord.Interaction):
         """Find the current Archon, missions, and remaining time for the current hunt"""
         archon_hunt_info = archon_hunt(self.warframe_api)
+        archon_expiry = "-".join(archon_hunt_info["remaining_time"])
         embed = nextcord.Embed(
             title = archon_hunt_info["archon"], 
             description = "\n".join(archon_hunt_info["nodes"]),
             color = nextcord.Colour.from_rgb(0, 128, 255)
             )
-        embed.set_footer("-".join(archon_hunt_info["remaining_time"]))
+        embed.set_footer(archon_expiry)
         await interaction.send(embed=embed)
     
     @nextcord.slash_command()
@@ -220,12 +221,12 @@ class Warframe(commands.Cog, name="Warframe"):
     async def steel_path_reward(self, interaction: nextcord.Interaction):
         """Finds the weekly reward from Teshin"""
         teshin_info = teshin_rotation(self.warframe_api)
-        teshin_time = " ".join(teshin_info["remaining_time"])
+        teshin_time = f"Expires in {" ".join(teshin_info["remaining_time"])}"
         embed = nextcord.Embed(
             title = f"Teshin Weekly Reward:",
             description = f'{teshin_info["reward_name"]} for {teshin_info["reward_cost"]} Steel Essence'
         )
-        embed.set_footer(f"Expires in {teshin_time}.")
+        embed.set_footer(teshin_time)
         await interaction.send(embed=embed)
 
 def setup(bot):
