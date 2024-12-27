@@ -170,6 +170,16 @@ class Warframe(commands.Cog, name="Warframe"):
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
         self.warframe_api = "https://api.warframestat.us/pc"
+        self.archon_timer.start()
+        self.baro_timer.start()
+        self.duviri_timer.start()
+        self.teshin_timer.start()
+
+    def cog_unload(self):
+        self.archon_timer.cancel()
+        self.baro_timer.cancel()
+        self.duviri_timer.cancel()
+        self.teshin_timer.cancel()
 
     # Baro loop runs every Friday to check if Baro has arrived
     @tasks.loop(time=datetime.time(15))
@@ -184,10 +194,40 @@ class Warframe(commands.Cog, name="Warframe"):
             await daily_channel.send(embed=baro_kiteer(self.warframe_api))
 
     # Archon loop runs every Sunday for the weekly reset
+    @tasks.loop(time=datetime.time(2))
+    async def archon_timer(self):
+        # Checks every day at 2:00 am UTC / 9:00 pm EST for Archon Hunts
+        weekday = datetime.datetime.today().weekday()
+        # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
+        if weekday is 0:
+            daily_channel = self.bot.get_channel(daily_channel_id)
+            if daily_channel is None:
+                daily_channel = await self.bot.fetch_channel(daily_channel_id)
+            await daily_channel.send(embed=archon_hunt(self.warframe_api))
 
     # Duviri loop runs every Sunday for the weekly reset
+    @tasks.loop(time=datetime.time(2))
+    async def duviri_timer(self):
+        # Checks every day at 2:00 am UTC / 9:00 pm EST for Duviri Rewards
+        weekday = datetime.datetime.today().weekday()
+        # If date is Sunday(EST)/Monday(UTC), then run the Duviri rewards function
+        if weekday is 0:
+            daily_channel = self.bot.get_channel(daily_channel_id)
+            if daily_channel is None:
+                daily_channel = await self.bot.fetch_channel(daily_channel_id)
+            await daily_channel.send(embed=duviri_status(self.warframe_api))
 
     # Teshin loop runs every Sunday for the weekly reset
+    @tasks.loop(time=datetime.time(2))
+    async def teshin_timer(self):
+        # Checks every day at 2:00 am UTC / 9:00 pm EST for the Teshin weekly reward
+        weekday = datetime.datetime.today().weekday()
+        # If date is Sunday(EST)/Monday(UTC), then run the Teshin reward function
+        if weekday is 0:
+            daily_channel = self.bot.get_channel(daily_channel_id)
+            if daily_channel is None:
+                daily_channel = await self.bot.fetch_channel(daily_channel_id)
+            await daily_channel.send(embed=teshin_rotation(self.warframe_api))
 
     @nextcord.slash_command()
     async def archon(self, interaction: nextcord.Interaction):
