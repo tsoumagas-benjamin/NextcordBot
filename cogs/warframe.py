@@ -47,7 +47,7 @@ def baro_kiteer(url):
         return error
     # Convert the response content for the Void Trader into a Python object
     baro_info = json.loads(wf_data.content)['voidTrader']
-    # Parse the object for the next Void trader location, arrival time (days and hours), and 
+    # Parse the object for the next Void trader location, arrival time (days and hours), and inventory
     baro_location = baro_info['location']
     baro_arrival = baro_info['startString'].split(" ")[0:2]
     baro_inventory = baro_info['inventory']
@@ -56,7 +56,7 @@ def baro_kiteer(url):
     baro_time = " ".join(baro_arrival)
     baro_items = ""
     for item in baro_inventory:
-        baro_items += (f"{item['item']} - {item['ducats']} Ducats - {item['credits']} Credits\n")
+        baro_items += (f"{item['item']} - {item['ducats']} D - {item['credits']} C\n")
     baro_embed = nextcord.Embed(
         title = f"Baro Ki'Teer will arrive at {baro_location} in {baro_time}",
         description = baro_items if baro_inventory else "Inventory Unknown",
@@ -189,7 +189,7 @@ class Warframe(commands.Cog, name="Warframe"):
         # Checks every day at 14:00 UTC / 9:00 am EST for Baro Ki'Teer
         weekday = datetime.datetime.today().weekday()
         # If date is Friday, then run the Baro function
-        if weekday is 4:
+        if weekday == 4:
             daily_channel = self.bot.get_channel(daily_channel_id)
             if daily_channel is None:
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
@@ -201,7 +201,7 @@ class Warframe(commands.Cog, name="Warframe"):
         # Checks every day at 2:00 am UTC / 9:00 pm EST for Archon Hunts
         weekday = datetime.datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
-        if weekday is 0:
+        if weekday == 0:
             daily_channel = self.bot.get_channel(daily_channel_id)
             if daily_channel is None:
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
@@ -213,7 +213,7 @@ class Warframe(commands.Cog, name="Warframe"):
         # Checks every day at 2:00 am UTC / 9:00 pm EST for Duviri Rewards
         weekday = datetime.datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Duviri rewards function
-        if weekday is 0:
+        if weekday == 0:
             daily_channel = self.bot.get_channel(daily_channel_id)
             if daily_channel is None:
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
@@ -225,7 +225,7 @@ class Warframe(commands.Cog, name="Warframe"):
         # Checks every day at 2:00 am UTC / 9:00 pm EST for the Teshin weekly reward
         weekday = datetime.datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Teshin reward function
-        if weekday is 0:
+        if weekday == 0:
             daily_channel = self.bot.get_channel(daily_channel_id)
             if daily_channel is None:
                 daily_channel = await self.bot.fetch_channel(daily_channel_id)
