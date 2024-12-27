@@ -54,6 +54,8 @@ def baro_kiteer(url):
 
     # Create an embed object to return with Baro information
     baro_time = " ".join(baro_arrival)
+    if baro_time[0] == "-":
+        baro_time = " ".join(baro_info['endString'].split(" ")[0:2])
     baro_items = ""
     for item in baro_inventory:
         baro_items += (f"{item['item']} - {item['ducats']} D - {item['credits']} C\n")
