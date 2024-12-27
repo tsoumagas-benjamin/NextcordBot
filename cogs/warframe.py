@@ -56,7 +56,7 @@ def baro_kiteer(url):
     baro_time = " ".join(baro_arrival)
     baro_items = ""
     for item in baro_inventory:
-        baro_items += (f"{item["item"]} - {item["ducats"]} Ducats - {item["credits"]} Credits\n")
+        baro_items += (f"{item['item']} - {item['ducats']} Ducats - {item['credits']} Credits\n")
     baro_embed = nextcord.Embed(
         title = f"Baro Ki'Teer will arrive at {baro_location} in {baro_time}",
         description = baro_items if baro_inventory else "Inventory Unknown",
