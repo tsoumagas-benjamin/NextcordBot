@@ -260,13 +260,13 @@ class Warframe(commands.Cog, name="Warframe"):
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
         # Add fields for each element and corresponding warframes
-        progenitor_embed.add_field(name="Impact", value=f"{self.progenitors["Impact"]}", inline=True)
-        progenitor_embed.add_field(name="Heat", value=f"{self.progenitors["Heat"]}", inline=True)
-        progenitor_embed.add_field(name="Cold", value=f"{self.progenitors["Cold"]}", inline=True)
-        progenitor_embed.add_field(name="Electricity", value=f"{self.progenitors["Electricity"]}", inline=True)
-        progenitor_embed.add_field(name="Toxin", value=f"{self.progenitors["Toxin"]}", inline=True)
-        progenitor_embed.add_field(name="Magnetic", value=f"{self.progenitors["Magnetic"]}", inline=True)
-        progenitor_embed.add_field(name="Radiation", value=f"{self.progenitors["Radiation"]}", inline=True)
+        progenitor_embed.add_field(name="Impact", value=f"{self.progenitors['Impact']}", inline=True)
+        progenitor_embed.add_field(name="Heat", value=f"{self.progenitors['Heat']}", inline=True)
+        progenitor_embed.add_field(name="Cold", value=f"{self.progenitors['Cold']}", inline=True)
+        progenitor_embed.add_field(name="Electricity", value=f"{self.progenitors['Electricity']}", inline=True)
+        progenitor_embed.add_field(name="Toxin", value=f"{self.progenitors['Toxin']}", inline=True)
+        progenitor_embed.add_field(name="Magnetic", value=f"{self.progenitors['Magnetic']}", inline=True)
+        progenitor_embed.add_field(name="Radiation", value=f"{self.progenitors['Radiation']}", inline=True)
 
         await interaction.send(embed=progenitor_embed)
     
