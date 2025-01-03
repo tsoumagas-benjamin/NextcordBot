@@ -279,14 +279,22 @@ class Warframe(commands.Cog, name="Warframe"):
             title = "Progenitor Elements",
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
+        # Unpack progenitor dictionary values
+        impact_progenitors = ', '.join(self.progenitor['Impact'])
+        heat_progenitors = ', '.join(self.progenitor['Heat'])
+        cold_progenitors = ', '.join(self.progenitor['Cold'])
+        electricity_progenitors = ', '.join(self.progenitor['Electricity'])
+        toxin_progenitors = ', '.join(self.progenitor['Toxin'])
+        magnetic_progenitors = ', '.join(self.progenitor['Magnetic'])
+        radiation_progenitors = ', '.join(self.progenitor['Radiation'])
         # Add fields for each element and corresponding warframes
-        progenitor_embed.add_field(name="Impact", value=f"{', '.join(self.progenitor['Impact'])}", inline=True)
-        progenitor_embed.add_field(name="Heat", value=f"{', '.join(self.progenitor['Heat'])}", inline=True)
-        progenitor_embed.add_field(name="Cold", value=f"{', '.join(self.progenitor['Cold'])}", inline=True)
-        progenitor_embed.add_field(name="Electricity", value=f"{', '.join(self.progenitor['Electricity'])}", inline=True)
-        progenitor_embed.add_field(name="Toxin", value=f"{', '.join(self.progenitor['Toxin'])}", inline=True)
-        progenitor_embed.add_field(name="Magnetic", value=f"{', '.join(self.progenitor['Magnetic'])}", inline=True)
-        progenitor_embed.add_field(name="Radiation", value=f"{', '.join(self.progenitor['Radiation'])}", inline=True)
+        progenitor_embed.add_field(name="Impact", value=f"{impact_progenitors}", inline=True)
+        progenitor_embed.add_field(name="Heat", value=f"{heat_progenitors}", inline=True)
+        progenitor_embed.add_field(name="Cold", value=f"{cold_progenitors}", inline=True)
+        progenitor_embed.add_field(name="Electricity", value=f"{electricity_progenitors}", inline=True)
+        progenitor_embed.add_field(name="Toxin", value=f"{toxin_progenitors}", inline=True)
+        progenitor_embed.add_field(name="Magnetic", value=f"{magnetic_progenitors}", inline=True)
+        progenitor_embed.add_field(name="Radiation", value=f"{radiation_progenitors}", inline=True)
 
         await interaction.send(embed=progenitor_embed)
 
@@ -296,7 +304,7 @@ class Warframe(commands.Cog, name="Warframe"):
         await interaction.send(embed=teshin_rotation(self.warframe_api))
     
     @nextcord.slash_command()
-    @application_checks.has_permissions(manage_channel=True)
+    @application_checks.has_permissions(manage_server=True)
     async def set_warframe_channel(self, interaction: nextcord.Interaction, channel: str):
         """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
 
@@ -313,7 +321,7 @@ class Warframe(commands.Cog, name="Warframe"):
             await interaction.send(f"Warframe content for this server will go to {updated_channel.name}.")
     
     @nextcord.slash_command()
-    @application_checks.has_permissions(manage_channel=True)
+    @application_checks.has_permissions(manage_server=True)
     async def remove_warframe_channel(self, interaction: nextcord.Interaction):
         """Removes the automated Warframe channel for this server, if it exists."""
 
