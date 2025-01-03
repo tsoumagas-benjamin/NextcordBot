@@ -304,7 +304,7 @@ class Warframe(commands.Cog, name="Warframe"):
         await interaction.send(embed=teshin_rotation(self.warframe_api))
     
     @nextcord.slash_command()
-    @application_checks.has_permissions(manage_server=True)
+    @application_checks.has_permissions(manage_guild=True)
     async def set_warframe_channel(self, interaction: nextcord.Interaction, channel: str):
         """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
 
@@ -321,7 +321,7 @@ class Warframe(commands.Cog, name="Warframe"):
             await interaction.send(f"Warframe content for this server will go to {updated_channel.name}.")
     
     @nextcord.slash_command()
-    @application_checks.has_permissions(manage_server=True)
+    @application_checks.has_permissions(manage_guild=True)
     async def remove_warframe_channel(self, interaction: nextcord.Interaction):
         """Removes the automated Warframe channel for this server, if it exists."""
 
