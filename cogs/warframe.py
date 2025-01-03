@@ -1,7 +1,7 @@
 import nextcord
 from os import getenv
 from pymongo import MongoClient
-from nextcord.ext import commands, tasks
+from nextcord.ext import application_checks, commands, tasks
 import requests
 import json
 import datetime
@@ -164,7 +164,7 @@ class Warframe(commands.Cog, name="Warframe"):
     def __init__(self, bot):
         self.bot = bot
         # Create a dictionary of Warframe Progenitor types to retrieve later
-        self.progenitors = {
+        self.progenitor = {
             "Impact": ["Baruuk", "Dante", "Gauss", "Grendel", "Rhino", "Sevagoth", "Wukong", "Zephyr"],
             "Heat": ["Chroma", "Ember", "Inaros", "Jade", "Kullervo", "Nezha", "Protea", "Vauban", "Wisp"],
             "Cold": ["Frost", "Gara", "Hildryn", "Koumei", "Revenant", "Styanax", "Titania", "Trinity"],
@@ -174,6 +174,8 @@ class Warframe(commands.Cog, name="Warframe"):
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
         self.warframe_api = "https://api.warframestat.us/pc"
+        # Fetch the list of enrolled warframe channels to post daily content to
+        self.daily_wf_channels = db.warframe_channels.distinct("channel")
         self.archon_timer.start()
         self.baro_timer.start()
         self.duviri_timer.start()
@@ -192,10 +194,14 @@ class Warframe(commands.Cog, name="Warframe"):
         weekday = datetime.datetime.today().weekday()
         # If date is Friday, then run the Baro function
         if weekday == 4:
-            daily_channel = self.bot.get_channel(daily_channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(daily_channel_id)
-            await daily_channel.send(embed=baro_kiteer(self.warframe_api))
+            # Fetch the list of enrolled warframe channels to post daily content to
+            self.daily_wf_channels = db.warframe_channels.distinct("channel")
+            # Send the content to each of the daily warframe channels
+            for channel_id in self.daily_wf_channels:
+                daily_wf_channel = self.bot.get_channel(channel_id)
+                if daily_wf_channel is None:
+                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
+                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
 
     # Archon loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -204,10 +210,14 @@ class Warframe(commands.Cog, name="Warframe"):
         weekday = datetime.datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
         if weekday == 0:
-            daily_channel = self.bot.get_channel(daily_channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(daily_channel_id)
-            await daily_channel.send(embed=archon_hunt(self.warframe_api))
+            # Fetch the list of enrolled warframe channels to post daily content to
+            self.daily_wf_channels = db.warframe_channels.distinct("channel")
+            # Send the content to each of the daily warframe channels
+            for channel_id in self.daily_wf_channels:
+                daily_wf_channel = self.bot.get_channel(channel_id)
+                if daily_wf_channel is None:
+                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
+                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
 
     # Duviri loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -216,10 +226,14 @@ class Warframe(commands.Cog, name="Warframe"):
         weekday = datetime.datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Duviri rewards function
         if weekday == 0:
-            daily_channel = self.bot.get_channel(daily_channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(daily_channel_id)
-            await daily_channel.send(embed=duviri_status(self.warframe_api))
+            # Fetch the list of enrolled warframe channels to post daily content to
+            self.daily_wf_channels = db.warframe_channels.distinct("channel")
+            # Send the content to each of the daily warframe channels
+            for channel_id in self.daily_wf_channels:
+                daily_wf_channel = self.bot.get_channel(channel_id)
+                if daily_wf_channel is None:
+                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
+                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
 
     # Teshin loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -228,10 +242,14 @@ class Warframe(commands.Cog, name="Warframe"):
         weekday = datetime.datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Teshin reward function
         if weekday == 0:
-            daily_channel = self.bot.get_channel(daily_channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(daily_channel_id)
-            await daily_channel.send(embed=teshin_rotation(self.warframe_api))
+            # Fetch the list of enrolled warframe channels to post daily content to
+            self.daily_wf_channels = db.warframe_channels.distinct("channel")
+            # Send the content to each of the daily warframe channels
+            for channel_id in self.daily_wf_channels:
+                daily_wf_channel = self.bot.get_channel(channel_id)
+                if daily_wf_channel is None:
+                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
+                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
 
     @nextcord.slash_command()
     async def archon(self, interaction: nextcord.Interaction):
@@ -262,20 +280,50 @@ class Warframe(commands.Cog, name="Warframe"):
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
         # Add fields for each element and corresponding warframes
-        progenitor_embed.add_field(name="Impact", value=f"{self.progenitors['Impact']}", inline=True)
-        progenitor_embed.add_field(name="Heat", value=f"{self.progenitors['Heat']}", inline=True)
-        progenitor_embed.add_field(name="Cold", value=f"{self.progenitors['Cold']}", inline=True)
-        progenitor_embed.add_field(name="Electricity", value=f"{self.progenitors['Electricity']}", inline=True)
-        progenitor_embed.add_field(name="Toxin", value=f"{self.progenitors['Toxin']}", inline=True)
-        progenitor_embed.add_field(name="Magnetic", value=f"{self.progenitors['Magnetic']}", inline=True)
-        progenitor_embed.add_field(name="Radiation", value=f"{self.progenitors['Radiation']}", inline=True)
+        progenitor_embed.add_field(name="Impact", value=f"{', '.join(self.progenitor['Impact'])}", inline=True)
+        progenitor_embed.add_field(name="Heat", value=f"{', '.join(self.progenitor['Heat'])}", inline=True)
+        progenitor_embed.add_field(name="Cold", value=f"{', '.join(self.progenitor['Cold'])}", inline=True)
+        progenitor_embed.add_field(name="Electricity", value=f"{', '.join(self.progenitor['Electricity'])}", inline=True)
+        progenitor_embed.add_field(name="Toxin", value=f"{', '.join(self.progenitor['Toxin'])}", inline=True)
+        progenitor_embed.add_field(name="Magnetic", value=f"{', '.join(self.progenitor['Magnetic'])}", inline=True)
+        progenitor_embed.add_field(name="Radiation", value=f"{', '.join(self.progenitor['Radiation'])}", inline=True)
 
         await interaction.send(embed=progenitor_embed)
-    
+
     @nextcord.slash_command()
     async def steel_path_reward(self, interaction: nextcord.Interaction):
         """Finds the weekly reward from Teshin"""
         await interaction.send(embed=teshin_rotation(self.warframe_api))
+    
+    @nextcord.slash_command()
+    @application_checks.has_permissions(manage_channel=True)
+    async def set_warframe_channel(self, interaction: nextcord.Interaction, channel: str):
+        """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
+
+        # Get the channel ID as an integer whether the user inputs a channel link or channel ID
+        wf_channel_id = int(channel.split("/")[-1])
+        # Prepares the new guild & channel combination for this server
+        new_channel = {"guild": interaction.guild_id, "channel": wf_channel_id}
+        # Updates the Warframe channel for the server or inserts it if one doesn't exist currently
+        db.warframe_channels.replace_one({"guild": interaction.guild_id}, new_channel, upsert=True)
+
+        # Let users know where the updated channel is
+        updated_channel = interaction.guild.get_channel(interaction.channel_id)
+        if updated_channel:
+            await interaction.send(f"Warframe content for this server will go to {updated_channel.name}.")
+    
+    @nextcord.slash_command()
+    @application_checks.has_permissions(manage_channel=True)
+    async def remove_warframe_channel(self, interaction: nextcord.Interaction):
+        """Removes the automated Warframe channel for this server, if it exists."""
+
+        # Removes the Warframe channel for the server if it exists
+        if db.warframe_channels.find_one({"guild": interaction.guild_id}):
+            db.warframe_channels.delete_one({"guild": interaction.guild_id})
+            await interaction.send("Warframe automated content for this server is stopped.")
+        # Lets the user know if there is no existing Warframe channel
+        else:
+            await interaction.send("There is no Warframe automated content for this server.")
 
 def setup(bot):
     bot.add_cog(Warframe(bot))
