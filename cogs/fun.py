@@ -15,8 +15,6 @@ from io import BytesIO
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
 
-daily_channel_id = 793685161635741712
-
 calendar = {
     1: 31,
     2: 28,
@@ -144,6 +142,8 @@ class Fun(commands.Cog, name="Fun"):
 
     def __init__(self, bot):
         self.bot = bot
+        # Fetch the list of enrolled warframe channels to post daily content to
+        self.daily_channels = db.daily_channels.distinct("channel")
         self.daily_birthday.start()
         self.daily_animal.start()
         self.daily_joke.start()
@@ -159,14 +159,18 @@ class Fun(commands.Cog, name="Fun"):
     
     @tasks.loop(time=datetime.time(0))
     async def daily_meme(self):
-        # Gets daily meme
-        daily_channel = self.bot.get_channel(daily_channel_id)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        await daily_channel.send(embed=meme_task())
+        # Fetch the list of enrolled channels to post daily content to
+        self.daily_channels = db.daily_channels.distinct("channel")
+        # Send a meme to each of the daily channels
+        for channel_id in self.daily_channels:
+            daily_channel = self.bot.get_channel(channel_id)
+            if daily_channel is None:
+                daily_channel = await self.bot.fetch_channel(channel_id)
+            await daily_channel.send(embed=meme_task())
 
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
+        # TODO: Rework so the bot only mentions birthdays of users belonging to each server.
         # Gets daily birthday, if any
         daily_channel = self.bot.get_channel(daily_channel_id)
         if daily_channel is None:
@@ -191,9 +195,6 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=datetime.time(12))
     async def daily_positivity(self):
         # Creates daily positivity post
-        daily_channel = self.bot.get_channel(daily_channel_id)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
         advice = advice_task()
         affirm = affirm_task()
         quote = get_quote()
@@ -201,29 +202,44 @@ class Fun(commands.Cog, name="Fun"):
         positivity.add_field(name="Advice of the day:", value=f"{advice}")
         positivity.add_field(name="Affirmation of the day:", value=f"{affirm}")
         positivity.add_field(name="", value=quote, inline=True)
-        await daily_channel.send(embed=positivity)
+        # Fetch the list of enrolled channels to post daily content to
+        self.daily_channels = db.daily_channels.distinct("channel")
+        # Send some positivity to each of the daily channels
+        for channel_id in self.daily_channels:
+            daily_channel = self.bot.get_channel(channel_id)
+            if daily_channel is None:
+                daily_channel = await self.bot.fetch_channel(channel_id)
+            await daily_channel.send(embed=positivity)
 
     @tasks.loop(time=datetime.time(16))
     async def daily_animal(self):
         # Gets daily animal
         try:
-            daily_channel = self.bot.get_channel(daily_channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(daily_channel_id)
             animal = nextcord.Embed(title=f"😊\tHere's your cute animal of the day!\t😊", colour=nextcord.Colour.from_rgb(0, 128, 255))
             animal_url = animal_task()
             animal.set_image(animal_url)
-            await daily_channel.send(embed=animal)
+            # Fetch the list of enrolled channels to post daily content to
+            self.daily_channels = db.daily_channels.distinct("channel")
+            # Send a cute animal to each of the daily channels
+            for channel_id in self.daily_channels:
+                daily_channel = self.bot.get_channel(channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(channel_id)
+                await daily_channel.send(embed=animal)
         except Exception as e:
             print(f"The error is: {e}")
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
         # Gets daily joke
-        daily_channel = self.bot.get_channel(daily_channel_id)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
-        await daily_channel.send(embed=joke_task())
+        # Fetch the list of enrolled channels to post daily content to
+        self.daily_channels = db.daily_channels.distinct("channel")
+        # Send a joke to each of the daily channels
+        for channel_id in self.daily_channels:
+            daily_channel = self.bot.get_channel(channel_id)
+            if daily_channel is None:
+                daily_channel = await self.bot.fetch_channel(channel_id)
+            await daily_channel.send(embed=joke_task())
 
     @nextcord.slash_command()
     async def animal(self, interaction: nextcord.Interaction):
@@ -386,6 +402,36 @@ class Fun(commands.Cog, name="Fun"):
         search_content = html_content.read().decode()
         search_results = findall(r'\/watch\?v=\w+', search_content)
         await interaction.send('https://www.youtube.com' + search_results[0])
+
+    @nextcord.slash_command()
+    @application_checks.has_permissions(manage_guild=True)
+    async def set_daily_channel(self, interaction: nextcord.Interaction, channel: str):
+        """Takes in a channel link/ID and sets it as the automated daily content channel for this server."""
+
+        # Get the channel ID as an integer whether the user inputs a channel link or channel ID
+        daily_channel_id = int(channel.split("/")[-1])
+        # Prepares the new guild & channel combination for this server
+        new_channel = {"guild": interaction.guild_id, "channel": daily_channel_id}
+        # Updates the daily channel for the server or inserts it if one doesn't exist currently
+        db.daily_channels.replace_one({"guild": interaction.guild_id}, new_channel, upsert=True)
+
+        # Let users know where the updated channel is
+        updated_channel = interaction.guild.get_channel(interaction.channel_id)
+        if updated_channel:
+            await interaction.send(f"Daily content for this server will go to {updated_channel.name}.")
+    
+    @nextcord.slash_command()
+    @application_checks.has_permissions(manage_guild=True)
+    async def remove_daily_channel(self, interaction: nextcord.Interaction):
+        """Removes the automated daily content channel for this server, if it exists."""
+
+        # Removes the daily channel for the server if it exists
+        if db.daily_channels.find_one({"guild": interaction.guild_id}):
+            db.daily_channels.delete_one({"guild": interaction.guild_id})
+            await interaction.send("Daily automated content for this server is stopped.")
+        # Lets the user know if there is no existing daily channel
+        else:
+            await interaction.send("There is no daily automated content for this server.")
 
 def setup(bot):
     bot.add_cog(Fun(bot))
