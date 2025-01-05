@@ -170,27 +170,31 @@ class Fun(commands.Cog, name="Fun"):
 
     @tasks.loop(time=datetime.time(4))
     async def daily_birthday(self):
-        # TODO: Rework so the bot only mentions birthdays of users belonging to each server.
-        # Gets daily birthday, if any
-        daily_channel = self.bot.get_channel(daily_channel_id)
-        if daily_channel is None:
-            daily_channel = await self.bot.fetch_channel(daily_channel_id)
+        # Check for a list of people whose birthday is today, stopping if there are none
         user_list = birthday_task()
-        # Get all user names and mentions formatted
         if user_list is not None:
-            # Collect birthday users belonging to the main guild
-            bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉", colour=nextcord.Colour.from_rgb(0, 128, 255))
-            for user_id in user_list:
-                user: nextcord.User = self.bot.get_user(user_id)
-                if user is None:
-                    user: nextcord.User = await self.bot.fetch_user(user_id)
-                # Prune user birthday if no mutual servers exist
-                if user.mutual_guilds is None:
-                    if db.birthdays.find_one({"_id": user_id}):
-                        db.birthdays.delete_one({"_id": user_id})
-                else:
-                    bday_message.add_field(name="", value=f"**{user.display_name.capitalize()}**")
-            await daily_channel.send(embed=bday_message)
+            # Get all daily content guilds and channels
+            birthday_channels = db.daily_channels.find({})
+            for channel in birthday_channels:
+                # Start the birthday embed for this guild
+                bday_message = nextcord.Embed(title=f"🥳\tHappy Birthday!\t🎉", colour=nextcord.Colour.from_rgb(0, 128, 255))
+                # Get the target channel from the registered channel IDs stored
+                target_channel = self.bot.get_channel(channel["channel"])
+                if target_channel is None:
+                    target_channel = self.bot.fetch_channel(channel["guild"])
+                # Get the target guild from the registered guild IDs stored
+                target_guild: nextcord.Guild = self.bot.get_guild(channel["guild"])
+                if target_guild is None:
+                    target_guild: nextcord.Guild = self.bot.fetch_guild(channel["guild"])
+                # Add each birthday user to the embed if they are in the current guild
+                for user_id in user_list:
+                    if target_guild.get_member(user_id) is not None:
+                        user: nextcord.User = self.bot.get_user(user_id)
+                        if user is None:
+                            user: nextcord.User = await self.bot.fetch_user(user_id)
+                        bday_message.add_field(name="", value=f"**{user.display_name.capitalize()}**")
+                # Send the birthday embed for this guild
+                await target_channel.send(embed=bday_message)
     
     @tasks.loop(time=datetime.time(12))
     async def daily_positivity(self):
@@ -231,7 +235,6 @@ class Fun(commands.Cog, name="Fun"):
     
     @tasks.loop(time=datetime.time(20))
     async def daily_joke(self):
-        # Gets daily joke
         # Fetch the list of enrolled channels to post daily content to
         self.daily_channels = db.daily_channels.distinct("channel")
         # Send a joke to each of the daily channels
