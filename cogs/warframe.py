@@ -9,8 +9,7 @@ import datetime
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
 
-daily_channel_id = 1228495611498594304
-
+# Function to get information on this week's archon hunt
 def archon_hunt(url):
     # Try to get the weekly Archon Hunt information and handle errors
     try:
@@ -217,7 +216,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
+                await daily_wf_channel.send(embed=archon_hunt(self.warframe_api))
 
     # Duviri loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -233,7 +232,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
+                await daily_wf_channel.send(embed=duviri_status(self.warframe_api))
 
     # Teshin loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -249,7 +248,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
+                await daily_wf_channel.send(embed=teshin_rotation(self.warframe_api))
 
     @nextcord.slash_command()
     async def archon(self, interaction: nextcord.Interaction):
