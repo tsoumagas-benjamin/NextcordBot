@@ -219,12 +219,14 @@ class Warframe(commands.Cog, name="Warframe"):
         self.archon_timer.start()
         self.baro_timer.start()
         self.duviri_timer.start()
+        self.event_timer.start()
         self.teshin_timer.start()
 
     def cog_unload(self):
         self.archon_timer.cancel()
         self.baro_timer.cancel()
         self.duviri_timer.cancel()
+        self.event_timer.cancel()
         self.teshin_timer.cancel()
 
     # Baro loop runs every Friday to check if Baro has arrived
