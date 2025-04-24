@@ -92,7 +92,7 @@ def duviri_status(url):
     return duviri_embed
 
 # Function to check for any active events
-def events(url):
+def event_status(url):
     # Try to get event information and handle errors
     try:
         wf_data = requests.get(url)
@@ -291,7 +291,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=events(self.warframe_api))
+                await daily_wf_channel.send(embed=event_status(self.warframe_api))
 
     # Teshin loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -323,6 +323,11 @@ class Warframe(commands.Cog, name="Warframe"):
     async def duviri(self, interaction: nextcord.Interaction):
         """Find information on the current Duviri cycle"""
         await interaction.send(embed=duviri_status(self.warframe_api))
+
+    @nextcord.slash_command()
+    async def events(self, interaction: nextcord.Interaction):
+        """Find information on current events in Warframe"""
+        await interaction.send(embed=event_status(self.warframe_api))
     
     @nextcord.slash_command()
     async def open_worlds(self, interaction: nextcord.Interaction):
