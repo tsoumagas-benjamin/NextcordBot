@@ -275,6 +275,22 @@ class Warframe(commands.Cog, name="Warframe"):
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
                 await daily_wf_channel.send(embed=duviri_status(self.warframe_api))
 
+    # Event loop runs every Sunday
+    @tasks.loop(time=datetime.time(2))
+    async def event_timer(self):
+        # Checks every day at 2:00 am UTC / 9:00 pm EST for Archon Hunts
+        weekday = datetime.datetime.today().weekday()
+        # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
+        if weekday == 0:
+            # Fetch the list of enrolled warframe channels to post daily content to
+            self.daily_wf_channels = db.warframe_channels.distinct("channel")
+            # Send the content to each of the daily warframe channels
+            for channel_id in self.daily_wf_channels:
+                daily_wf_channel = self.bot.get_channel(channel_id)
+                if daily_wf_channel is None:
+                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
+                await daily_wf_channel.send(embed=events(self.warframe_api))
+
     # Teshin loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
     async def teshin_timer(self):
