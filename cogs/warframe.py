@@ -91,6 +91,47 @@ def duviri_status(url):
     duviri_embed.add_field(name="Steel Path Rewards", value=duviri_steel_path, inline=False)
     return duviri_embed
 
+# Function to check for any active events
+def events(url):
+    # Try to get event information and handle errors
+    try:
+        wf_data = requests.get(url)
+    except requests.exceptions.RequestException as error:
+        return error
+    # Convert the response content for events into a Python object
+    events = json.loads(wf_data)['events']
+
+    # Create the embed to store event data in later
+    event_embed = nextcord.Embed(
+        title = "Event Status",
+        description = "Current Events:",
+        color = nextcord.Colour.from_rgb(0, 128, 255)
+    )
+
+    # Iterate all the events and get each event name, start, and end date
+    for event in events:
+        event_name = event['description']
+
+        # Get only the year-month-day for start and end / the first 10 characters
+        event_start = event['activation'][0:10]
+        event_end = event['expiry'][0:10]
+
+        # Combine the event name and start/end dates to use in the embed field later
+        event_details = f"{event_name} | {event_start} to {event_end}"
+
+        # Iterate the rewards for each event and store them in an array if there are multiple
+        rewards = []
+        for reward in event['rewards']:
+            if reward['asString']:
+                rewards += reward['asString']
+
+        # Join items in the reward list with a new line
+        reward_list = "\n".join(rewards)
+
+        # Create a new embed field for each reward
+        event_embed.add_field(name=event_details, value=reward_list, inline=False)
+    return event_embed # TODO: If Baro is active, display endString instead of startString
+
 def open_worlds(url):
     # Try to get the current Open World information and handle errors
     try:
