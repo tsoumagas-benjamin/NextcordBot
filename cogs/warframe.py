@@ -123,7 +123,7 @@ def event_status(url):
         rewards = []
         for reward in event['rewards']:
             if reward['asString']:
-                rewards += reward['asString']
+                rewards.append(reward['asString'])
 
         # Join items in the reward list with a new line
         reward_list = "\n".join(rewards)
