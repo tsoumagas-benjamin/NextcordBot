@@ -99,7 +99,7 @@ def event_status(url):
     except requests.exceptions.RequestException as error:
         return error
     # Convert the response content for events into a Python object
-    events = json.loads(wf_data)['events']
+    events = json.loads(wf_data.content)['events']
 
     # Create the embed to store event data in later
     event_embed = nextcord.Embed(
