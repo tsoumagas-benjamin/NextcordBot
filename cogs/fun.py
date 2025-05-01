@@ -407,7 +407,7 @@ class Fun(commands.Cog, name="Fun"):
         # Removes the daily channel for the server if it exists
         if db.daily_channels.find_one({"guild": interaction.guild_id}):
             db.daily_channels.delete_one({"guild": interaction.guild_id})
-            await interaction.send("Daily automated content for this server is stopped.")
+            await interaction.send("Daily automated content for this server are stopped.")
         # Lets the user know if there is no existing daily channel
         else:
             await interaction.send("There is no daily automated content for this server.")
