@@ -9,7 +9,7 @@ client = MongoClient(getenv('CONN_STRING'))
 db = client.NextcordBot 
 
 # Create a cog for audit log functionality
-class Audit(commands.cog):
+class Audit(commands.Cog, name="Audit Logs"):
     def __init__(self, bot) -> None:
       self.bot = bot
 
