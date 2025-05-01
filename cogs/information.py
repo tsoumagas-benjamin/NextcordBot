@@ -1,6 +1,5 @@
 import nextcord
 from asyncio import sleep
-import InfixParser
 from time import time
 from os import getenv
 from pymongo import MongoClient
@@ -48,8 +47,7 @@ class Information(commands.Cog, name = "Information"):
     async def calculate(self, interaction: nextcord.Interaction, *, equation: str):
         """Calculates user input and returns the output"""
         equation = equation.replace(" ", "")
-        evaluator = InfixParser.Evaluator()
-        evaluation = evaluator.eval(equation)
+        evaluation = eval(equation)
         await interaction.send(f' Result of {equation} is {evaluation}')
     
     @nextcord.slash_command()
