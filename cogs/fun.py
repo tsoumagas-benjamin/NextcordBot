@@ -281,16 +281,6 @@ class Fun(commands.Cog, name="Fun"):
             else:
                 db['birthdays'].insert_one(input)
                 await interaction.send(f"Added birthday for {member.name}.")
-        
-    @nextcord.slash_command()
-    async def bored(self, interaction: nextcord.Interaction):
-        """Get some activity to cure your boredom"""
-        response = requests.get(url="http://www.boredapi.com/api/activity/", allow_redirects=False, timeout=20)
-        json_data = json.loads(response.text)
-        activity = json_data['activity'].title()
-        category = json_data['type'].title()
-        embed = nextcord.Embed(title=f'{category.title()}:',description=f'{activity.title()}.',color=nextcord.Colour.from_rgb(0, 128, 255))
-        await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def embed(self, interaction: nextcord.Interaction, *, title: str=None, message: str=None,):
