@@ -355,7 +355,7 @@ class Audit(commands.cog):
 
         # If there are attachments, mention them and the deleted filenames
         if message.attachments:
-            message_delete.add_field(name="Attachments", value=f"{"\n".join(message.attachments)}")
+            message_delete.add_field(name="Attachments", value="\n".join(message.attachments))
         
         # If there is content, add content of the deleted message
         if message.content:
@@ -379,7 +379,7 @@ class Audit(commands.cog):
         # If attachments are removed, mention them and the deleted filenames
         if len(before.attachments) > len(after.attachments):
             removed_attachments = [attachment for attachment in before.attachments if attachment not in after.attachments]
-            message_edit.add_field(name="Attachments", value=f"{"\n".join(removed_attachments)}")
+            message_edit.add_field(name="Attachments", value="\n".join(removed_attachments))
         
         # If message content has changed, record it
         if before.content is not after.content:
@@ -423,7 +423,7 @@ class Audit(commands.cog):
                 role_names.append(role.mention)
             role_names.reverse()
 
-        member_remove.add_field(name="Roles", value=f"{", ".join(role_names)}")
+        member_remove.add_field(name="Roles", value=", ".join(role_names))
         member_remove.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.datetime.now)}")
 
         # Send the embed to the designated channel
