@@ -348,7 +348,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_message_delete(self, message: nextcord.Message):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": message.guild.id})
-        if not server_audit_log:
+        if not server_audit_log or message.author.id is getenv('CLIENT_ID'):
             return
         
         message_delete = nextcord.Embed(title=f"Message Deleted in #{message.channel.name}", color=nextcord.Colour.red())
@@ -371,7 +371,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_message_edit(self, before: nextcord.Message, after: nextcord.Message):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
-        if not server_audit_log:
+        if not server_audit_log or before.author.id is getenv('CLIENT_ID') or after.author.id is getenv('CLIENT_ID'):
             return
         
         message_edit = nextcord.Embed(title=f"Message Edited in #{after.channel.name}", color=nextcord.Colour.blurple())
