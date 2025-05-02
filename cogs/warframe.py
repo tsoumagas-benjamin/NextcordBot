@@ -53,16 +53,28 @@ def baro_kiteer(url):
 
     # Create an embed object to return with Baro information
     baro_time = " ".join(baro_arrival)
-    if baro_time[0] == "-":
-        baro_time = " ".join(baro_info['endString'].split(" ")[0:2])
+    
+    # Append and format all of Baro's inventory
     baro_items = ""
     for item in baro_inventory:
         baro_items += (f"{item['item']} - {item['ducats']} D - {item['credits']} C\n")
-    baro_embed = nextcord.Embed(
-        title = f"Baro Ki'Teer will arrive at {baro_location} in {baro_time}",
+
+    # If Baro is already here, create an embed with his departure time
+    if baro_time[0] == "-":
+        baro_time = " ".join(baro_info['endString'].split(" ")[0:2])
+        baro_embed = nextcord.Embed(
+        title = f"Baro Ki'Teer will leave at {baro_location} in {baro_time}",
         description = baro_items if baro_inventory else "Inventory Unknown",
         color = nextcord.Colour.from_rgb(0, 128, 255)
     )
+        
+    # Otherwise make an embed with when he will arrive next
+    else:
+        baro_embed = nextcord.Embed(
+            title = f"Baro Ki'Teer will arrive at {baro_location} in {baro_time}",
+            description = baro_items if baro_inventory else "Inventory Unknown",
+            color = nextcord.Colour.from_rgb(0, 128, 255)
+        )
     return baro_embed
 
 # Function to handle the retrieval of Duviri information
