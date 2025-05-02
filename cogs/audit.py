@@ -15,7 +15,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
     # Function to format
     def date_format(self, time: datetime.datetime):
-        return time.strftime("%M/%D/%Y %H:%M")
+        return time.strftime("%m/%d/%Y %H:%M:%S")
     
     # Function to send embeds to the designated channel
     async def send_embed(self, audit_channel_id: int, target_embed: nextcord.Embed):
