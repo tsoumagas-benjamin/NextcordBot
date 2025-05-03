@@ -67,7 +67,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
        
-        # Handle the different kind of channels that can be made
+        # Handle the different kind of channels that can be made and category if applicable
         if isinstance(channel, nextcord.TextChannel):
             create_channel = nextcord.Embed(title="Text Channel Created", color=nextcord.Colour.green())
         elif isinstance(channel, nextcord.VoiceChannel):
@@ -79,9 +79,8 @@ class Audit(commands.Cog, name="Audit Logs"):
         else:
             create_channel = nextcord.Embed(title="Forum Channel Created", color=nextcord.Colour.green())
 
-        # Add channel name and category to the embed
+        # Add channel name to the embed
         create_channel.add_field(name="Name", value=f"{channel.name}")
-        create_channel.add_field(name="Category", value=f"{channel.category}")
 
         # Format the time the channel was created at and the channel ID into the footer
         create_channel.set_footer(text=f"Channel ID: {channel.id} | {self.date_format(datetime.datetime.now())}")
