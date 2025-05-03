@@ -286,15 +286,15 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return 
 
-        # Check if the avatar has changed
-        if before.display_avatar.url != after.display_avatar.url:
-            member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
-            member_update.set_image(after.avatar.url)
+        # Check if the avatar has changed (This currently triggers for every on_member_update)
+        # if before.display_avatar.url != after.display_avatar.url:
+        #     member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
+        #     member_update.set_image(after.avatar.url)
         
         # Check if the nickname has changed
-        elif before.nick != after.nick:
-            member_update = nextcord.Embed(title="Nickname Update", colour=nextcord.Colour.blurple())
-            member_update.add_field(name=f"{before.nick} -> {after.nick}", value="")
+        if before.display_name != after.display_name:
+            member_update = nextcord.Embed(title="Display Name Update", colour=nextcord.Colour.blurple())
+            member_update.add_field(name=f"{before.display_name} -> {after.display_name}", value="")
         
         # Check if a role has been added
         elif len(before.roles) < len(after.roles):
