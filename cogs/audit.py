@@ -307,6 +307,15 @@ class Audit(commands.Cog, name="Audit Logs"):
             member_update = nextcord.Embed(title="Role Removed", color=nextcord.Colour.red())
             removed_role = [role for role in before.roles if role not in after.roles]
             member_update.add_field(name=f"Removed Role: {removed_role[0].name}", value="")
+
+        # Check if the avatar has changed (This currently triggers for every on_member_update)
+        elif before.display_avatar.url != after.display_avatar.url:
+            member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
+            member_update.set_image(after.avatar.url)
+
+        # If none of the above conditions are met, do nothing
+        else:
+            return
         
         member_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
 
