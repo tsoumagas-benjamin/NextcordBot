@@ -287,7 +287,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             return 
 
         # Check if the avatar has changed
-        if before.display_avatar.url != after.display_avatar:
+        if before.display_avatar.url != after.display_avatar.url:
             member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
             member_update.set_image(after.avatar.url)
         
