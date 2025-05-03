@@ -98,21 +98,24 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
        
-        # Handle the different kind of channels that can be made
+        # Handle the different kind of channels that can be made and their categories if applicable
         if isinstance(channel, nextcord.TextChannel):
             delete_channel = nextcord.Embed(title="Text Channel deleted", color=nextcord.Colour.red())
+            delete_channel.add_field(name="Category", value=f"{channel.category}")
         elif isinstance(channel, nextcord.VoiceChannel):
             delete_channel = nextcord.Embed(title="Voice Channel deleted", color=nextcord.Colour.red())
+            delete_channel.add_field(name="Category", value=f"{channel.category}")
         elif isinstance(channel, nextcord.CategoryChannel):
             delete_channel = nextcord.Embed(title="Category Channel deleted", color=nextcord.Colour.red())
         elif isinstance(channel, nextcord.StageChannel):
             delete_channel = nextcord.Embed(title="Stage Channel deleted", color=nextcord.Colour.red())
+            delete_channel.add_field(name="Category", value=f"{channel.category}")
         else:
             delete_channel = nextcord.Embed(title="Forum Channel deleted", color=nextcord.Colour.red())
+            delete_channel.add_field(name="Category", value=f"{channel.category}")
 
-        # Add channel name and category to the embed
+        # Add channel name to the embed
         delete_channel.add_field(name="Name", value=f"{channel.name}")
-        delete_channel.add_field(name="Category", value=f"{channel.category}")
 
         # Format the time the channel was deleted at and the channel ID into the footer
         delete_channel.set_footer(text=f"Channel ID: {channel.id} | {self.date_format(datetime.datetime.now())}")
