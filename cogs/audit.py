@@ -144,8 +144,8 @@ class Audit(commands.Cog, name="Audit Logs"):
         # Add channel name and category to the embed for before and after
         update_channel.add_field(name="Old Name", value=f"{before.name}")
         update_channel.add_field(name="Old Category", value=f"{before.category}")
-        update_channel.add_field(name="New Name", value=f"{before.name}")
-        update_channel.add_field(name="New Category", value=f"{before.category}")
+        update_channel.add_field(name="New Name", value=f"{after.name}")
+        update_channel.add_field(name="New Category", value=f"{after.category}")
 
         # Format the time the channel was updated at and the channel ID into the footer
         update_channel.set_footer(text=f"Channel ID: {before.id} | {self.date_format(datetime.datetime.now())}")
@@ -285,33 +285,28 @@ class Audit(commands.Cog, name="Audit Logs"):
         server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
         if not server_audit_log:
             return 
-
-        # Check if the avatar has changed (This currently triggers for every on_member_update)
-        # if before.display_avatar.url != after.display_avatar.url:
-        #     member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
-        #     member_update.set_image(after.avatar.url)
         
         # Check if the nickname has changed
         if before.display_name != after.display_name:
-            member_update = nextcord.Embed(title="Display Name Update", colour=nextcord.Colour.blurple())
+            member_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
             member_update.add_field(name=f"{before.display_name} -> {after.display_name}", value="")
         
         # Check if a role has been added
         elif len(before.roles) < len(after.roles):
-            member_update = nextcord.Embed(title="Role Added", color=nextcord.Colour.green())
+            member_update = nextcord.Embed(title="Role Added", description=f"{after.display_name}", color=nextcord.Colour.green())
             new_role = [role for role in after.roles if role not in before.roles]
-            member_update.add_field(name=f"Added Role: {new_role[0].name}", value="")
+            member_update.add_field(name=f"+{new_role[0].name}", value="")
         
         # Check if a role has been removed
         elif len(before.roles) > len(after.roles):
-            member_update = nextcord.Embed(title="Role Removed", color=nextcord.Colour.red())
+            member_update = nextcord.Embed(title="Role Removed", description=f"{after.display_name}", color=nextcord.Colour.red())
             removed_role = [role for role in before.roles if role not in after.roles]
-            member_update.add_field(name=f"Removed Role: {removed_role[0].name}", value="")
+            member_update.add_field(name=f"-{removed_role[0].name}", value="")
 
-        # Check if the avatar has changed (This currently triggers for every on_member_update)
+        # Check if the avatar has changed
         elif before.display_avatar.url != after.display_avatar.url:
-            member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
-            member_update.set_image(after.avatar.url)
+            member_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
+            member_update.set_thumbnail(after.avatar)
 
         # If none of the above conditions are met, do nothing
         else:
