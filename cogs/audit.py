@@ -70,14 +70,18 @@ class Audit(commands.Cog, name="Audit Logs"):
         # Handle the different kind of channels that can be made and category if applicable
         if isinstance(channel, nextcord.TextChannel):
             create_channel = nextcord.Embed(title="Text Channel Created", color=nextcord.Colour.green())
+            create_channel.add_field(name="Category", value=f"{channel.category}")
         elif isinstance(channel, nextcord.VoiceChannel):
             create_channel = nextcord.Embed(title="Voice Channel Created", color=nextcord.Colour.green())
+            create_channel.add_field(name="Category", value=f"{channel.category}")
         elif isinstance(channel, nextcord.CategoryChannel):
             create_channel = nextcord.Embed(title="Category Channel Created", color=nextcord.Colour.green())
         elif isinstance(channel, nextcord.StageChannel):
             create_channel = nextcord.Embed(title="Stage Channel Created", color=nextcord.Colour.green())
+            create_channel.add_field(name="Category", value=f"{channel.category}")
         else:
             create_channel = nextcord.Embed(title="Forum Channel Created", color=nextcord.Colour.green())
+            create_channel.add_field(name="Category", value=f"{channel.category}")
 
         # Add channel name to the embed
         create_channel.add_field(name="Name", value=f"{channel.name}")
