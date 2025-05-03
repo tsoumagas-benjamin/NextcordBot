@@ -287,12 +287,12 @@ class Audit(commands.Cog, name="Audit Logs"):
             return 
 
         # Check if the avatar has changed
-        if before.display_avatar is not after.display_avatar:
+        if before.display_avatar.url != after.display_avatar.url:
             member_update = nextcord.Embed(title="Avatar Update", color=nextcord.Colour.blurple())
             member_update.set_image(after.avatar.url)
         
         # Check if the nickname has changed
-        elif before.nick is not after.nick:
+        elif before.nick != after.nick:
             member_update = nextcord.Embed(title="Nickname Update", colour=nextcord.Colour.blurple())
             member_update.add_field(name=f"{before.nick} -> {after.nick}")
         
