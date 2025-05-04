@@ -310,7 +310,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             member_update.add_field(name=f"-{removed_role[0].name}", value="")
 
         # Check if the avatar has changed
-        elif before.display_avatar.url != after.display_avatar.url:
+        elif before.display_avatar.key != after.display_avatar.key:
             member_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
             member_update.set_thumbnail(after.avatar)
 
@@ -369,7 +369,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # If there is content, add content of the deleted message
         if message.content:
-            message_delete.add_field(name="Content", value=f"{message.content}")
+            message_delete.add_field(name=f"Deleted by {message.author.mention}", value=f"{message.content}")
 
         message_delete.set_footer(text=f"Message ID: {message.id} | {self.date_format(datetime.datetime.now())}")
 
@@ -393,7 +393,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # If message content has changed, record it
         if before.content is not after.content:
-            message_edit.add_field(name="Content", value=f"{before.content} -> {after.content}")
+            message_edit.add_field(name=f"Edited by {after.author.mention}", value=f"{before.content} -> {after.content}")
         
         message_edit.set_footer(text=f"Message ID: {after.id} | {self.date_format(datetime.datetime.now())}")
 
@@ -423,7 +423,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
 
-        member_remove = nextcord.Embed(title="Member Joined", color=nextcord.Colour.red())
+        member_remove = nextcord.Embed(title="Member Left", color=nextcord.Colour.red())
         member_remove.add_field(name=f"{member.mention}", value=f"Joined at: {self.date_format(member.joined_at)} ago")
 
         # Get a list of role names
