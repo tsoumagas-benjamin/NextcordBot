@@ -211,18 +211,21 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
         
+        # Only record if one of the following traits are updated
+        if (
+            (before.name == after.name) or 
+            (before.hoist == after.hoist) or 
+            (before.managed == after.managed) or 
+            (before.mentionable == after.mentionable)):
+            return
+        
         update_role = nextcord.Embed(title="Role Updated", color=nextcord.Colour.blurple())
 
         # Add role name and category to the embed
-        update_role.add_field(name="Before Name", value=f"{before.name}")
-        update_role.add_field(name="Before Hoisted", value=f"{before.hoist}")
-        update_role.add_field(name="Before Integration Role", value=f"{before.managed}")
-        update_role.add_field(name="Before Mentionable", value=f"{before.mentionable}")
-
-        update_role.add_field(name="After Name", value=f"{after.name}")
-        update_role.add_field(name="After Hoisted", value=f"{after.hoist}")
-        update_role.add_field(name="After Integration Role", value=f"{after.managed}")
-        update_role.add_field(name="After Mentionable", value=f"{after.mentionable}")
+        update_role.add_field(name="Name", value=f"{before.name} -> {after.name}")
+        update_role.add_field(name="Hoisted", value=f"{before.hoist} -> {after.hoist}")
+        update_role.add_field(name="Integration Role", value=f"{before.managed} -> {after.managed}")
+        update_role.add_field(name="Mentionable", value=f"{before.mentionable} -> {after.mentionable}")
 
         # Format the time the role was created at and the role ID into the footer
         update_role.set_footer(text=f"Role ID: {before.id} | {self.date_format(datetime.datetime.now())}")
@@ -270,7 +273,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             emoji_update = nextcord.Embed(title="Emoji Created", color=nextcord.Colour.green())
             # Get emojis that have been created and add them to the embed
             created_emoji = [emoji for emoji in after if emoji not in before]
-            emoji_update.add_field(name="New Name", value=f":{created_emoji[0].name}: {created_emoji[0].name}")
+            emoji_update.add_field(name="New Name", value=f"<:{created_emoji[0].name}:{created_emoji[0].id}> {created_emoji[0].name}")
             emoji_update.set_footer(text=f"Emoji ID: {created_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
 
         else:
@@ -278,7 +281,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             # Get emojis that have been updated and add them to the embed
             old_emoji = [emoji for emoji in before if emoji not in after]
             new_emoji = [emoji for emoji in after if emoji not in before]
-            emoji_update.add_field(name="Updated Name", value=f"{old_emoji[0].name} -> :{new_emoji[0].name}: {new_emoji[0].name}")
+            emoji_update.add_field(name="Updated Name", value=f"{old_emoji[0].name} -> <:{new_emoji[0].name}:{new_emoji[0].id}> {new_emoji[0].name}")
             emoji_update.set_footer(text=f"Emoji ID: {new_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
         
         # Send the embed to the designated channel
@@ -295,19 +298,19 @@ class Audit(commands.Cog, name="Audit Logs"):
         # Check if the nickname has changed
         if before.display_name != after.display_name:
             member_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
-            member_update.add_field(name=f"{before.display_name} -> {after.display_name}", value="")
+            member_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
         
         # Check if a role has been added
         elif len(before.roles) < len(after.roles):
             member_update = nextcord.Embed(title="Role Added", description=f"{after.display_name}", color=nextcord.Colour.green())
             new_role = [role for role in after.roles if role not in before.roles]
-            member_update.add_field(name=f"+{new_role[0].name}", value="")
+            member_update.add_field(name=f"+{new_role[0].name}", value=after.mention)
         
         # Check if a role has been removed
         elif len(before.roles) > len(after.roles):
             member_update = nextcord.Embed(title="Role Removed", description=f"{after.display_name}", color=nextcord.Colour.red())
             removed_role = [role for role in before.roles if role not in after.roles]
-            member_update.add_field(name=f"-{removed_role[0].name}", value="")
+            member_update.add_field(name=f"-{removed_role[0].name}", value=after.mention)
 
         # Check if the avatar has changed
         elif before.display_avatar.key != after.display_avatar.key:
@@ -332,7 +335,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             return 
         
         member_ban = nextcord.Embed(title="Member Banned", color=nextcord.Colour.red())
-        member_ban.add_field(name=f"{user.display_name}", value="")
+        member_ban.add_field(name=f"{user.display_name}", value=user.mention)
         member_ban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -347,7 +350,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             return 
         
         member_unban = nextcord.Embed(title="Member Unbanned", color=nextcord.Colour.green())
-        member_unban.add_field(name=f"{user.name}", value="")
+        member_unban.add_field(name=f"{user.display_name}", value=user.mention)
         member_unban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -369,7 +372,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # If there is content, add content of the deleted message
         if message.content:
-            message_delete.add_field(name=f"Deleted by {message.author.mention}", value=f"{message.content}")
+            message_delete.add_field(name=f"{message.content}", value=f"Deleted by {message.author.mention}")
 
         message_delete.set_footer(text=f"Message ID: {message.id} | {self.date_format(datetime.datetime.now())}")
 
@@ -393,7 +396,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # If message content has changed, record it
         if before.content is not after.content:
-            message_edit.add_field(name=f"Edited by {after.author.mention}", value=f"{before.content} -> {after.content}")
+            message_edit.add_field(name=f"{before.content} -> {after.content}", value=f"Edited by {after.author.mention}")
         
         message_edit.set_footer(text=f"Message ID: {after.id} | {self.date_format(datetime.datetime.now())}")
 
@@ -409,7 +412,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             return
 
         member_join = nextcord.Embed(title="Member Joined", color=nextcord.Colour.green())
-        member_join.add_field(name=f"{member.mention} #{member.guild.member_count}", value=f"Created at: {member.created_at}")
+        member_join.add_field(name=f"{member.display_name} #{member.guild.member_count}", value=f"Created at: {member.created_at}")
         member_join.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -424,7 +427,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             return
 
         member_remove = nextcord.Embed(title="Member Left", color=nextcord.Colour.red())
-        member_remove.add_field(name=f"{member.mention}", value=f"Joined at: {self.date_format(member.joined_at)} ago")
+        member_remove.add_field(name=f"{member.display_name}", value=f"Joined at: {self.date_format(member.joined_at)}")
 
         # Get a list of role names
         role_names = []
