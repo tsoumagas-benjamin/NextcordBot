@@ -213,9 +213,9 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # Only record if one of the following traits are updated
         if (
-            (before.name == after.name) or 
-            (before.hoist == after.hoist) or 
-            (before.managed == after.managed) or 
+            (before.name == after.name) and 
+            (before.hoist == after.hoist) and 
+            (before.managed == after.managed) and 
             (before.mentionable == after.mentionable)):
             return
         
