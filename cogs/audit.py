@@ -313,14 +313,15 @@ class Audit(commands.Cog, name="Audit Logs"):
             member_update.add_field(name=f"-{removed_role[0].name}", value=after.mention)
 
         # Check if the avatar has changed
-        elif before.display_avatar.key != after.display_avatar.key:
+        elif before.display_avatar != after.display_avatar:
             member_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
-            member_update.set_thumbnail(after.avatar)
 
         # If none of the above conditions are met, do nothing
         else:
             return
         
+        # Set the thumbnail and footer
+        member_update.set_thumbnail(after.display_avatar.url)
         member_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -336,6 +337,9 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         member_ban = nextcord.Embed(title="Member Banned", color=nextcord.Colour.red())
         member_ban.add_field(name=f"{user.display_name}", value=user.mention)
+
+        # Set the thumbnail and footer
+        member_ban.set_thumbnail(user.display_avatar.url)
         member_ban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -351,6 +355,9 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         member_unban = nextcord.Embed(title="Member Unbanned", color=nextcord.Colour.green())
         member_unban.add_field(name=f"{user.display_name}", value=user.mention)
+
+        # Set the thumbnail and footer
+        member_unban.set_thumbnail(user.display_avatar.url)
         member_unban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -374,6 +381,8 @@ class Audit(commands.Cog, name="Audit Logs"):
         if message.content:
             message_delete.add_field(name=f"{message.content}", value=f"Deleted by {message.author.mention}")
 
+        # Set the thumbnail and footer
+        message_delete.set_thumbnail(message.author.display_avatar.url)
         message_delete.set_footer(text=f"Message ID: {message.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -398,6 +407,8 @@ class Audit(commands.Cog, name="Audit Logs"):
         if before.content is not after.content:
             message_edit.add_field(name=f"{before.content} -> {after.content}", value=f"Edited by {after.author.mention}")
         
+        # Set the thumbnail and footer
+        message_edit.set_thumbnail(after.author.display_avatar.url)
         message_edit.set_footer(text=f"Message ID: {after.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -413,6 +424,9 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         member_join = nextcord.Embed(title="Member Joined", color=nextcord.Colour.green())
         member_join.add_field(name=f"{member.display_name} #{member.guild.member_count}", value=f"Created at: {member.created_at}")
+
+        # Set the thumbnail and footer
+        member_join.set_thumbnail(member.display_avatar.url)
         member_join.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
@@ -437,6 +451,9 @@ class Audit(commands.Cog, name="Audit Logs"):
             role_names.reverse()
 
         member_remove.add_field(name="Roles", value=", ".join(role_names))
+
+        # Set the thumbnail and footer
+        member_remove.set_thumbnail(member.display_avatar.url)
         member_remove.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.datetime.now())}")
 
         # Send the embed to the designated channel
