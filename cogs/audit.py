@@ -292,7 +292,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_member_update(self, before: nextcord.Member, after: nextcord.Member):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
-        if not server_audit_log:
+        if (not server_audit_log or before.bot or after.bot):
             return 
         
         # Check if the nickname has changed
@@ -332,7 +332,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_member_ban(self, guild: nextcord.Guild,  user: nextcord.User):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": guild.id})
-        if not server_audit_log:
+        if (not server_audit_log or user.bot):
             return 
         
         member_ban = nextcord.Embed(title="Member Banned", color=nextcord.Colour.red())
@@ -350,7 +350,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_member_unban(self, guild: nextcord.Guild,  user: nextcord.User):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": guild.id})
-        if not server_audit_log:
+        if (not server_audit_log or user.bot):
             return 
         
         member_unban = nextcord.Embed(title="Member Unbanned", color=nextcord.Colour.green())
@@ -368,7 +368,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_message_delete(self, message: nextcord.Message):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": message.guild.id})
-        if not server_audit_log or message.author.id is getenv('CLIENT_ID'):
+        if (not server_audit_log or message.author.bot):
             return
         
         message_delete = nextcord.Embed(title=f"Message Deleted in #{message.channel.name}", color=nextcord.Colour.red())
@@ -393,7 +393,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_message_edit(self, before: nextcord.Message, after: nextcord.Message):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
-        if not server_audit_log or before.author.id is getenv('CLIENT_ID') or after.author.id is getenv('CLIENT_ID'):
+        if (not server_audit_log or before.author.bot or after.author.bot):
             return
         
         message_edit = nextcord.Embed(title=f"Message Edited in #{after.channel.name}", color=nextcord.Colour.blurple())
