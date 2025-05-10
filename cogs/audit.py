@@ -304,13 +304,13 @@ class Audit(commands.Cog, name="Audit Logs"):
         elif len(before.roles) < len(after.roles):
             member_update = nextcord.Embed(title="Role Added", description=f"{after.display_name}", color=nextcord.Colour.green())
             new_role = [role for role in after.roles if role not in before.roles]
-            member_update.add_field(name=f"+{new_role[0].name}", value=after.mention)
+            member_update.add_field(name=f"{new_role[0].mention}", value=new_role[0].name)
         
         # Check if a role has been removed
         elif len(before.roles) > len(after.roles):
             member_update = nextcord.Embed(title="Role Removed", description=f"{after.display_name}", color=nextcord.Colour.red())
             removed_role = [role for role in before.roles if role not in after.roles]
-            member_update.add_field(name=f"-{removed_role[0].name}", value=after.mention)
+            member_update.add_field(name=f"{removed_role[0].mention}", value=removed_role[0].name)
 
         # Check if the avatar has changed
         elif before.display_avatar != after.display_avatar:
