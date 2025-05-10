@@ -393,7 +393,7 @@ class Audit(commands.Cog, name="Audit Logs"):
     async def on_message_edit(self, before: nextcord.Message, after: nextcord.Message):
         # If there is no assigned audit log role for this server, return before creating an embed
         server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
-        if (not server_audit_log or before.author.bot or after.author.bot):
+        if (not server_audit_log or before.author.bot or after.author.bot or (before.content == after.content)):
             return
         
         message_edit = nextcord.Embed(title=f"Message Edited in #{after.channel.name}", color=nextcord.Colour.blurple())
