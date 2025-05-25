@@ -303,7 +303,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], emoji_update)
 
-    # Record when a member's role/name/avatar is updated
+    # Record when a member's roles are updated
     @commands.Cog.listener()
     async def on_member_update(self, before: nextcord.Member, after: nextcord.Member):
         # If there is no assigned audit log role for this server, return before creating an embed
@@ -311,34 +311,10 @@ class Audit(commands.Cog, name="Audit Logs"):
         if (not server_audit_log or before.bot or after.bot):
             return 
         
-        # For debugging purposes
-        print(before.display_avatar.key)
-        print(after.display_avatar.key)
-        print(before.display_avatar.url)
-        print(after.display_avatar.url)
-
-        print(before.avatar.key)
-        print(after.avatar.key)
-        print(before.avatar.url)
-        print(after.avatar.url)
-
-        print(before.default_avatar.key)
-        print(after.default_avatar.key)
-        print(before.default_avatar.url)
-        print(after.default_avatar.url)
-
-        print(before.guild_avatar.key)
-        print(after.guild_avatar.key)
-        print(before.guild_avatar.url)
-        print(after.guild_avatar.url)
-        
-        # Check if the nickname has changed
-        if before.display_name != after.display_name:
-            member_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
-            member_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
+        before.pending
         
         # Check if a role has been added
-        elif len(before.roles) < len(after.roles):
+        if len(before.roles) < len(after.roles):
             member_update = nextcord.Embed(title="Role Added", description=f"{after.display_name}", color=nextcord.Colour.green())
             new_role = [role for role in after.roles if role not in before.roles]
             member_update.add_field(name=new_role[0].name, value=new_role[0].mention)
@@ -348,10 +324,6 @@ class Audit(commands.Cog, name="Audit Logs"):
             member_update = nextcord.Embed(title="Role Removed", description=f"{after.display_name}", color=nextcord.Colour.red())
             removed_role = [role for role in before.roles if role not in after.roles]
             member_update.add_field(name=removed_role[0].name, value=removed_role[0].mention)
-
-        # Check if the avatar has changed
-        elif before.display_avatar != after.display_avatar:
-            member_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
 
         # If none of the above conditions are met, do nothing
         else:
@@ -363,6 +335,35 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], member_update)
+
+    # Records when a user's avatar is updated
+    @commands.Cog.listener()
+    async def on_user_update(self, before: nextcord.Member, after: nextcord.Member):
+        # If there is no assigned audit log role for this server, return before creating an embed
+        server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
+        if (not server_audit_log or before.bot or after.bot):
+            return 
+        
+        # Check if the user's avatar is changed
+        if before.display_avatar != after.display_avatar:
+            user_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
+
+        # Check if the user's username has changed
+        elif (before.display_name != after.display_name):
+            user_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
+            user_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
+        
+        # If none of the above conditions are met, do nothing
+        else:
+            return
+        
+        # Set the thumbnail and footer
+        user_update.set_thumbnail(after.display_avatar.url)
+        user_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
+
+        # Send the embed to the designated channel
+        await self.send_embed(server_audit_log['channel'], user_update)
+
 
     # Records when a member is banned
     @commands.Cog.listener()
