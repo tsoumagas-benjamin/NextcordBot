@@ -293,6 +293,10 @@ class Audit(commands.Cog, name="Audit Logs"):
             # Get emojis that have been updated and add them to the embed
             old_emoji = [emoji for emoji in before if emoji not in after]
             new_emoji = [emoji for emoji in after if emoji not in before]
+            for emoji in old_emoji:
+                print(emoji.name)
+            for emoji in new_emoji:
+                print(emoji.name)
             emoji_update.add_field(name="Updated Name", value=f"{old_emoji[0].name} -> <:{new_emoji[0].name}:{new_emoji[0].id}> {new_emoji[0].name}")
             emoji_update.set_footer(text=f"Emoji ID: {new_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
         
@@ -312,6 +316,21 @@ class Audit(commands.Cog, name="Audit Logs"):
         print(after.display_avatar.key)
         print(before.display_avatar.url)
         print(after.display_avatar.url)
+
+        print(before.avatar.key)
+        print(after.avatar.key)
+        print(before.avatar.url)
+        print(after.avatar.url)
+
+        print(before.default_avatar.key)
+        print(after.default_avatar.key)
+        print(before.default_avatar.url)
+        print(after.default_avatar.url)
+
+        print(before.guild_avatar.key)
+        print(after.guild_avatar.key)
+        print(before.guild_avatar.url)
+        print(after.guild_avatar.url)
         
         # Check if the nickname has changed
         if before.display_name != after.display_name:
