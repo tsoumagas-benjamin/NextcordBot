@@ -10,6 +10,10 @@ db = client.NextcordBot
 
 # Create a cog for audit log functionality
 class Audit(commands.Cog, name="Audit Logs"):
+    """Commands for managing server event logs"""
+
+    COG_EMOJI = "📋"
+    
     def __init__(self, bot) -> None:
       self.bot = bot
 
@@ -261,6 +265,14 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
         
+        # For debugging purposes to see what the before and after looks like when an emoji is changed.
+        for emoji in before:
+            print(emoji.name)
+            print(emoji.url)
+        for emoji in after:
+            print(emoji.name)
+            print(emoji.url)
+        
         # Check if an emoji is removed, added, or updated
         if len(before) > len(after):
             emoji_update = nextcord.Embed(title="Emoji Deleted", color=nextcord.Colour.red())
@@ -294,6 +306,12 @@ class Audit(commands.Cog, name="Audit Logs"):
         server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
         if (not server_audit_log or before.bot or after.bot):
             return 
+        
+        # For debugging purposes
+        print(before.display_avatar.key)
+        print(after.display_avatar.key)
+        print(before.display_avatar.url)
+        print(after.display_avatar.url)
         
         # Check if the nickname has changed
         if before.display_name != after.display_name:
