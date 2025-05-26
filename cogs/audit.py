@@ -265,14 +265,6 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
         
-        # For debugging purposes to see what the before and after looks like when an emoji is changed.
-        for emoji in before:
-            print(emoji.name)
-            print(emoji.url)
-        for emoji in after:
-            print(emoji.name)
-            print(emoji.url)
-        
         # Check if an emoji is removed, added, or updated
         if len(before) > len(after):
             emoji_update = nextcord.Embed(title="Emoji Deleted", color=nextcord.Colour.red())
@@ -338,31 +330,31 @@ class Audit(commands.Cog, name="Audit Logs"):
 
     # Records when a user's avatar is updated
     @commands.Cog.listener()
-    async def on_user_update(self, before: nextcord.Member, after: nextcord.Member):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"guild": after.guild.id})
-        if (not server_audit_log or before.bot or after.bot):
-            return 
-        
-        # Check if the user's avatar is changed
-        if before.display_avatar != after.display_avatar:
-            user_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
+    async def on_user_update(self, before: nextcord.User, after: nextcord.User):
+        # Get mutual guilds where the user and this bot is set up for audit logs
+        mutuals = after.mutual_guilds
 
-        # Check if the user's username has changed
-        elif (before.display_name != after.display_name):
-            user_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
-            user_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
-        
-        # If none of the above conditions are met, do nothing
-        else:
-            return
-        
-        # Set the thumbnail and footer
-        user_update.set_thumbnail(after.display_avatar.url)
-        user_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
+        for guild in mutuals:
+            # If there is no assigned audit log role for this server, return before creating an embed
+            server_audit_log = db.audit_logs.find_one({"guild": guild.id})
+            if (not server_audit_log or before.bot or after.bot):
+                continue
+            
+            # Check if the user's avatar is changed
+            if before.display_avatar != after.display_avatar:
+                user_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
 
-        # Send the embed to the designated channel
-        await self.send_embed(server_audit_log['channel'], user_update)
+            # Check if the user's username has changed
+            elif (before.display_name != after.display_name):
+                user_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
+                user_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
+            
+            # Set the thumbnail and footer
+            user_update.set_thumbnail(after.display_avatar.url)
+            user_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
+
+            # Send the embed to the designated channel
+            await self.send_embed(server_audit_log['channel'], user_update)
 
 
     # Records when a member is banned
