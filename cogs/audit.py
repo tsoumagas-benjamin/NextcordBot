@@ -342,11 +342,13 @@ class Audit(commands.Cog, name="Audit Logs"):
             
             # Check if the user's avatar is changed
             if before.display_avatar != after.display_avatar:
-                user_update = nextcord.Embed(title="Avatar Update", description=f"{after.display_name}", color=nextcord.Colour.blurple())
+                user_update = nextcord.Embed(title="Avatar Update", description=f"{after.mention}", color=nextcord.Colour.blurple())
+                user_update.add_field(name="Old Avatar", value=f"[View]({before.display_avatar.url})")
+                user_update.add_field(name="New Avatar", value=f"[View]({after.display_avatar.url})")
 
             # Check if the user's username has changed
             elif (before.display_name != after.display_name):
-                user_update = nextcord.Embed(title="Display Name Update", description=f"{after.display_name}", colour=nextcord.Colour.blurple())
+                user_update = nextcord.Embed(title="Display Name Update", description=f"{after.mention}", colour=nextcord.Colour.blurple())
                 user_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
             
             # Set the thumbnail and footer
