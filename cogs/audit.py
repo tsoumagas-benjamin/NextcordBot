@@ -265,6 +265,13 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
         
+        old_emoji = [emoji for emoji in before if emoji not in after]
+        new_emoji = [emoji for emoji in after if emoji not in before]
+        for emoji in old_emoji:
+            print(emoji.name)
+        for emoji in new_emoji:
+            print(emoji.name)
+        
         # Check if an emoji is removed, added, or updated
         if len(before) > len(after):
             emoji_update = nextcord.Embed(title="Emoji Deleted", color=nextcord.Colour.red())
