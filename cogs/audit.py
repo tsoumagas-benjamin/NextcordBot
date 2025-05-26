@@ -303,8 +303,6 @@ class Audit(commands.Cog, name="Audit Logs"):
         if (not server_audit_log or before.bot or after.bot):
             return 
         
-        before.pending
-        
         # Check if a role has been added
         if len(before.roles) < len(after.roles):
             member_update = nextcord.Embed(title="Role Added", description=f"{after.display_name}", color=nextcord.Colour.green())
