@@ -32,7 +32,7 @@ async def on_ready():
     """When bot is connected to Discord"""
     # Initialize default collections
     collections = db.list_collection_names()
-    for c in ['birthdays', 'rules', 'Viktor', 'levels', 'daily_channels', 'warframe_channels', 'audit_logs']:
+    for c in ['birthdays', 'rules', 'Viktor', 'levels', 'daily_channels', 'warframe_channels', 'audit_logs', 'sales_channels']:
         if c not in collections:
             db.create_collection(c)
     
