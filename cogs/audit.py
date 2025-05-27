@@ -265,13 +265,6 @@ class Audit(commands.Cog, name="Audit Logs"):
         if not server_audit_log:
             return
         
-        old_emoji = [emoji for emoji in before if emoji not in after]
-        new_emoji = [emoji for emoji in after if emoji not in before]
-        for emoji in old_emoji:
-            print(emoji.name)
-        for emoji in new_emoji:
-            print(emoji.name)
-        
         # Check if an emoji is removed, added, or updated
         if len(before) > len(after):
             emoji_update = nextcord.Embed(title="Emoji Deleted", color=nextcord.Colour.red())
@@ -286,18 +279,6 @@ class Audit(commands.Cog, name="Audit Logs"):
             created_emoji = [emoji for emoji in after if emoji not in before]
             emoji_update.add_field(name="New Name", value=f"<:{created_emoji[0].name}:{created_emoji[0].id}> {created_emoji[0].name}")
             emoji_update.set_footer(text=f"Emoji ID: {created_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
-
-        else:
-            emoji_update = nextcord.Embed(title="Emoji Updated", color=nextcord.Colour.blurple())
-            # Get emojis that have been updated and add them to the embed
-            old_emoji = [emoji for emoji in before if emoji not in after]
-            new_emoji = [emoji for emoji in after if emoji not in before]
-            for emoji in old_emoji:
-                print(emoji.name)
-            for emoji in new_emoji:
-                print(emoji.name)
-            emoji_update.add_field(name="Updated Name", value=f"{old_emoji[0].name} -> <:{new_emoji[0].name}:{new_emoji[0].id}> {new_emoji[0].name}")
-            emoji_update.set_footer(text=f"Emoji ID: {new_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
         
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], emoji_update)
@@ -321,6 +302,11 @@ class Audit(commands.Cog, name="Audit Logs"):
             member_update = nextcord.Embed(title="Role Removed", description=f"{after.display_name}", color=nextcord.Colour.red())
             removed_role = [role for role in before.roles if role not in after.roles]
             member_update.add_field(name=removed_role[0].name, value=removed_role[0].mention)
+        
+        # Check if the user's username has changed
+        elif (before.display_name != after.display_name):
+            user_update = nextcord.Embed(title="Display Name Update", description=f"{after.mention}", colour=nextcord.Colour.blurple())
+            user_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
 
         # If none of the above conditions are met, do nothing
         else:
@@ -351,11 +337,6 @@ class Audit(commands.Cog, name="Audit Logs"):
                 user_update.add_field(name="Old Avatar", value=f"[View]({before.display_avatar.url})")
                 user_update.add_field(name="New Avatar", value=f"[View]({after.display_avatar.url})")
 
-            # Check if the user's username has changed
-            elif (before.display_name != after.display_name):
-                user_update = nextcord.Embed(title="Display Name Update", description=f"{after.mention}", colour=nextcord.Colour.blurple())
-                user_update.add_field(name=f"{before.display_name} -> {after.display_name}", value=after.mention)
-            
             # Set the thumbnail and footer
             user_update.set_thumbnail(after.display_avatar.url)
             user_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
