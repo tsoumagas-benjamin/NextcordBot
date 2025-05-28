@@ -257,7 +257,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], update_server)
 
-    # Record when an emoji is added or deleted
+    # Record when an emoji is removed, added, or updated
     @commands.Cog.listener()
     async def on_guild_emojis_update(self, guild: nextcord.Guild, before: Sequence[nextcord.Emoji], after: Sequence[nextcord.Emoji]):
         # If there is no assigned audit log role for this server, return before creating an embed
@@ -279,6 +279,21 @@ class Audit(commands.Cog, name="Audit Logs"):
             created_emoji = [emoji for emoji in after if emoji not in before]
             emoji_update.add_field(name="New Name", value=f"<:{created_emoji[0].name}:{created_emoji[0].id}> {created_emoji[0].name}")
             emoji_update.set_footer(text=f"Emoji ID: {created_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
+        
+        else:
+            # Create a dict for emoji IDs and names before and after to compare
+            before_emojis = {emoji.id: emoji for emoji in before}
+            after_emojis = {emoji.id: emoji for emoji in after}
+
+            # Iterate the old emojis and if the name but not the ID has changed then we know which emoji is updated
+            for emoji_id, old_emoji in before_emojis.items():
+                if emoji_id in after_emojis:
+                    new_emoji = after_emojis[emoji_id]
+                    if old_emoji.name != new_emoji.name:
+                        emoji_update = nextcord.Embed(title="Emoji Updated", color=nextcord.Colour.blurple())
+                        emoji_update.add_field(name="Old Name", value=old_emoji.name)
+                        emoji_update.add_field(name="New Name", value=f"<:{new_emoji.name}:{new_emoji.id}> {new_emoji.name}")
+                        emoji_update.set_footer(text=f"Emoji ID: {emoji_id} | {self.date_format(datetime.datetime.now())}")
         
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], emoji_update)
