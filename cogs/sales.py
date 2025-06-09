@@ -112,6 +112,12 @@ class Sales(commands.Cog, name="Game Sales"):
         sale = requests.post(sale_url, json=payload, headers=headers)
         sale_json = json.loads(sale.content)
 
+        print(json.dumps(sale_json, indent=4))
+        print("---")
+        print(json.dumps(sale_json[0]['historyLow'], indent=4))
+        print("---")
+        print(json.dumps(sale_json[0]['deals'][0], indent=4))
+
         # Gather information on the historic lows for the game's price
         historic_low = sale_json[0]['historyLow']
         all_time = historic_low['all']['amount']
