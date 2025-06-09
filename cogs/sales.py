@@ -124,7 +124,6 @@ class Sales(commands.Cog, name="Game Sales"):
         best_price = best_deal['price']['amount']
         best_cut = best_deal['cut']
         deal_url = best_deal['url']
-        regular_price = best_deal['regular']['amount']
 
         # Create the embed to send with relevant information that was gathered
         price_embed = nextcord.Embed(
@@ -133,8 +132,8 @@ class Sales(commands.Cog, name="Game Sales"):
             color=nextcord.Colour.blurple()
             )
         price_embed.add_field(name="All Time Low", value=f"${all_time} USD")
-        price_embed.add_field(name="Last Year Low", value=f"${all_time} USD")
-        price_embed.add_field(name="3 Month Low", value=f"${all_time} USD")
+        price_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
+        price_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
 
         await interaction.send(embed=price_embed)
 
@@ -142,9 +141,6 @@ class Sales(commands.Cog, name="Game Sales"):
     # Once a day at a certain time, check list of games for sales
     # If sale exceeds regular price or previous sale report that and override previous sale
     # If sale reaches expiration, remove it and set price for that game back to regular
-
-    # Or look into webhook and authentication
-
 
 def setup(bot):
     bot.add_cog(Sales(bot))
