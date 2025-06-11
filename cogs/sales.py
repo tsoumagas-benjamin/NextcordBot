@@ -104,19 +104,13 @@ class Sales(commands.Cog, name="Game Sales"):
         game_id = self.get_game_id(game)
 
         # Format game ID as a payload and set up header and API URL
-        payload = f"[\"{game_id}\"]"
+        payload = [game_id]
         headers = {"content-type": "application/json"}
         sale_url = self.get_base_url("/games/prices/v3")
 
         # Make a POST request to the API and load the response as a python iterable object
-        sale = requests.post(sale_url, json=payload, headers=headers)
+        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
         sale_json = json.loads(sale.content)
-
-        print(json.dumps(sale_json, indent=4))
-        print("---")
-        print(json.dumps(sale_json[0]['historyLow'], indent=4))
-        print("---")
-        print(json.dumps(sale_json[0]['deals'][0], indent=4))
 
         # Gather information on the historic lows for the game's price
         historic_low = sale_json[0]['historyLow']
@@ -136,7 +130,8 @@ class Sales(commands.Cog, name="Game Sales"):
             title=f"Sale Information for {game.title()}", 
             description=f"Current best deal at {best_shop} for ${best_price} USD (-{best_cut}%) | {deal_url}",
             color=nextcord.Colour.blurple()
-            )
+        )
+        
         price_embed.add_field(name="All Time Low", value=f"${all_time} USD")
         price_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
         price_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
