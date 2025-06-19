@@ -183,7 +183,8 @@ class Sales(commands.Cog, name="Game Sales"):
         date_info = expiry.split("-")
 
         # Remove the leading zeroes and convert all strings to ints
-        year, month, day = [int(date.lstrip("0") for date in date_info)]
+        date = [date.lstrip("0") for date in date_info]
+        year, month, day = list(map(int, date))
 
         # Create and return our date object
         expiry_date = datetime.date(year, month, day) 
