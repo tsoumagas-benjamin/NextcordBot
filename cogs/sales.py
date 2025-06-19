@@ -168,9 +168,14 @@ class Sales(commands.Cog, name="Game Sales"):
         # Gather information on the current best cut according to IsThereAnyDeal
         best_deal = sale_json[0]['deals'][0]
         best_cut = best_deal['cut']
-        expiry = best_deal['expiry'][:10]
+        expiry = best_deal['expiry']
+        if expiry:
+            expiry_date = expiry[:10]
+            return [best_cut, expiry_date]
+        else:
+            return [best_cut, None]
 
-        return [best_cut, expiry]
+        
     
     # Function to format expiry as a date object
     def format_expiry(self, expiry: str):
@@ -199,6 +204,11 @@ class Sales(commands.Cog, name="Game Sales"):
         current_best = self.best_cut(game_id)
         current_best_cut = current_best[0]
         current_best_expiry = current_best[1]
+
+        # If there is no expiry, return as there is no sale for this game
+        if current_best_expiry is None:
+            return 
+        
         formatted_expiry = self.format_expiry(current_best_expiry)
 
         # Check database for the if there is already a sale stored for this game
@@ -226,10 +236,6 @@ class Sales(commands.Cog, name="Game Sales"):
     async def update_sales(self, interaction: nextcord.Interaction):
         self.iterate_games()
         await interaction.send("Game sales have been updated in the database")
-
-
-    
-    
 
 def setup(bot):
     bot.add_cog(Sales(bot))
