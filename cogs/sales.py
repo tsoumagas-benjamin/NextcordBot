@@ -187,7 +187,7 @@ class Sales(commands.Cog, name="Game Sales"):
         year, month, day = list(map(int, date))
 
         # Create and return our date object
-        expiry_date = datetime.date(year, month, day) 
+        expiry_date = datetime.datetime(year, month, day, 0, 0, 0) 
 
         return expiry_date
     
