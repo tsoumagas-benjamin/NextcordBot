@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from nextcord.ext import commands, application_checks
 import requests
 import json
+import datetime
 
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
@@ -139,9 +140,96 @@ class Sales(commands.Cog, name="Game Sales"):
         await interaction.send(embed=price_embed)
 
     # TODO: Automatically notify users when one of the target games are on sale somewhere.
+    # Pass webhook through Make.com to format it for the bot
     # Once a day at a certain time, check list of games for sales
     # If sale exceeds regular price or previous sale report that and override previous sale
     # If sale reaches expiration, remove it and set price for that game back to regular
+
+    # async def waitlist_notifs():
+    #     async with aiohttp.ClientSession() as session:
+    #         webhook = nextcord.Webhook.from_url(
+    #             url="https://discord.com/api/webhooks/1381077764219601076/xsxkK1-omAaLPXQUkaxG0ZjqdUKwWbdI7tjrEYJu6DqgdQZmGP21oCabEKUSQtfY6oPK", 
+    #             session=session,
+    #             bot_token=getenv('DEAL_KEY')
+    #             )
+    #         await webhook.send('Hello World', username='Foo')
+
+    # Function to check for the best cut on a game and when it expires
+    def best_cut(self, game_id: str):
+        # Format game ID as a payload and set up header and API URL
+        payload = [game_id]
+        headers = {"content-type": "application/json"}
+        sale_url = self.get_base_url("/games/prices/v3")
+
+        # Make a POST request to the API and load the response as a python iterable object
+        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
+        sale_json = json.loads(sale.content)
+
+        # Gather information on the current best cut according to IsThereAnyDeal
+        best_deal = sale_json[0]['deals'][0]
+        best_cut = best_deal['cut']
+        expiry = best_deal['expiry'][:10]
+
+        return [best_cut, expiry]
+    
+    # Function to format expiry as a date object
+    def format_expiry(self, expiry: str):
+        # Isolate the year, month, and day parts of the string
+        date_info = expiry.split("-")
+
+        # Remove the leading zeroes and convert all strings to ints
+        year, month, day = [int(date.lstrip("0") for date in date_info)]
+
+        # Create and return our date object
+        expiry_date = datetime.date(year, month, day) 
+
+        return expiry_date
+    
+    # Function to store information on a game's sale cut and expiry in the database
+    def store_sale(self, game_id: str, cut: int, expiry_date: datetime.date):
+        # Format the record to insert/replace the old record
+        new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
+
+        # Overwrite the existing sale info or create a new entry if there is nothing
+        db.sales.replace_one({"_id": game_id}, new_sale, True)
+    
+    # Function to compare a game's current best price against the database or append it if it's better
+    def compare_cut(self, game_id: str):
+        # Get the current best sale info on a game
+        current_best = self.best_cut(game_id)
+        current_best_cut = current_best[0]
+        current_best_expiry = current_best[1]
+        formatted_expiry = self.format_expiry(current_best_expiry)
+
+        # Check database for the if there is already a sale stored for this game
+        game_sale = db.sales.find_one({"_id": game_id}, {"_id": False, "best_cut": True})
+        if game_sale:
+            # Check the cut for the existing record
+            previous_cut = game_sale['best_cut']
+
+            # Replace previous sale if new sale is better
+            if current_best_cut > previous_cut:
+                self.store_sale(game_id, current_best_cut, formatted_expiry)
+        
+        # If a sale is not already recorded, record the new one
+        else:
+            self.store_sale(game_id, current_best_cut, formatted_expiry)
+
+    
+    # Function to iterate list of game ID's and update their sale price if needed
+    def iterate_games(self):
+        for game_id in self.target_games.values():
+            self.compare_cut(game_id)
+    
+    # Here for testing purposes, eventually we will have the bot check these games for sales automatically
+    @nextcord.slash_command(guild_ids=permitted_guilds)
+    async def update_sales(self, interaction: nextcord.Interaction):
+        self.iterate_games()
+        await interaction.send("Game sales have been updated in the database")
+
+
+    
+    
 
 def setup(bot):
     bot.add_cog(Sales(bot))
