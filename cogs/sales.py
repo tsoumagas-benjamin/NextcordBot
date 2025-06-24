@@ -1,7 +1,7 @@
 import nextcord
 from os import getenv
 from pymongo import MongoClient
-from nextcord.ext import commands, application_checks
+from nextcord.ext import commands, application_checks, tasks
 import requests
 import json
 import datetime
@@ -17,6 +17,12 @@ class Sales(commands.Cog, name="Game Sales"):
 
     def __init__(self, bot) -> None:
         self.bot = bot
+        # Fetch the list of sales channels to post sale information to
+        self.sales_channels = db.sales_channels.distinct("channel")
+        self.daily_sales.start()
+    
+    def cog_unload(self):
+        self.daily_sales.cancel()    
         
     permitted_guilds = [686394755009347655, 793685160931098696]
 
@@ -41,6 +47,19 @@ class Sales(commands.Cog, name="Game Sales"):
         "SANABI": "018d937f-62fb-7394-b7df-25ff35798fe6",
         "Terraria": "018d937f-30fa-705e-8a3a-f39719bdde93",
     }
+
+    # TODO: Once this functionality works as a slash command, we can implement it here as a task
+    def sale_task():
+        return None
+
+    @tasks.loop(time=datetime.time(4))
+    async def daily_sales(self):
+        # Send sale info to each enrolled channel
+        for channel_id in self.sales_channels:
+            sale_channel = self.bot.get_channel(channel_id)
+            if sale_channel is None:
+                sale_channel = await self.bot.fetch_channel(channel_id)
+            await sale_channel.send(embed=self.sale_task())
     
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):
@@ -62,6 +81,55 @@ class Sales(commands.Cog, name="Game Sales"):
         game_id = game_json['game']['id']
 
         return game_id
+    
+     # Function to format expiry as a date object
+    def format_expiry(self, expiry: str):
+        # Isolate the year, month, and day parts of the string
+        date_info = expiry.split("-")
+
+        # Remove the leading zeroes and convert all strings to ints
+        date = [date.lstrip("0") for date in date_info]
+        year, month, day = list(map(int, date))
+
+        # Create and return our date object
+        expiry_date = datetime.datetime(year, month, day, 0, 0, 0) 
+
+        return expiry_date
+    
+    # Function to store information on a game's sale cut and expiry in the database
+    def store_sale(self, game_id: str, cut: int, expiry_date: datetime.date):
+        # Format the record to insert/replace the old record
+        new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
+
+        # Overwrite the existing sale info or create a new entry if there is nothing
+        db.sales.replace_one({"_id": game_id}, new_sale, True)
+    
+    # Function to compare a game's current best price against the database or append it if it's better
+    def compare_cut(self, game_id: str):
+        # Get the current best sale info on a game
+        current_best = self.best_cut(game_id)
+        current_best_cut = current_best[0]
+        current_best_expiry = current_best[1]
+
+        # If there is no expiry, return as there is no sale for this game
+        if current_best_expiry is None:
+            return 
+        
+        formatted_expiry = self.format_expiry(current_best_expiry)
+
+        # Check database for the if there is already a sale stored for this game
+        game_sale = db.sales.find_one({"_id": game_id}, {"_id": False, "best_cut": True})
+        if game_sale:
+            # Check the cut for the existing record
+            previous_cut = game_sale['best_cut']
+
+            # Replace previous sale if new sale is better
+            if current_best_cut > previous_cut:
+                self.store_sale(game_id, current_best_cut, formatted_expiry)
+        
+        # If a sale is not already recorded, record the new one
+        else:
+            self.store_sale(game_id, current_best_cut, formatted_expiry)
     
     # Function to set sales channel for this server
     @nextcord.slash_command(guild_ids=permitted_guilds)
@@ -139,21 +207,6 @@ class Sales(commands.Cog, name="Game Sales"):
 
         await interaction.send(embed=price_embed)
 
-    # TODO: Automatically notify users when one of the target games are on sale somewhere.
-    # Pass webhook through Make.com to format it for the bot
-    # Once a day at a certain time, check list of games for sales
-    # If sale exceeds regular price or previous sale report that and override previous sale
-    # If sale reaches expiration, remove it and set price for that game back to regular
-
-    # async def waitlist_notifs():
-    #     async with aiohttp.ClientSession() as session:
-    #         webhook = nextcord.Webhook.from_url(
-    #             url="https://discord.com/api/webhooks/1381077764219601076/xsxkK1-omAaLPXQUkaxG0ZjqdUKwWbdI7tjrEYJu6DqgdQZmGP21oCabEKUSQtfY6oPK", 
-    #             session=session,
-    #             bot_token=getenv('DEAL_KEY')
-    #             )
-    #         await webhook.send('Hello World', username='Foo')
-
     # Function to check for the best cut on a game and when it expires
     def best_cut(self, game_id: str):
         # Format game ID as a payload and set up header and API URL
@@ -173,70 +226,20 @@ class Sales(commands.Cog, name="Game Sales"):
             expiry_date = expiry[:10]
             return [best_cut, expiry_date]
         else:
-            return [best_cut, None]
-
-        
-    
-    # Function to format expiry as a date object
-    def format_expiry(self, expiry: str):
-        # Isolate the year, month, and day parts of the string
-        date_info = expiry.split("-")
-
-        # Remove the leading zeroes and convert all strings to ints
-        date = [date.lstrip("0") for date in date_info]
-        year, month, day = list(map(int, date))
-
-        # Create and return our date object
-        expiry_date = datetime.datetime(year, month, day, 0, 0, 0) 
-
-        return expiry_date
-    
-    # Function to store information on a game's sale cut and expiry in the database
-    def store_sale(self, game_id: str, cut: int, expiry_date: datetime.date):
-        # Format the record to insert/replace the old record
-        new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
-
-        # Overwrite the existing sale info or create a new entry if there is nothing
-        db.sales.replace_one({"_id": game_id}, new_sale, True)
-    
-    # Function to compare a game's current best price against the database or append it if it's better
-    def compare_cut(self, game_id: str):
-        # Get the current best sale info on a game
-        current_best = self.best_cut(game_id)
-        current_best_cut = current_best[0]
-        current_best_expiry = current_best[1]
-
-        # If there is no expiry, return as there is no sale for this game
-        if current_best_expiry is None:
-            return 
-        
-        formatted_expiry = self.format_expiry(current_best_expiry)
-
-        # Check database for the if there is already a sale stored for this game
-        game_sale = db.sales.find_one({"_id": game_id}, {"_id": False, "best_cut": True})
-        if game_sale:
-            # Check the cut for the existing record
-            previous_cut = game_sale['best_cut']
-
-            # Replace previous sale if new sale is better
-            if current_best_cut > previous_cut:
-                self.store_sale(game_id, current_best_cut, formatted_expiry)
-        
-        # If a sale is not already recorded, record the new one
-        else:
-            self.store_sale(game_id, current_best_cut, formatted_expiry)
-
-    
-    # Function to iterate list of game ID's and update their sale price if needed
-    def iterate_games(self):
-        for game_id in self.target_games.values():
-            self.compare_cut(game_id)
+            return [best_cut, None]     
     
     # Here for testing purposes, eventually we will have the bot check these games for sales automatically
     @nextcord.slash_command(guild_ids=permitted_guilds)
     async def update_sales(self, interaction: nextcord.Interaction):
-        self.iterate_games()
+        for game_id in self.target_games.values():
+            self.compare_cut(game_id)
         await interaction.send("Game sales have been updated in the database")
+    
+    @nextcord.slash_command(guild_ids=permitted_guilds)
+    async def update_sales(self, interaction: nextcord.Interaction, game: str):
+        game_id = self.get_game_id(game)
+        self.compare_cut(game_id)
+        await interaction.send(f"Sale info for {game} have been updated in the database")
 
 def setup(bot):
     bot.add_cog(Sales(bot))
