@@ -231,12 +231,14 @@ class Sales(commands.Cog, name="Game Sales"):
     # Here for testing purposes, eventually we will have the bot check these games for sales automatically
     @nextcord.slash_command(guild_ids=permitted_guilds)
     async def update_sales(self, interaction: nextcord.Interaction):
+        """Update sales for all games for testing purposes"""
         for game_id in self.target_games.values():
             self.compare_cut(game_id)
         await interaction.send("Game sales have been updated in the database")
     
     @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def update_sales(self, interaction: nextcord.Interaction, game: str):
+    async def update_sale(self, interaction: nextcord.Interaction, game: str):
+        """Update sale for target game for testing purposes"""
         game_id = self.get_game_id(game)
         self.compare_cut(game_id)
         await interaction.send(f"Sale info for {game} have been updated in the database")
