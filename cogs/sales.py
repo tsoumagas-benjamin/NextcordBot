@@ -50,6 +50,9 @@ class Sales(commands.Cog, name="Game Sales"):
 
     # TODO: Once this functionality works as a slash command, we can implement it here as a task
     def sale_task():
+        # Run a function similar to update_sales where all games are checked for sales and the database is updated
+
+        # Check all dates in the database, if any expiries are past, remove those entries
         return None
 
     @tasks.loop(time=datetime.time(4))
@@ -111,9 +114,12 @@ class Sales(commands.Cog, name="Game Sales"):
         current_best_cut = current_best[0]
         current_best_expiry = current_best[1]
 
-        # If there is no expiry, return as there is no sale for this game
+        # If there is no expiry, put the expiry as tomorrow
         if current_best_expiry is None:
-            return 
+            # Get today's date and increment it by one day to get tomorrow's date
+            today = datetime.date.today()
+            tomorrow = today + datetime.timedelta(days=1)
+            current_best_expiry = tomorrow.strftime('%Y-%m-%d')
         
         formatted_expiry = self.format_expiry(current_best_expiry)
 
