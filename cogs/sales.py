@@ -107,10 +107,39 @@ class Sales(commands.Cog, name="Game Sales"):
         # Overwrite the existing sale info or create a new entry if there is nothing
         db.sales.replace_one({"_id": game_id}, new_sale, True)
     
+        # Function to check for the best cut on a game and when it expires
+    def best_cut(self, game_id: str):
+        # Format game ID as a payload and set up header and API URL
+        payload = [game_id]
+        headers = {"content-type": "application/json"}
+        sale_url = self.get_base_url("/games/prices/v3")
+
+        # Make a POST request to the API and load the response as a python iterable object
+        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
+        try:
+            sale_json = json.loads(sale.content)
+        except:
+            print(f"JSON for {game_id} could not be decoded")
+            return
+
+        # Gather information on the current best cut according to IsThereAnyDeal
+        best_deal = sale_json[0]['deals'][0]
+        best_cut = best_deal['cut']
+        expiry = best_deal['expiry']
+        if expiry:
+            expiry_date = expiry[:10]
+            return [best_cut, expiry_date]
+        else:
+            return [best_cut, None]  
+    
     # Function to compare a game's current best price against the database or append it if it's better
     def compare_cut(self, game_id: str):
         # Get the current best sale info on a game
-        current_best = self.best_cut(game_id)
+        try:
+            current_best = self.best_cut(game_id)
+        except:
+            print(f"Could not retrieve current sale date for {game_id}")
+            return
         current_best_cut = current_best[0]
         current_best_expiry = current_best[1]
 
@@ -211,28 +240,7 @@ class Sales(commands.Cog, name="Game Sales"):
         price_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
         price_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
 
-        await interaction.send(embed=price_embed)
-
-    # Function to check for the best cut on a game and when it expires
-    def best_cut(self, game_id: str):
-        # Format game ID as a payload and set up header and API URL
-        payload = [game_id]
-        headers = {"content-type": "application/json"}
-        sale_url = self.get_base_url("/games/prices/v3")
-
-        # Make a POST request to the API and load the response as a python iterable object
-        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
-        sale_json = json.loads(sale.content)
-
-        # Gather information on the current best cut according to IsThereAnyDeal
-        best_deal = sale_json[0]['deals'][0]
-        best_cut = best_deal['cut']
-        expiry = best_deal['expiry']
-        if expiry:
-            expiry_date = expiry[:10]
-            return [best_cut, expiry_date]
-        else:
-            return [best_cut, None]     
+        await interaction.send(embed=price_embed)   
     
     # Here for testing purposes, eventually we will have the bot check these games for sales automatically
     @nextcord.slash_command(guild_ids=permitted_guilds)
