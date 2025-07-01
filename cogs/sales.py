@@ -19,9 +19,11 @@ class Sales(commands.Cog, name="Game Sales"):
         self.bot = bot
         # Fetch the list of sales channels to post sale information to
         self.sales_channels = db.sales_channels.distinct("channel")
+        self.daily_prune.start()
         self.daily_sales.start()
     
     def cog_unload(self):
+        self.daily_prune.cancel()
         self.daily_sales.cancel()    
         
     permitted_guilds = [686394755009347655, 793685160931098696]
@@ -48,14 +50,20 @@ class Sales(commands.Cog, name="Game Sales"):
         "Terraria": "018d937f-30fa-705e-8a3a-f39719bdde93",
     }
 
-    # TODO: Once this functionality works as a slash command, we can implement it here as a task
-    def sale_task():
+    def sale_task(self):
         # Run a function similar to update_sales where all games are checked for sales and the database is updated
-
-        # Check all dates in the database, if any expiries are past, remove those entries
+        for game_id in self.target_games.values():
+            self.compare_cut(game_id)
+    
+    def prune_sales():
+        # Iterate all sales in the database
+        for sale in db.sales.find():
+            # If the expiry has past, remove that sale entry
+            if sale['expiry'] < datetime.date.today():
+                db.sales.delete_one({"_id": sale["_id"]})
         return None
 
-    @tasks.loop(time=datetime.time(4))
+    @tasks.loop(time=datetime.time(5))
     async def daily_sales(self):
         # Send sale info to each enrolled channel
         for channel_id in self.sales_channels:
@@ -63,6 +71,11 @@ class Sales(commands.Cog, name="Game Sales"):
             if sale_channel is None:
                 sale_channel = await self.bot.fetch_channel(channel_id)
             await sale_channel.send(embed=self.sale_task())
+    
+    @tasks.loop(time=datetime.time(4))
+    async def daily_prune(self):
+        # Prune expired sales from the database daily
+        self.prune_sales()
     
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):
