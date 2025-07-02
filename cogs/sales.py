@@ -264,7 +264,7 @@ class Sales(commands.Cog, name="Game Sales"):
             self.compare_cut(game_id)
     
     @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def prune_sales(self, interaction: nextcord.Interaction):
+    async def prune_sales_command(self, interaction: nextcord.Interaction):
         """Prune outdated sales for testing purposes"""
         self.prune_sales()
         await interaction.send("Expired sales have been pruned")
