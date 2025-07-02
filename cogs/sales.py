@@ -55,7 +55,7 @@ class Sales(commands.Cog, name="Game Sales"):
         for game_id in self.target_games.values():
             self.compare_cut(game_id)
     
-    def prune_sales():
+    def prune_sales(self):
         # Iterate all sales in the database
         for sale in db.sales.find():
             # If the expiry has past, remove that sale entry
