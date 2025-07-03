@@ -58,12 +58,10 @@ class Sales(commands.Cog, name="Game Sales"):
     def prune_sales(self):
         # Iterate all sales in the database
         for sale in db.sales.find():
-            # If the expiry has past, remove that sale entry
             # Convert datetime in DB to date type so they can be compared
             expiry = sale['expiry']
             if expiry.date() < datetime.date.today():
-                print(f"{sale['expiry']}\t{datetime.date.today}")
-                print(f"{type(sale['expiry'])}\t{type(datetime.date.today)}")
+                # If the expiry has past, remove that sale entry
                 db.sales.delete_one({"_id": sale["_id"]})
 
     @tasks.loop(time=datetime.time(5))
@@ -257,19 +255,6 @@ class Sales(commands.Cog, name="Game Sales"):
         price_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
 
         await interaction.send(embed=price_embed)   
-    
-    # Here for testing purposes, eventually we will have the bot check these games for sales automatically
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def update_sales(self, interaction: nextcord.Interaction):
-        """Update sales for all games for testing purposes"""
-        for game_id in self.target_games.values():
-            self.compare_cut(game_id)
-    
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def prune_sales_command(self, interaction: nextcord.Interaction):
-        """Prune outdated sales for testing purposes"""
-        self.prune_sales()
-        await interaction.send("Expired sales have been pruned")
 
 def setup(bot):
     bot.add_cog(Sales(bot))
