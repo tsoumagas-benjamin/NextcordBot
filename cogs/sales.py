@@ -59,7 +59,9 @@ class Sales(commands.Cog, name="Game Sales"):
         # Iterate all sales in the database
         for sale in db.sales.find():
             # If the expiry has past, remove that sale entry
-            if sale['expiry'] < datetime.date.today():
+            # Convert datetime in DB to date type so they can be compared
+            expiry = sale['expiry']
+            if expiry.date() < datetime.date.today():
                 print(f"{sale['expiry']}\t{datetime.date.today}")
                 print(f"{type(sale['expiry'])}\t{type(datetime.date.today)}")
                 db.sales.delete_one({"_id": sale["_id"]})
