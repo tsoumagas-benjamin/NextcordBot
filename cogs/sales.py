@@ -146,6 +146,67 @@ class Sales(commands.Cog, name="Game Sales"):
         else:
             return [best_cut, None]  
     
+    # Function to return the corresponding title for a given game ID
+    def get_title(self, game_id: str):
+        for title, id in self.target_games.items():
+            if id == game_id:
+                return title
+    
+    # Function to return sale contents for a game
+    def get_sale_content(self, game_id: str):
+        # Format game ID as a payload and set up header and API URL
+        payload = [game_id]
+        headers = {"content-type": "application/json"}
+        sale_url = self.get_base_url("/games/prices/v3")
+
+        # Make a POST request to the API and load the response as a python iterable object
+        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
+        sale_json = json.loads(sale.content)
+
+        return sale_json
+
+    # Function to send formatted content to sales channels
+    async def send_sale_info(self, sale_embed: nextcord.Embed):
+        # Send a meme to each of the daily channels
+        for channel_id in self.sales_channels:
+            sales_channel = self.bot.get_channel(channel_id)
+            if sales_channel is None:
+                sales_channel = await self.bot.fetch_channel(channel_id)
+            await sales_channel.send(embed=sale_embed())
+    
+    # Function to format content to be sent to sales channels(see best_price())
+    async def format_sale(self, game_id: str):
+        # Get the title and sale information for the game
+        game_title = self.get_title(game_id)
+        sale_json = self.get_sale_content(game_id)
+
+        # Gather information on the historic lows for the game's price
+        historic_low = sale_json[0]['historyLow']
+        all_time = historic_low['all']['amount']
+        last_year = historic_low['y1']['amount']
+        three_month = historic_low['m3']['amount']
+        
+        # Gather information on the current best deal according to IsThereAnyDeal
+        best_deal = sale_json[0]['deals'][0]
+        best_shop = best_deal['shop']['name']
+        best_price = best_deal['price']['amount']
+        best_cut = best_deal['cut']
+        deal_url = best_deal['url']
+
+        # Create the embed to send with relevant information that was gathered
+        sale_embed = nextcord.Embed(
+            title=f"Sale Information for {game_title.title()}", 
+            description=f"Current best deal at {best_shop} for ${best_price} USD (-{best_cut}%) | {deal_url}",
+            color=nextcord.Colour.blurple()
+        )
+        
+        # Add information on the best prices for the game over various timespans
+        sale_embed.add_field(name="All Time Low", value=f"${all_time} USD")
+        sale_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
+        sale_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
+
+        return sale_embed
+    
     # Function to compare a game's current best price against the database or append it if it's better
     def compare_cut(self, game_id: str):
         # Get the current best sale info on a game
@@ -221,40 +282,10 @@ class Sales(commands.Cog, name="Game Sales"):
         # Get the game's ID given its title
         game_id = self.get_game_id(game)
 
-        # Format game ID as a payload and set up header and API URL
-        payload = [game_id]
-        headers = {"content-type": "application/json"}
-        sale_url = self.get_base_url("/games/prices/v3")
+        # Retrieve the embed with formatted information about the sale
+        sale_embed = self.format_sale(game_id)
 
-        # Make a POST request to the API and load the response as a python iterable object
-        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
-        sale_json = json.loads(sale.content)
-
-        # Gather information on the historic lows for the game's price
-        historic_low = sale_json[0]['historyLow']
-        all_time = historic_low['all']['amount']
-        last_year = historic_low['y1']['amount']
-        three_month = historic_low['m3']['amount']
-        
-        # Gather information on the current best deal according to IsThereAnyDeal
-        best_deal = sale_json[0]['deals'][0]
-        best_shop = best_deal['shop']['name']
-        best_price = best_deal['price']['amount']
-        best_cut = best_deal['cut']
-        deal_url = best_deal['url']
-
-        # Create the embed to send with relevant information that was gathered
-        price_embed = nextcord.Embed(
-            title=f"Sale Information for {game.title()}", 
-            description=f"Current best deal at {best_shop} for ${best_price} USD (-{best_cut}%) | {deal_url}",
-            color=nextcord.Colour.blurple()
-        )
-        
-        price_embed.add_field(name="All Time Low", value=f"${all_time} USD")
-        price_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
-        price_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
-
-        await interaction.send(embed=price_embed)   
+        await interaction.send(embed=sale_embed)   
 
 def setup(bot):
     bot.add_cog(Sales(bot))
