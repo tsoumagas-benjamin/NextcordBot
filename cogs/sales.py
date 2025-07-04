@@ -175,7 +175,7 @@ class Sales(commands.Cog, name="Game Sales"):
             await sales_channel.send(embed=sale_embed())
     
     # Function to format content to be sent to sales channels(see best_price())
-    async def format_sale(self, game_id: str):
+    def format_sale(self, game_id: str):
         # Get the title and sale information for the game
         game_title = self.get_title(game_id)
         sale_json = self.get_sale_content(game_id)
