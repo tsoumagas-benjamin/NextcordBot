@@ -57,7 +57,7 @@ class Sales(commands.Cog, name="Game Sales"):
     
     def prune_task(self):
         # Delete all sales with expiries older than the present datetime
-        db.sales.delete_many({"expiry" : {"$lte": datetime.datetime.now()}})
+        db.sales.delete_many({"expiry" : {"$lt": datetime.datetime.now()}})
 
     @tasks.loop(time=datetime.time(5))
     async def daily_sales(self):
