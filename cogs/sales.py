@@ -61,12 +61,8 @@ class Sales(commands.Cog, name="Game Sales"):
 
     @tasks.loop(time=datetime.time(5))
     async def daily_sales(self):
-        # Send sale info to each enrolled channel
-        for channel_id in self.sales_channels:
-            sale_channel = self.bot.get_channel(channel_id)
-            if sale_channel is None:
-                sale_channel = await self.bot.fetch_channel(channel_id)
-            await sale_channel.send(embed=self.sale_task())
+        # Check for better updated sales
+        self.sale_task()
     
     @tasks.loop(time=datetime.time(4))
     async def daily_prune(self):
@@ -107,14 +103,6 @@ class Sales(commands.Cog, name="Game Sales"):
         expiry_date = datetime.datetime(year, month, day, 0, 0, 0) 
 
         return expiry_date
-    
-    # Function to store information on a game's sale cut and expiry in the database
-    def store_sale(self, game_id: str, cut: int, expiry_date: datetime.date):
-        # Format the record to insert/replace the old record
-        new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
-
-        # Overwrite the existing sale info or create a new entry if there is nothing
-        db.sales.replace_one({"_id": game_id}, new_sale, True)
     
         # Function to check for the best cut on a game and when it expires
     def best_cut(self, game_id: str):
@@ -159,15 +147,6 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_json = json.loads(sale.content)
 
         return sale_json
-
-    # Function to send formatted content to sales channels
-    async def send_sale_info(self, sale_embed: nextcord.Embed):
-        # Send a meme to each of the daily channels
-        for channel_id in self.sales_channels:
-            sales_channel = self.bot.get_channel(channel_id)
-            if sales_channel is None:
-                sales_channel = await self.bot.fetch_channel(channel_id)
-            await sales_channel.send(embed=sale_embed())
     
     # Function to format content to be sent to sales channels(see best_price())
     def format_sale(self, game_id: str):
@@ -201,6 +180,26 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
 
         return sale_embed
+    
+    # Function to send formatted content to sales channels
+    async def send_sale_info(self, sale_embed: nextcord.Embed):
+        # Send a meme to each of the daily channels
+        for channel_id in self.sales_channels:
+            sales_channel = self.bot.get_channel(channel_id)
+            if sales_channel is None:
+                sales_channel = await self.bot.fetch_channel(channel_id)
+            await sales_channel.send(embed=sale_embed())
+
+    # Function to store information on a game's sale cut and expiry in the database
+    def store_sale(self, game_id: str, cut: int, expiry_date: datetime.date):
+        # Format the record to insert/replace the old record
+        new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
+
+        # Overwrite the existing sale info or create a new entry if there is nothing
+        db.sales.replace_one({"_id": game_id}, new_sale, True)
+
+        # Write to the servers about the new best sale
+        self.send_sale_info(self.format_sale())
     
     # Function to compare a game's current best price against the database or append it if it's better
     def compare_cut(self, game_id: str):
@@ -281,6 +280,19 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_embed = self.format_sale(game_id)
 
         await interaction.send(embed=sale_embed)   
+    
+    # Temporary functions to test the pruning and retrieval of sales
+    @nextcord.slash_command(guild_ids=permitted_guilds)
+    async def get_sales(self, interaction: nextcord.Interaction):
+        "Manually search for sales"
+        self.sale_task()
+        await interaction.send("Sales have been retrieved")
+    
+    @nextcord.slash_command(guild_ids=permitted_guilds)
+    async def prune(self, interaction: nextcord.Interaction):
+        "Manually search for sales"
+        self.prune_sales()
+        await interaction.send("Sales have been pruned")
 
 def setup(bot):
     bot.add_cog(Sales(bot))
