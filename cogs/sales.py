@@ -55,7 +55,7 @@ class Sales(commands.Cog, name="Game Sales"):
         for game_id in self.target_games.values():
             self.compare_cut(game_id)
     
-    def prune_sales(self):
+    def prune_task(self):
         # Delete all sales with expiries older than the present datetime
         db.sales.delete_many({"expiry" : {"$lte": datetime.datetime.now()}})
 
@@ -67,7 +67,7 @@ class Sales(commands.Cog, name="Game Sales"):
     @tasks.loop(time=datetime.time(4))
     async def daily_prune(self):
         # Prune expired sales from the database daily
-        self.prune_sales()
+        self.prune_task()
     
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):
@@ -291,7 +291,7 @@ class Sales(commands.Cog, name="Game Sales"):
     @nextcord.slash_command(guild_ids=permitted_guilds)
     async def prune(self, interaction: nextcord.Interaction):
         "Manually search for sales"
-        self.prune_sales()
+        self.prune_task()
         await interaction.send("Sales have been pruned")
 
 def setup(bot):
