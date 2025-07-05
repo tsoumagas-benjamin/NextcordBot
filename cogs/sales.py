@@ -56,13 +56,8 @@ class Sales(commands.Cog, name="Game Sales"):
             self.compare_cut(game_id)
     
     def prune_sales(self):
-        # Iterate all sales in the database
-        for sale in db.sales.find():
-            # Convert datetime in DB to date type so they can be compared
-            expiry = sale['expiry']
-            if expiry.date() < datetime.date.today():
-                # If the expiry has past, remove that sale entry
-                db.sales.delete_one({"_id": sale["_id"]})
+        # Delete all sales with expiries older than the present datetime
+        db.sales.delete_many({"expiry" : {"$lte": datetime.datetime.now()}})
 
     @tasks.loop(time=datetime.time(5))
     async def daily_sales(self):
