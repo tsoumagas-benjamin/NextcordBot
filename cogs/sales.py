@@ -199,7 +199,7 @@ class Sales(commands.Cog, name="Game Sales"):
         db.sales.replace_one({"_id": game_id}, new_sale, True)
 
         # Write to the servers about the new best sale
-        self.send_sale_info(self.format_sale())
+        self.send_sale_info(self.format_sale(game_id))
     
     # Function to compare a game's current best price against the database or append it if it's better
     def compare_cut(self, game_id: str):
@@ -280,19 +280,6 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_embed = self.format_sale(game_id)
 
         await interaction.send(embed=sale_embed)   
-    
-    # Temporary functions to test the pruning and retrieval of sales
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def get_sales(self, interaction: nextcord.Interaction):
-        "Manually search for sales"
-        self.sale_task()
-        await interaction.send("Sales have been retrieved")
-    
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def prune(self, interaction: nextcord.Interaction):
-        "Manually search for sales"
-        self.prune_task()
-        await interaction.send("Sales have been pruned")
 
 def setup(bot):
     bot.add_cog(Sales(bot))
