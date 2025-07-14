@@ -181,6 +181,25 @@ class Sales(commands.Cog, name="Game Sales"):
 
         return sale_embed
     
+    # Function to report on all the active sales in the database
+    def get_current_sales(self):
+        current_sale_embed = nextcord.Embed(
+            title="Current Sales on IsThereAnyDeal",
+            description="Use /best_price on a game here to see more details",
+            colour=nextcord.Colour.blurple()
+        )
+
+        for sale in db.sales.find():
+            # Retrieve the game's title, discount, and expiry and format them for the embed
+            sale_title = self.get_title(sale['_id'])
+            sale_description = f"{sale['cut']}% off until {sale['expiry'][:11]}"
+            current_sale_embed.add_field(
+                name=sale_title,
+                description=sale_description
+            )
+
+        return current_sale_embed
+
     # Function to send formatted content to sales channels
     async def send_sale_info(self, sale_embed: nextcord.Embed):
         # Send a meme to each of the daily channels
@@ -280,6 +299,14 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_embed = self.format_sale(game_id)
 
         await interaction.send(embed=sale_embed)   
+    
+    # Function to get all current sales as an embed
+    @nextcord.slash_command(guild_ids=permitted_guilds)
+    async def current_sales(self, interaction: nextcord.Interaction, game: str):
+        """Displays all currently stored game sales"""
+        current_sale_embed = self.get_current_sales()
+
+        await interaction.send(current_sale_embed)
 
 def setup(bot):
     bot.add_cog(Sales(bot))
