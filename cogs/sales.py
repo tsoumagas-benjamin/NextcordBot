@@ -192,7 +192,8 @@ class Sales(commands.Cog, name="Game Sales"):
         for sale in db.sales.find():
             # Retrieve the game's title, discount, and expiry and format them for the embed
             sale_title = self.get_title(sale['_id'])
-            sale_description = f"{sale['cut']}% off until {sale['expiry'][:11]}"
+            sale_expiry = sale['expiry'].strftime('%m-%d-%Y')
+            sale_description = f"{sale['cut']}% off until {sale_expiry}"
             current_sale_embed.add_field(
                 name=sale_title,
                 description=sale_description
@@ -302,7 +303,7 @@ class Sales(commands.Cog, name="Game Sales"):
     
     # Function to get all current sales as an embed
     @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def current_sales(self, interaction: nextcord.Interaction, game: str):
+    async def current_sales(self, interaction: nextcord.Interaction):
         """Displays all currently stored game sales"""
         current_sale_embed = self.get_current_sales()
 
