@@ -307,7 +307,7 @@ class Sales(commands.Cog, name="Game Sales"):
         """Displays all currently stored game sales"""
         current_sale_embed = self.get_current_sales()
 
-        await interaction.send(current_sale_embed)
+        await interaction.send(embed=current_sale_embed)
 
 def setup(bot):
     bot.add_cog(Sales(bot))
