@@ -196,7 +196,7 @@ class Sales(commands.Cog, name="Game Sales"):
             sale_description = f"{sale['cut']}% off until {sale_expiry}"
             current_sale_embed.add_field(
                 name=sale_title,
-                description=sale_description
+                value=sale_description
             )
 
         return current_sale_embed
