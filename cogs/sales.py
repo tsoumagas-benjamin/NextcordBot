@@ -59,6 +59,9 @@ class Sales(commands.Cog, name="Game Sales"):
         # Delete all sales with expiries older than the present datetime
         db.sales.delete_many({"expiry" : {"$lt": datetime.datetime.now()}})
 
+        # Delete all sales with discounts lower or equal to 0% if they exist
+        db.sales.delete_many({"cut" : {"$lte": 0}})
+
     @tasks.loop(time=datetime.time(4))
     async def daily_sales(self):
         # Check for better updated sales
