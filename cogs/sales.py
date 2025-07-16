@@ -232,6 +232,11 @@ class Sales(commands.Cog, name="Game Sales"):
         current_best_cut = current_best[0]
         current_best_expiry = current_best[1]
 
+        # If the best retrieved sale has a discount of 0, do not write it to the database
+        if current_best_cut <= 0:
+            print(f"Invalid sale for {game_id}")
+            return
+
         # If there is no expiry, put the expiry as tomorrow
         if current_best_expiry is None:
             # Get today's date and increment it by one day to get tomorrow's date
