@@ -51,6 +51,15 @@ def baro_kiteer(url):
     baro_arrival = baro_info['startString'].split(" ")[0:2]
     baro_inventory = baro_info['inventory']
 
+    # If Baro's inventory is empty, assume he will arrive next week and return early
+    if not baro_inventory:
+        baro_embed = nextcord.Embed(
+            title = "Baro will arrive next week",
+            description = "Inventory Unknown",
+            color = nextcord.Colour.from_rgb(0, 128, 255)
+        )
+        return baro_embed
+
     # Create an embed object to return with Baro information
     baro_time = " ".join(baro_arrival)
     
@@ -221,7 +230,7 @@ class Warframe(commands.Cog, name="Warframe"):
             "Heat": ["Chroma", "Ember", "Inaros", "Jade", "Kullervo", "Nezha", "Protea", "Vauban", "Wisp"],
             "Cold": ["Frost", "Gara", "Hildryn", "Koumei", "Revenant", "Styanax", "Titania", "Trinity"],
             "Electricity": ["Banshee", "Caliban", "Excalibur", "Gyre", "Limbo", "Nova", "Valkyr", "Volt"],
-            "Toxin": ["Atlas", "Dagath", "Ivara", "Khora", "Nekros", "Nidus", "Oberon", "Saryn"],
+            "Toxin": ["Atlas", "Dagath", "Ivara", "Khora", "Nekros", "Nidus", "Oberon", "Oraxia", "Saryn"],
             "Magnetic": ["Citrine", "Cyte-09", "Harrow", "Hydroid", "Lavos", "Mag", "Mesa", "Xaku", "Yareli"],
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
