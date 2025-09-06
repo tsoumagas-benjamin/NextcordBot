@@ -48,7 +48,7 @@ def baro_kiteer(url):
     baro_info = json.loads(wf_data.content)['voidTrader']
     # Parse the object for the next Void trader location, arrival time (days and hours), and inventory
     baro_location = baro_info['location']
-    baro_arrival = baro_info['startString'].split(" ")[0:2]
+    baro_arrival = baro_info['activation'].split(" ")[0:2]
     baro_inventory = baro_info['inventory']
 
     # If Baro's inventory is empty, assume he will arrive next week and return early
@@ -70,7 +70,7 @@ def baro_kiteer(url):
 
     # If Baro is already here, create an embed with his departure time
     if baro_time[0] == "-":
-        baro_time = " ".join(baro_info['endString'].split(" ")[0:2])
+        baro_time = " ".join(baro_info['expiry'].split(" ")[0:2])
         baro_embed = nextcord.Embed(
         title = f"Baro Ki'Teer will leave {baro_location} in {baro_time}",
         description = baro_items if baro_inventory else "Inventory Unknown",
