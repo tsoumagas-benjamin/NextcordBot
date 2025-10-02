@@ -47,6 +47,7 @@ class Sales(commands.Cog, name="Game Sales"):
         "Risk of Rain 2 - Seekers of the Storm DLC": "018d9591-5076-72c7-8f9f-5814e4d41004",
         "Risk of Rain 2 - Survivors of the Void DLC": "018d937f-5db9-7246-b784-e94f402d7cd9",
         "SANABI": "018d937f-62fb-7394-b7df-25ff35798fe6",
+        "Slay the Spire": "018d937f-285e-7065-a58b-23400688cc12",
         "Terraria": "018d937f-30fa-705e-8a3a-f39719bdde93",
     }
 
