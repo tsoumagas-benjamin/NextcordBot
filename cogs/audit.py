@@ -152,10 +152,12 @@ class Audit(commands.Cog, name="Audit Logs"):
             update_channel = nextcord.Embed(title="Forum Channel updated", color=nextcord.Colour.blurple())
 
         # Add channel name and category to the embed for before and after
-        update_channel.add_field(name="Old Name", value=f"{before.name}")
-        update_channel.add_field(name="Old Category", value=f"{before.category}")
-        update_channel.add_field(name="New Name", value=f"{after.name}")
-        update_channel.add_field(name="New Category", value=f"{after.category}")
+        if before.name != after.name:
+            update_channel.add_field(name="Old Name", value=f"{before.name}")
+            update_channel.add_field(name="New Name", value=f"{after.name}")
+        if before.category != after.category:
+            update_channel.add_field(name="Old Category", value=f"{before.category}")
+            update_channel.add_field(name="New Category", value=f"{after.category}")
 
         # Format the time the channel was updated at and the channel ID into the footer
         update_channel.set_footer(text=f"Channel ID: {before.id} | {self.date_format(datetime.datetime.now())}")
@@ -226,10 +228,14 @@ class Audit(commands.Cog, name="Audit Logs"):
         update_role = nextcord.Embed(title="Role Updated", color=nextcord.Colour.blurple())
 
         # Add role name and category to the embed
-        update_role.add_field(name="Name", value=f"{before.name} -> {after.name}")
-        update_role.add_field(name="Hoisted", value=f"{before.hoist} -> {after.hoist}")
-        update_role.add_field(name="Integration Role", value=f"{before.managed} -> {after.managed}")
-        update_role.add_field(name="Mentionable", value=f"{before.mentionable} -> {after.mentionable}")
+        if before.name != after.name:
+            update_role.add_field(name="Name", value=f"{before.name} -> {after.name}")
+        if before.hoist != after.hoist:
+            update_role.add_field(name="Hoisted", value=f"{before.hoist} -> {after.hoist}")
+        if before.managed != after.managed:
+            update_role.add_field(name="Integration Role", value=f"{before.managed} -> {after.managed}")
+        if before.mentionable != after.mentionable:
+            update_role.add_field(name="Mentionable", value=f"{before.mentionable} -> {after.mentionable}")
 
         # Format the time the role was created at and the role ID into the footer
         update_role.set_footer(text=f"Role ID: {before.id} | {self.date_format(datetime.datetime.now())}")
@@ -248,8 +254,11 @@ class Audit(commands.Cog, name="Audit Logs"):
         update_server = nextcord.Embed(title="Server Updated", color=nextcord.Colour.blurple())
 
         # Add role name and category to the embed
-        update_server.add_field(name="Before Name", value=f"{before.name}")
-        update_server.add_field(name="After Name", value=f"{after.name}")
+        if before.name != after.name:
+            update_server.add_field(name="Before Name", value=f"{before.name}")
+            update_server.add_field(name="After Name", value=f"{after.name}")
+        else:
+            return
 
         # Format the time the role was created at and the role ID into the footer
         update_server.set_footer(text=f"Server ID: {before.id} | {self.date_format(datetime.datetime.now())}")
@@ -412,7 +421,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # If there is content, add content of the deleted message
         if message.content:
-            message_delete.add_field(name=f"{message.content}", value=f"Deleted by {message.author.mention}")
+            message_delete.add_field(name=f"{message.content}", value=f"Deleted message by {message.author.mention}")
 
         # Set the thumbnail and footer
         message_delete.set_thumbnail(message.author.display_avatar.url)
