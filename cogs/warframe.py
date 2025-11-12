@@ -330,30 +330,30 @@ class Warframe(commands.Cog, name="Warframe"):
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
                 await daily_wf_channel.send(embed=teshin_rotation(self.warframe_api))
 
-    @nextcord.slash_command()
-    async def archon(self, interaction: nextcord.Interaction):
-        """Find the current Archon, missions, and remaining time for the current hunt"""
-        await interaction.send(embed=archon_hunt(self.warframe_api))
+    # @nextcord.slash_command()
+    # async def archon(self, interaction: nextcord.Interaction):
+    #     """Find the current Archon, missions, and remaining time for the current hunt"""
+    #     await interaction.send(embed=archon_hunt(self.warframe_api))
     
-    @nextcord.slash_command()
-    async def baro(self, interaction: nextcord.Interaction):
-        """Get information on Baro Ki'Teer"""
-        await interaction.send(embed=baro_kiteer(self.warframe_api))
+    # @nextcord.slash_command()
+    # async def baro(self, interaction: nextcord.Interaction):
+    #     """Get information on Baro Ki'Teer"""
+    #     await interaction.send(embed=baro_kiteer(self.warframe_api))
 
-    @nextcord.slash_command()
-    async def duviri(self, interaction: nextcord.Interaction):
-        """Find information on the current Duviri cycle"""
-        await interaction.send(embed=duviri_status(self.warframe_api))
+    # @nextcord.slash_command()
+    # async def duviri(self, interaction: nextcord.Interaction):
+    #     """Find information on the current Duviri cycle"""
+    #     await interaction.send(embed=duviri_status(self.warframe_api))
 
-    @nextcord.slash_command()
-    async def events(self, interaction: nextcord.Interaction):
-        """Find information on current events in Warframe"""
-        await interaction.send(embed=event_status(self.warframe_api))
+    # @nextcord.slash_command()
+    # async def events(self, interaction: nextcord.Interaction):
+    #     """Find information on current events in Warframe"""
+    #     await interaction.send(embed=event_status(self.warframe_api))
     
-    @nextcord.slash_command()
-    async def open_worlds(self, interaction: nextcord.Interaction):
-        """Find information on the status of open world locations"""
-        await interaction.send(embed=open_worlds(self.warframe_api))
+    # @nextcord.slash_command()
+    # async def open_worlds(self, interaction: nextcord.Interaction):
+    #     """Find information on the status of open world locations"""
+    #     await interaction.send(embed=open_worlds(self.warframe_api))
     
     @nextcord.slash_command()
     async def progenitors(self, interaction: nextcord.Interaction):
@@ -382,10 +382,10 @@ class Warframe(commands.Cog, name="Warframe"):
 
         await interaction.send(embed=progenitor_embed)
 
-    @nextcord.slash_command()
-    async def steel_path_reward(self, interaction: nextcord.Interaction):
-        """Finds the weekly reward from Teshin"""
-        await interaction.send(embed=teshin_rotation(self.warframe_api))
+    # @nextcord.slash_command()
+    # async def steel_path_reward(self, interaction: nextcord.Interaction):
+    #     """Finds the weekly reward from Teshin"""
+    #     await interaction.send(embed=teshin_rotation(self.warframe_api))
     
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_guild=True)
