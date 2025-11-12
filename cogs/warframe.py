@@ -227,10 +227,10 @@ class Warframe(commands.Cog, name="Warframe"):
         # Create a dictionary of Warframe Progenitor types to retrieve later
         self.progenitor = {
             "Impact": ["Baruuk", "Dante", "Gauss", "Grendel", "Rhino", "Sevagoth", "Wukong", "Zephyr"],
-            "Heat": ["Chroma", "Ember", "Inaros", "Jade", "Kullervo", "Nezha", "Protea", "Vauban", "Wisp"],
+            "Heat": ["Chroma", "Ember", "Inaros", "Jade", "Kullervo", "Nezha", "Protea", "Temple", "Vauban", "Wisp"],
             "Cold": ["Frost", "Gara", "Hildryn", "Koumei", "Revenant", "Styanax", "Titania", "Trinity"],
             "Electricity": ["Banshee", "Caliban", "Excalibur", "Gyre", "Limbo", "Nova", "Valkyr", "Volt"],
-            "Toxin": ["Atlas", "Dagath", "Ivara", "Khora", "Nekros", "Nidus", "Oberon", "Oraxia", "Saryn"],
+            "Toxin": ["Atlas", "Dagath", "Ivara", "Khora", "Nekros", "Nidus", "Nokko", "Oberon", "Oraxia", "Saryn"],
             "Magnetic": ["Citrine", "Cyte-09", "Harrow", "Hydroid", "Lavos", "Mag", "Mesa", "Xaku", "Yareli"],
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
