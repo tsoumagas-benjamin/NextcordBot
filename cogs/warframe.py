@@ -62,7 +62,7 @@ def archon_hunt(url: str):
         color = nextcord.Colour.from_rgb(0, 128, 255)
     )
 
-    archon_embed.set_footer(text=archon_duration)
+    archon_embed.add_field(name="Archon is here from:", value=archon_duration)
     return archon_embed
 
 # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
@@ -119,7 +119,7 @@ def baro_kiteer(url: str):
         # Format everything into one line and append it to the embed
         baro_embed.add_field(f"{name} - {ducats} D - {credits} C")
     
-    baro_embed.set_footer(text=baro_duration)    
+    baro_embed.add_field(name="Baro is here from:", value=baro_duration)    
     return baro_embed
 
 # Function to handle the retrieval of Duviri information
