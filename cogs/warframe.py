@@ -45,14 +45,14 @@ def archon_hunt(url: str):
     archon_duration = f"{archon_start} - {archon_end}"
 
     # Get the current Archon and the missions leading up to them
-    current_archon = db.worldstate.find_one({"key" : [archon_info["Boss"]]})["value"]
+    current_archon = db.worldstate.find_one({"key" : archon_info["Boss"]})["value"]
     archon_missions = archon_info["Missions"]
 
     hunt_info = []
     # Append each mission type and node
     for mission in archon_missions:
-        mission_type = db.worldstate.find_one({"key" : [mission["missionType"]]})["value"]
-        mission_node = db.worldstate.find_one({"key" : [mission["node"]]})["value"]
+        mission_type = db.worldstate.find_one({"key" : mission["missionType"]})["value"]
+        mission_node = db.worldstate.find_one({"key" : mission["node"]})["value"]
         hunt_info.append(f"{mission_type} - {mission_node}")
 
     # Create an embed object to return with Archon information
@@ -92,7 +92,7 @@ def baro_kiteer(url: str):
     baro_duration = f"{baro_start} - {baro_end}"
 
     # Get Baro's location
-    baro_location = db.worldstate.find_one({"key" : [baro["Node"]]})["value"]
+    baro_location = db.worldstate.find_one({"key" : baro["Node"]})["value"]
 
     # Create an embed object to return with Baro information
     baro_embed = nextcord.Embed(
