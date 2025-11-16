@@ -5,217 +5,201 @@ from nextcord.ext import application_checks, commands, tasks
 import requests
 import json
 import datetime
+import re
 
 client = MongoClient(getenv('CONN_STRING')) 
-db = client.NextcordBot 
+db = client.NextcordBot
+worldstate_url = "https://api.warframe.com/cdn/worldState.php"
+languages = None
+worldstate = None
+
+# Function to read in languages.json file and parse it as a dictionary
+# CREDIT: warframe-worldstate-data project
+def get_languages():
+    with open('../languages.json', 'r') as file:
+        data = file.read()
+        languages = json.loads(data)
+    return languages
+
+# Function to read in worldstate.json file and parse it as a dictionary
+def get_worldstate():
+    with open('../worldstate.json', 'r') as file:
+        data = file.read()
+        worldstate = json.loads(data)
+    return worldstate
+
+# Function to convert an epoch timestamp into a dynamic timestamp
+def epoch_convert(epoch: str):
+    epoch_num = epoch[:10]
+    formatted_time = f"<t:{epoch_num}:f>"
+    return formatted_time
+
+# Function to put spaces before capitals in strings
+def string_split(string: str):
+    return re.sub(r'(?<!^)(?=[A-Z])', ' ', string)
+
+# Function to perform a GET request on Warframe's worldstate URL
+def request_wf_info(url: str):
+    try:
+        # Return the parsed JSON as a Python object
+        wf_data = requests.get(url)
+        wf_world = json.loads(wf_data.content)
+        return wf_world
+    except requests.exceptions.RequestException as error:
+        return error   
 
 # Function to get information on this week's archon hunt
-def archon_hunt(url):
-    # Try to get the weekly Archon Hunt information and handle errors
-    try:
-        wf_data = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        return error
-    # Convert the response content for the Archon Hunt into a Python object
-    archon_hunt = json.loads(wf_data.content)['archonHunt']
-    # Parse the object for the current Archon Hunt target, missions, and remaining time
-    archon = archon_hunt['boss']
-    missions = archon_hunt['missions'][0:3]
-    remaining_time = archon_hunt['eta'].split(" ")[0:2]
-    # Parse the node and mission type for each missions
-    nodes = []
-    for mission in missions:
-        nodes.append(f"{mission['node']} - {mission['type']}")
+def archon_hunt(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    # Check for languages and worldstate if they haven't been retrieved yet
+    if not languages:
+        languages = get_languages()
+    if not worldstate:
+        worldstate = get_worldstate()
+
+    # Access specifically the information about Archon Hunts
+    archon_info = wf_world["LiteSorties"][0]
+
+    # Convert the Archon's arrival and expiry as dynamic timestamps
+    archon_start = epoch_convert(archon_info["Activation"]["$date"]["$numberLong"])
+    archon_end = epoch_convert(archon_info["Expiry"]["$date"]["$numberLong"])
+    archon_duration = f"{archon_start} - {archon_end}"
+
+    # Get the current Archon and the missions leading up to them
+    current_archon = worldstate["sortie_bosses"][archon_info["Boss"]]
+    archon_missions = archon_info["Missions"]
+
+    hunt_info = []
+    # Append each mission type and node
+    for mission in archon_missions:
+        mission_type = worldstate["mission_type"][mission["missionType"]]
+        mission_node = worldstate["nodes"][mission["node"]]
+        hunt_info.append(f"{mission_type} - {mission_node}")
 
     # Create an embed object to return with Archon information
-    archon_expiry = " ".join(remaining_time)
     archon_embed = nextcord.Embed(
-        title = archon, 
-        description = "\n".join(nodes),
+        title = f"{current_archon}",
+        description = "\n".join(hunt_info),
         color = nextcord.Colour.from_rgb(0, 128, 255)
-        )
-    archon_embed.add_field(name="Expires in:", value=archon_expiry, inline=True)
+    )
+
+    archon_embed.set_footer(text=archon_duration)
     return archon_embed
 
 # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
-def baro_kiteer(url):
-    # Try to get the time to Baro's arrival and handle errors
-    try:
-        wf_data = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        return error
-    # Convert the response content for the Void Trader into a Python object
-    baro_info = json.loads(wf_data.content)['voidTrader']
-    # Parse the object for the next Void trader location, arrival time (days and hours), and inventory
-    baro_location = baro_info['location']
-    baro_arrival = baro_info['activation'].split(" ")[0:2]
-    baro_inventory = baro_info['inventory']
+def baro_kiteer(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
 
-    # If Baro's inventory is empty, assume he will arrive next week and return early
-    if not baro_inventory:
+    # Check for languages and worldstate if they haven't been retrieved yet
+    if not languages:
+        languages = get_languages()
+    if not worldstate:
+        worldstate = get_worldstate()
+
+    # Access specifically the information about Baro Ki'Teer
+    baro = wf_world["VoidTraders"][0]
+
+    try:
+        # Check if Baro has inventory/is available
+        if baro["Manifest"]:
+            baro_inventory = baro["Manifest"]
+    except:
+        # Create an embed object to return with Baro information
         baro_embed = nextcord.Embed(
-            title = "Baro will arrive next week",
+            title = "Baro Ki'Teer has not arrived yet",
             description = "Inventory Unknown",
             color = nextcord.Colour.from_rgb(0, 128, 255)
         )
         return baro_embed
 
-    # Create an embed object to return with Baro information
-    baro_time = " ".join(baro_arrival)
-    
-    # Append and format all of Baro's inventory
-    baro_items = ""
-    for item in baro_inventory:
-        baro_items += (f"{item['item']} - {item['ducats']} D - {item['credits']} C\n")
+    # Get the start and end times as dynamic timestamps
+    baro_start = epoch_convert(baro["Activation"]["$date"]["$numberLong"])
+    baro_end = epoch_convert(baro["Expiry"]["$date"]["$numberLong"])
+    baro_duration = f"{baro_start} - {baro_end}"
 
-    # If Baro is already here, create an embed with his departure time
-    if baro_time[0] == "-":
-        baro_time = " ".join(baro_info['expiry'].split(" ")[0:2])
-        baro_embed = nextcord.Embed(
-        title = f"Baro Ki'Teer will leave {baro_location} in {baro_time}",
-        description = baro_items if baro_inventory else "Inventory Unknown",
+    # Get Baro's location
+    baro_location = worldstate["nodes"][baro["Node"]]
+
+    # Create an embed object to return with Baro information
+    baro_embed = nextcord.Embed(
+        title = "Baro Ki'Teer is here",
+        description = baro_location,
         color = nextcord.Colour.from_rgb(0, 128, 255)
     )
+
+    # Iterate Baro's inventory
+    for item in baro_inventory:
+        # Get each item's name, ducat, and credit cost
+        ducats = item["PrimePrice"]
+        credits = item["RegularPrice"]
+
+        # Check if the item is in the dictionary in both regular and lowercase
+        if item["ItemType"] in languages:
+            name = languages[item["ItemType"]]["value"]
+        elif item["ItemType"].lower() in languages:
+            name = languages[item["ItemType"].lower()]["value"]
+        # Otherwise take the item name as shown
+        else:
+            name = item["ItemType"].split("/")[-1]
         
-    # Otherwise make an embed with when he will arrive next
-    else:
-        baro_embed = nextcord.Embed(
-            title = f"Baro Ki'Teer will arrive at {baro_location} in {baro_time}",
-            description = baro_items if baro_inventory else "Inventory Unknown",
-            color = nextcord.Colour.from_rgb(0, 128, 255)
-        )
+        # Format everything into one line and append it to the embed
+        baro_embed.add_field(f"{name} - {ducats} D - {credits} C")
+    
+    baro_embed.set_footer(text=baro_duration)    
     return baro_embed
 
 # Function to handle the retrieval of Duviri information
 def duviri_status(url):
-    # Try to get Duviri information and handle errors
-    try:
-        wf_data = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        return error
-    # Convert the response content for the Duviri Cycle into a Python object
-    duviri = json.loads(wf_data.content)['duviriCycle']
-    # Parse the object for Duviri emotion, regular rewards and Steel Path rewards
-    emotion = duviri['state']
-    regular_rewards = duviri['choices'][0]['choices']
-    steel_path_rewards = duviri['choices'][1]['choices']
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    # Check for languages and worldstate if they haven't been retrieved yet
+    if not languages:
+        languages = get_languages()
+    if not worldstate:
+        worldstate = get_worldstate()
+
+    # Access specifically the information about Duviri
+    duviri = wf_world["EndlessXpChoices"]
+
+    # Look in both regular and steel path variants for reward choices
+    regular_choices = duviri[0]["Choices"]
+    steel_path_choices = duviri[1]["Choices"]
 
     # Create an embed object to return with Duviri information
-    duviri_regular = "\n".join(regular_rewards)
-    duviri_steel_path = "\n".join(steel_path_rewards)
     duviri_embed = nextcord.Embed(
-        title = "Duviri Status",
-        description = f'Current Cycle: {str.capitalize(emotion)}',
+        title = "Weekly Duviri Rewards",
+        description = "This week's rewards in the Circuit",
         color = nextcord.Colour.from_rgb(0, 128, 255)
     )
-    duviri_embed.add_field(name="Regular Rewards", value=duviri_regular, inline=False)
-    duviri_embed.add_field(name="Steel Path Rewards", value=duviri_steel_path, inline=False)
+
+    rewards = []
+    sp_rewards = []
+
+    # Get the regular rewards
+    for choice in regular_choices:
+        rewards.append(f"- {choice}")
+
+    for choice in steel_path_choices:
+        sp_rewards.append(f"- {choice} Incarnon Genesis")
+
+    duviri_regular = "\n".join(rewards)
+    duviri_steel_path = "\n".join(sp_rewards)
+
+    # Add regular and steel path rewards
+    duviri_embed.add_field(
+        name="**Circuit Rewards** (Choose one)", 
+        value="\n".join(duviri_regular)
+    )
+    duviri_embed.add_field(
+        name="**Steel Path Circuit Rewards** (Choose one)", 
+        value="\n".join(duviri_steel_path)
+    )
+
     return duviri_embed
-
-# Function to check for any active events
-def event_status(url):
-    # Try to get event information and handle errors
-    try:
-        wf_data = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        return error
-    # Convert the response content for events into a Python object
-    events = json.loads(wf_data.content)['events']
-
-    # Create the embed to store event data in later
-    event_embed = nextcord.Embed(
-        title = "Event Status",
-        description = "Current Events:",
-        color = nextcord.Colour.from_rgb(0, 128, 255)
-    )
-
-    # Iterate all the events and get each event name, start, and end date
-    for event in events:
-        event_name = event['description']
-
-        # Get only the year-month-day for start and end / the first 10 characters
-        event_start = event['activation'][0:10]
-        event_end = event['expiry'][0:10]
-
-        # Combine the event name and start/end dates to use in the embed field later
-        event_details = f"{event_name} | {event_start} to {event_end}"
-
-        # Iterate the rewards for each event and store them in an array if there are multiple
-        rewards = []
-        for reward in event['rewards']:
-            if reward['asString']:
-                rewards.append(reward['asString'])
-
-        # Join items in the reward list with a new line
-        reward_list = "\n".join(rewards)
-
-        # Create a new embed field for each reward
-        event_embed.add_field(name=event_details, value=reward_list, inline=False)
-    return event_embed # TODO: If Baro is active, display endString instead of startString
-
-def open_worlds(url):
-    # Try to get the current Open World information and handle errors
-    try:
-        wf_data = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        return error
-    # Convert the response content for the Teshin Reward into a Python object
-    wf_content = json.loads(wf_data.content)
-    # Parse the object for open world state and time for the plains, vallis, and cambion areas
-    plains_status = wf_content['cetusCycle']
-    plains_state = str.capitalize(plains_status['state'])
-    plains_time = plains_status['timeLeft']
-    vallis_status = wf_content['vallisCycle']
-    vallis_state = str.capitalize(vallis_status['state'])
-    vallis_time = vallis_status['timeLeft']
-    cambion_status = wf_content['cambionCycle']
-    cambion_state = str.capitalize(cambion_status['state'])
-    cambion_time = cambion_status['timeLeft']
-
-    # Create an embed object to return with Open World information
-    open_world_embed = nextcord.Embed(
-        title = "Open World Status",
-        color = nextcord.Colour.from_rgb(0, 128, 255)
-    )
-    open_world_embed.add_field(
-        name = "Plains of Eidolon", 
-        value = f'{plains_state} - {plains_time}',
-        inline = False
-    )
-    open_world_embed.add_field(
-        name = "Orb Vallis", 
-        value = f'{vallis_state} - {vallis_time}',
-        inline = False
-    )
-    open_world_embed.add_field(
-        name = "Cambion Drift", 
-        value = f'{cambion_state} - {cambion_time}',
-        inline = False
-    )
-    return open_world_embed   
-
-def teshin_rotation(url):
-    # Try to get the weekly Teshin Reward information and handle errors
-    try:
-        wf_data = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        return error
-    # Convert the response content for the Teshin Reward into a Python object
-    current_reward = json.loads(wf_data.content)['steelPath']
-    # Parse the object for the current reward name and cost
-    reward_name = current_reward['currentReward']['name']
-    reward_cost = current_reward['currentReward']['cost']
-    remaining_time = current_reward['remaining'].split(" ")[0:2]
-
-    # Create an embed object to return with Teshin information
-    teshin_time = " ".join(remaining_time)
-    teshin_embed = nextcord.Embed(
-        title = f"Teshin Weekly Reward:",
-        description = f'{reward_name} for {reward_cost} Steel Essence',
-        color = nextcord.Colour.from_rgb(0, 128, 255)
-    )
-    teshin_embed.add_field(name="Expires in:", value=teshin_time, inline=True)
-    return teshin_embed
 
 class Warframe(commands.Cog, name="Warframe"):
     """Commands for getting Warframe information"""
@@ -234,21 +218,17 @@ class Warframe(commands.Cog, name="Warframe"):
             "Magnetic": ["Citrine", "Cyte-09", "Harrow", "Hydroid", "Lavos", "Mag", "Mesa", "Xaku", "Yareli"],
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
-        self.warframe_api = "https://api.warframestat.us/pc"
+        self.worldstate_url = "https://api.warframe.com/cdn/worldState.php"
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_wf_channels = db.warframe_channels.distinct("channel")
         self.archon_timer.start()
         self.baro_timer.start()
         self.duviri_timer.start()
-        self.event_timer.start()
-        self.teshin_timer.start()
 
     def cog_unload(self):
         self.archon_timer.cancel()
         self.baro_timer.cancel()
         self.duviri_timer.cancel()
-        self.event_timer.cancel()
-        self.teshin_timer.cancel()
 
     # Baro loop runs every Friday to check if Baro has arrived
     @tasks.loop(time=datetime.time(15))
@@ -264,7 +244,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=baro_kiteer(self.warframe_api))
+                await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
 
     # Archon loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -280,7 +260,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=archon_hunt(self.warframe_api))
+                await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
 
     # Duviri loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -296,64 +276,22 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=duviri_status(self.warframe_api))
+                await daily_wf_channel.send(embed=duviri_status(self.worldstate_url))
 
-    # Event loop runs every Sunday
-    @tasks.loop(time=datetime.time(2))
-    async def event_timer(self):
-        # Checks every day at 2:00 am UTC / 9:00 pm EST for Archon Hunts
-        weekday = datetime.datetime.today().weekday()
-        # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
-        if weekday == 0:
-            # Fetch the list of enrolled warframe channels to post daily content to
-            self.daily_wf_channels = db.warframe_channels.distinct("channel")
-            # Send the content to each of the daily warframe channels
-            for channel_id in self.daily_wf_channels:
-                daily_wf_channel = self.bot.get_channel(channel_id)
-                if daily_wf_channel is None:
-                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=event_status(self.warframe_api))
-
-    # Teshin loop runs every Sunday for the weekly reset
-    @tasks.loop(time=datetime.time(2))
-    async def teshin_timer(self):
-        # Checks every day at 2:00 am UTC / 9:00 pm EST for the Teshin weekly reward
-        weekday = datetime.datetime.today().weekday()
-        # If date is Sunday(EST)/Monday(UTC), then run the Teshin reward function
-        if weekday == 0:
-            # Fetch the list of enrolled warframe channels to post daily content to
-            self.daily_wf_channels = db.warframe_channels.distinct("channel")
-            # Send the content to each of the daily warframe channels
-            for channel_id in self.daily_wf_channels:
-                daily_wf_channel = self.bot.get_channel(channel_id)
-                if daily_wf_channel is None:
-                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=teshin_rotation(self.warframe_api))
-
-    # @nextcord.slash_command()
-    # async def archon(self, interaction: nextcord.Interaction):
-    #     """Find the current Archon, missions, and remaining time for the current hunt"""
-    #     await interaction.send(embed=archon_hunt(self.warframe_api))
+    @nextcord.slash_command()
+    async def archon(self, interaction: nextcord.Interaction):
+        """Find the current Archon, missions, and remaining time for the current hunt"""
+        await interaction.send(embed=archon_hunt(self.worldstate_url))
     
-    # @nextcord.slash_command()
-    # async def baro(self, interaction: nextcord.Interaction):
-    #     """Get information on Baro Ki'Teer"""
-    #     await interaction.send(embed=baro_kiteer(self.warframe_api))
+    @nextcord.slash_command()
+    async def baro(self, interaction: nextcord.Interaction):
+        """Get information on Baro Ki'Teer"""
+        await interaction.send(embed=baro_kiteer(self.worldstate_url))
 
-    # @nextcord.slash_command()
-    # async def duviri(self, interaction: nextcord.Interaction):
-    #     """Find information on the current Duviri cycle"""
-    #     await interaction.send(embed=duviri_status(self.warframe_api))
-
-    # @nextcord.slash_command()
-    # async def events(self, interaction: nextcord.Interaction):
-    #     """Find information on current events in Warframe"""
-    #     await interaction.send(embed=event_status(self.warframe_api))
-    
-    # @nextcord.slash_command()
-    # async def open_worlds(self, interaction: nextcord.Interaction):
-    #     """Find information on the status of open world locations"""
-    #     await interaction.send(embed=open_worlds(self.warframe_api))
+    @nextcord.slash_command()
+    async def duviri(self, interaction: nextcord.Interaction):
+        """Find information on the current Duviri cycle"""
+        await interaction.send(embed=duviri_status(self.worldstate_url))
     
     @nextcord.slash_command()
     async def progenitors(self, interaction: nextcord.Interaction):
@@ -381,11 +319,6 @@ class Warframe(commands.Cog, name="Warframe"):
         progenitor_embed.add_field(name="Radiation", value=f"{radiation_progenitors}", inline=True)
 
         await interaction.send(embed=progenitor_embed)
-
-    # @nextcord.slash_command()
-    # async def steel_path_reward(self, interaction: nextcord.Interaction):
-    #     """Finds the weekly reward from Teshin"""
-    #     await interaction.send(embed=teshin_rotation(self.warframe_api))
     
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_guild=True)
