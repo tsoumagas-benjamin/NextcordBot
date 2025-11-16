@@ -31,6 +31,62 @@ def request_wf_info(url: str):
     except requests.exceptions.RequestException as error:
         return error   
 
+# Function to get information on current alerts
+def alerts_search(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    # Access specifically the information about alerts
+    alert_data = wf_world["Alerts"]
+
+    # Create an embed object to return with alert information
+    alert_embed = nextcord.Embed(
+        title = "Alerts",
+        description = "",
+        color = nextcord.Colour.from_rgb(0, 128, 255)
+    )
+
+    for alert in alert_data:
+        # Get the start and end times as dynamic timestamps
+        alert_start = epoch_convert(alert["Activation"]["$date"]["$numberLong"])
+        alert_end = epoch_convert(alert["Expiry"]["$date"]["$numberLong"])
+
+        # Get information on the alert location, type, faction, and difficulty
+        alert_mission = alert["MissionInfo"]
+        alert_location = db.worldstate.find_one({"key" : alert_mission["location"]})["value"]
+        alert_type = db.worldstate.find_one({"key" : alert_mission["missionType"]})["value"]
+        alert_faction = db.worldstate.find_one({"key" : alert_mission["faction"]})["value"]
+        alert_min_level = alert_mission["minEnemyLevel"]
+        alert_max_level = alert_mission["maxEnemyLevel"]
+        alert_tag = "Gift of the Lotus" if alert["Tag"] == "LotusGift" else "Tactical Alert"
+
+        # Get information on the alert rewards
+        alert_reward = alert_mission["missionReward"]
+        alert_credits = alert_reward["credits"]
+        alert_items = alert_reward["countedItems"]
+
+        # Get the alert tag and when it will be around
+        alert_title = f"**{alert_tag}** from {alert_start} to {alert_end}\n"
+
+        # Get the enemy level, faction, alert type and location
+        alert_desc = f"Level {alert_min_level}-{alert_max_level} {alert_faction} {alert_type} on {alert_location}\n"
+
+        # Append information about the alert
+        alert_embed.add_field(name=alert_title, value=alert_desc)
+
+        # Append the alert credit reward
+        alert_rewards = f"- {alert_credits} credits\n"
+
+        # Get the type and quantity of additional rewards
+        for item in alert_items:
+            item_type = db.languages.find_one({"key" : item["ItemType"]})["value"]
+            item_count = item["ItemCount"]
+            alert_rewards += f"- {item_count} {item_type}\n"
+        
+        alert_embed.add_field(name="Rewards:", value=alert_rewards)
+        
+    return alert_embed
+
 # Function to get information on this week's archon hunt
 def archon_hunt(url: str):
     # Convert the response content for the world state into a Python object
@@ -166,6 +222,41 @@ def duviri_status(url: str):
 
     return duviri_embed
 
+# Function to get information on the current sortie
+def sortie_status(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    sorties = wf_world["Sorties"][0]
+
+    # Get the start and end time for sorties as a dynamic timestamp
+    sortie_start = epoch_convert(sorties["Activation"]["$date"]["$numberLong"])
+    sortie_end = epoch_convert(sorties["Expiry"]["$date"]["$numberLong"])
+
+    # Get the sortie boss and missions
+    sortie_boss = db.worldstate.find_one({"key" : sorties["Boss"]})["value"]
+    missions = sorties["Variants"]
+
+    # Create the message for when the sortie will be around
+    sortie_title = f"**Sortie** {sortie_boss} from {sortie_start} to {sortie_end}\n"
+    sortie_missions = ""
+
+    # Get each missions type, modifier, and node
+    for mission in missions:
+        sortie_type = db.worldstate.find_one({"key" : mission["missionType"]})["value"]
+        sortie_modifier = db.worldstate.find_one({"key" : mission["modifierType"]})["value"]
+        sortie_node = db.worldstate.find_one({"key" : mission["node"]})["value"]
+        sortie_missions += f"{sortie_type} {sortie_node} {sortie_modifier}\n"
+    
+    # Create an embed object to return with sortie information
+    sortie_embed = nextcord.Embed(
+        title = sortie_title,
+        description = sortie_missions,
+        color = nextcord.Colour.from_rgb(0, 128, 255)
+    )
+    
+    return sortie_embed
+
 class Warframe(commands.Cog, name="Warframe"):
     """Commands for getting Warframe information"""
 
@@ -209,8 +300,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(
-                    embed=baro_kiteer(self.worldstate_url))
+                await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
 
     # Archon loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -245,6 +335,11 @@ class Warframe(commands.Cog, name="Warframe"):
                 await daily_wf_channel.send(embed=duviri_status(self.worldstate_url))
 
     @nextcord.slash_command()
+    async def alerts(self, interaction: nextcord.Interaction):
+        """Find information on current alerts, if there are any"""
+        await interaction.send(embed=alerts_search(self.worldstate_url))
+
+    @nextcord.slash_command()
     async def archon(self, interaction: nextcord.Interaction):
         """Find the current Archon, missions, and remaining time for the current hunt"""
         await interaction.send(embed=archon_hunt(self.worldstate_url))
@@ -256,8 +351,13 @@ class Warframe(commands.Cog, name="Warframe"):
 
     @nextcord.slash_command()
     async def duviri(self, interaction: nextcord.Interaction):
-        """Find information on the current Duviri cycle"""
+        """Find information on the current Duviri cycle rewards"""
         await interaction.send(embed=duviri_status(self.worldstate_url))
+    
+    @nextcord.slash_command()
+    async def sortie(self, interaction: nextcord.Interaction):
+        """Find information on the current sortie"""
+        await interaction.send(embed=sortie_status(self.worldstate_url))
     
     @nextcord.slash_command()
     async def progenitors(self, interaction: nextcord.Interaction):
