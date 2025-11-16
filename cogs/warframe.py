@@ -11,21 +11,6 @@ client = MongoClient(getenv('CONN_STRING'))
 db = client.NextcordBot
 worldstate_url = "https://api.warframe.com/cdn/worldState.php"
 
-# Function to read in languages.json file and parse it as a dictionary
-# CREDIT: warframe-worldstate-data project
-def get_languages():
-    with open('/main/languages.json', 'r') as file:
-        data = file.read()
-        languages = json.loads(data)
-    return languages
-
-# Function to read in worldstate.json file and parse it as a dictionary
-def get_worldstate():
-    with open('/main/worldstate.json', 'r') as file:
-        data = file.read()
-        worldstate = json.loads(data)
-    return worldstate
-
 # Function to convert an epoch timestamp into a dynamic timestamp
 def epoch_convert(epoch: str):
     epoch_num = epoch[:10]
@@ -199,8 +184,6 @@ class Warframe(commands.Cog, name="Warframe"):
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
         self.worldstate_url = "https://api.warframe.com/cdn/worldState.php"
-        self.languages = get_languages()
-        self.worldstate = get_worldstate()
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_wf_channels = db.warframe_channels.distinct("channel")
         self.archon_timer.start()
@@ -227,12 +210,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
                 await daily_wf_channel.send(
-                    embed=baro_kiteer(
-                        self.worldstate_url, 
-                        self.worldstate, 
-                        self.languages
-                        )
-                    )
+                    embed=baro_kiteer(self.worldstate_url))
 
     # Archon loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -248,7 +226,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url, self.worldstate))
+                await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
 
     # Duviri loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -274,11 +252,7 @@ class Warframe(commands.Cog, name="Warframe"):
     @nextcord.slash_command()
     async def baro(self, interaction: nextcord.Interaction):
         """Get information on Baro Ki'Teer"""
-        await interaction.send(embed=baro_kiteer(
-                self.worldstate_url, 
-                self.worldstate, 
-                self.languages
-            ))
+        await interaction.send(embed=baro_kiteer(self.worldstate_url))
 
     @nextcord.slash_command()
     async def duviri(self, interaction: nextcord.Interaction):
