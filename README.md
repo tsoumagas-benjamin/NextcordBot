@@ -66,4 +66,5 @@ IDE config such as the `.vscode` folder do not normally belong on GitHub since t
 - Glowstik: https://www.youtube.com/c/Glowstik
 - Code With Swastik: https://www.youtube.com/c/CodeWithSwastik
 - Jonah Lawrence • Dev Pro Tips: https://www.youtube.com/c/DevProTips
+- Warframe Community Developers for help parsing worldstate data: https://github.com/WFCD/warframe-worldstate-data
 - Special thanks to the Official Nextcord Discord server!
