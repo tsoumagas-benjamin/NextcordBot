@@ -14,14 +14,14 @@ worldstate_url = "https://api.warframe.com/cdn/worldState.php"
 # Function to read in languages.json file and parse it as a dictionary
 # CREDIT: warframe-worldstate-data project
 def get_languages():
-    with open('../languages.json', 'r') as file:
+    with open('/main/languages.json', 'r') as file:
         data = file.read()
         languages = json.loads(data)
     return languages
 
 # Function to read in worldstate.json file and parse it as a dictionary
 def get_worldstate():
-    with open('../worldstate.json', 'r') as file:
+    with open('/main/worldstate.json', 'r') as file:
         data = file.read()
         worldstate = json.loads(data)
     return worldstate
