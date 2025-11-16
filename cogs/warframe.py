@@ -172,11 +172,11 @@ def duviri_status(url: str):
     # Add regular and steel path rewards
     duviri_embed.add_field(
         name="**Circuit Rewards** (Choose one)", 
-        value="\n".join(duviri_regular)
+        value=duviri_regular
     )
     duviri_embed.add_field(
         name="**Steel Path Circuit Rewards** (Choose one)", 
-        value="\n".join(duviri_steel_path)
+        value=duviri_steel_path
     )
 
     return duviri_embed
