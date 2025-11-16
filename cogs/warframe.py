@@ -32,7 +32,7 @@ def request_wf_info(url: str):
         return error   
 
 # Function to get information on this week's archon hunt
-def archon_hunt(url: str, worldstate: dict):
+def archon_hunt(url: str):
     # Convert the response content for the world state into a Python object
     wf_world = request_wf_info(url)
 
@@ -45,14 +45,14 @@ def archon_hunt(url: str, worldstate: dict):
     archon_duration = f"{archon_start} - {archon_end}"
 
     # Get the current Archon and the missions leading up to them
-    current_archon = worldstate["sortie_bosses"][archon_info["Boss"]]
+    current_archon = db.worldstate.find_one({"key" : [archon_info["Boss"]]})["value"]
     archon_missions = archon_info["Missions"]
 
     hunt_info = []
     # Append each mission type and node
     for mission in archon_missions:
-        mission_type = worldstate["mission_type"][mission["missionType"]]
-        mission_node = worldstate["nodes"][mission["node"]]
+        mission_type = db.worldstate.find_one({"key" : [mission["missionType"]]})["value"]
+        mission_node = db.worldstate.find_one({"key" : [mission["node"]]})["value"]
         hunt_info.append(f"{mission_type} - {mission_node}")
 
     # Create an embed object to return with Archon information
@@ -66,7 +66,7 @@ def archon_hunt(url: str, worldstate: dict):
     return archon_embed
 
 # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
-def baro_kiteer(url: str, worldstate: dict, languages: dict):
+def baro_kiteer(url: str):
     # Convert the response content for the world state into a Python object
     wf_world = request_wf_info(url)
 
@@ -92,7 +92,7 @@ def baro_kiteer(url: str, worldstate: dict, languages: dict):
     baro_duration = f"{baro_start} - {baro_end}"
 
     # Get Baro's location
-    baro_location = worldstate["nodes"][baro["Node"]]
+    baro_location = db.worldstate.find_one({"key" : [baro["Node"]]})["value"]
 
     # Create an embed object to return with Baro information
     baro_embed = nextcord.Embed(
@@ -108,10 +108,10 @@ def baro_kiteer(url: str, worldstate: dict, languages: dict):
         credits = item["RegularPrice"]
 
         # Check if the item is in the dictionary in both regular and lowercase
-        if item["ItemType"] in languages:
-            name = languages[item["ItemType"]]["value"]
-        elif item["ItemType"].lower() in languages:
-            name = languages[item["ItemType"].lower()]["value"]
+        if db.languages.find_one({"key" : item["ItemType"]}):
+            name = db.languages.find_one({"key" : item["ItemType"]})["value"]
+        elif db.languages.find_one({"key" : item["ItemType"].lower()}):
+            name = db.languages.find_one({"key" : item["ItemType"].lower()})["value"]
         # Otherwise take the item name as shown
         else:
             name = item["ItemType"].split("/")[-1]
