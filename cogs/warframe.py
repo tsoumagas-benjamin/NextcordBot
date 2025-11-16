@@ -10,8 +10,6 @@ import re
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot
 worldstate_url = "https://api.warframe.com/cdn/worldState.php"
-languages = None
-worldstate = None
 
 # Function to read in languages.json file and parse it as a dictionary
 # CREDIT: warframe-worldstate-data project
@@ -49,15 +47,9 @@ def request_wf_info(url: str):
         return error   
 
 # Function to get information on this week's archon hunt
-def archon_hunt(url: str):
+def archon_hunt(url: str, worldstate: dict):
     # Convert the response content for the world state into a Python object
     wf_world = request_wf_info(url)
-
-    # Check for languages and worldstate if they haven't been retrieved yet
-    if not languages:
-        languages = get_languages()
-    if not worldstate:
-        worldstate = get_worldstate()
 
     # Access specifically the information about Archon Hunts
     archon_info = wf_world["LiteSorties"][0]
@@ -89,15 +81,9 @@ def archon_hunt(url: str):
     return archon_embed
 
 # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
-def baro_kiteer(url: str):
+def baro_kiteer(url: str, worldstate: dict, languages: dict):
     # Convert the response content for the world state into a Python object
     wf_world = request_wf_info(url)
-
-    # Check for languages and worldstate if they haven't been retrieved yet
-    if not languages:
-        languages = get_languages()
-    if not worldstate:
-        worldstate = get_worldstate()
 
     # Access specifically the information about Baro Ki'Teer
     baro = wf_world["VoidTraders"][0]
@@ -152,15 +138,9 @@ def baro_kiteer(url: str):
     return baro_embed
 
 # Function to handle the retrieval of Duviri information
-def duviri_status(url):
+def duviri_status(url: str):
     # Convert the response content for the world state into a Python object
     wf_world = request_wf_info(url)
-
-    # Check for languages and worldstate if they haven't been retrieved yet
-    if not languages:
-        languages = get_languages()
-    if not worldstate:
-        worldstate = get_worldstate()
 
     # Access specifically the information about Duviri
     duviri = wf_world["EndlessXpChoices"]
@@ -219,6 +199,8 @@ class Warframe(commands.Cog, name="Warframe"):
             "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
         }
         self.worldstate_url = "https://api.warframe.com/cdn/worldState.php"
+        self.languages = get_languages()
+        self.worldstate = get_worldstate()
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_wf_channels = db.warframe_channels.distinct("channel")
         self.archon_timer.start()
@@ -244,7 +226,13 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
+                await daily_wf_channel.send(
+                    embed=baro_kiteer(
+                        self.worldstate_url, 
+                        self.worldstate, 
+                        self.languages
+                        )
+                    )
 
     # Archon loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -260,7 +248,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 daily_wf_channel = self.bot.get_channel(channel_id)
                 if daily_wf_channel is None:
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
+                await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url, self.worldstate))
 
     # Duviri loop runs every Sunday for the weekly reset
     @tasks.loop(time=datetime.time(2))
@@ -286,7 +274,11 @@ class Warframe(commands.Cog, name="Warframe"):
     @nextcord.slash_command()
     async def baro(self, interaction: nextcord.Interaction):
         """Get information on Baro Ki'Teer"""
-        await interaction.send(embed=baro_kiteer(self.worldstate_url))
+        await interaction.send(embed=baro_kiteer(
+                self.worldstate_url, 
+                self.worldstate, 
+                self.languages
+            ))
 
     @nextcord.slash_command()
     async def duviri(self, interaction: nextcord.Interaction):
