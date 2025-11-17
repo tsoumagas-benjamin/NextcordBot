@@ -2,9 +2,9 @@ import nextcord
 from os import getenv
 from pymongo import MongoClient
 from nextcord.ext import commands, application_checks, tasks
-import requests
-import json
-import datetime
+from requests import get, post
+from json import loads, dumps
+from datetime import datetime, date, time, timedelta
 
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
@@ -58,17 +58,17 @@ class Sales(commands.Cog, name="Game Sales"):
     
     def prune_task(self):
         # Delete all sales with expiries older than the present datetime
-        db.sales.delete_many({"expiry" : {"$lt": datetime.datetime.now()}})
+        db.sales.delete_many({"expiry" : {"$lt": datetime.now()}})
 
         # Delete all sales with discounts lower or equal to 0% if they exist
         db.sales.delete_many({"cut" : {"$lte": 0}})
 
-    @tasks.loop(time=datetime.time(4))
+    @tasks.loop(time=time(4))
     async def daily_sales(self):
         # Check for better updated sales
         self.sale_task()
     
-    @tasks.loop(time=datetime.time(5))
+    @tasks.loop(time=time(5))
     async def daily_prune(self):
         # Prune expired sales from the database daily
         self.prune_task()
@@ -88,8 +88,8 @@ class Sales(commands.Cog, name="Game Sales"):
         query_url = base_url + f"&title={format_title}"
 
         # Query the API and return the ID field
-        game = requests.get(query_url)
-        game_json = json.loads(game.content)
+        game = get(query_url)
+        game_json = loads(game.content)
         game_id = game_json['game']['id']
 
         return game_id
@@ -104,7 +104,7 @@ class Sales(commands.Cog, name="Game Sales"):
         year, month, day = list(map(int, date))
 
         # Create and return our date object
-        expiry_date = datetime.datetime(year, month, day, 0, 0, 0) 
+        expiry_date = datetime(year, month, day, 0, 0, 0) 
 
         return expiry_date
     
@@ -116,9 +116,9 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_url = self.get_base_url("/games/prices/v3")
 
         # Make a POST request to the API and load the response as a python iterable object
-        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
+        sale = post(sale_url, data=dumps(payload), headers=headers)
         try:
-            sale_json = json.loads(sale.content)
+            sale_json = loads(sale.content)
         except:
             print(f"JSON for {game_id} could not be decoded")
             return
@@ -147,8 +147,8 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_url = self.get_base_url("/games/prices/v3")
 
         # Make a POST request to the API and load the response as a python iterable object
-        sale = requests.post(sale_url, data=json.dumps(payload), headers=headers)
-        sale_json = json.loads(sale.content)
+        sale = post(sale_url, data=dumps(payload), headers=headers)
+        sale_json = loads(sale.content)
 
         return sale_json
     
@@ -215,7 +215,7 @@ class Sales(commands.Cog, name="Game Sales"):
             await sales_channel.send(embed=sale_embed())
 
     # Function to store information on a game's sale cut and expiry in the database
-    def store_sale(self, game_id: str, cut: int, expiry_date: datetime.date):
+    def store_sale(self, game_id: str, cut: int, expiry_date: date):
         # Format the record to insert/replace the old record
         new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
 
@@ -244,8 +244,8 @@ class Sales(commands.Cog, name="Game Sales"):
         # If there is no expiry, put the expiry as tomorrow
         if current_best_expiry is None:
             # Get today's date and increment it by one day to get tomorrow's date
-            today = datetime.date.today()
-            tomorrow = today + datetime.timedelta(days=1)
+            today = date.today()
+            tomorrow = today + timedelta(days=1)
             current_best_expiry = tomorrow.strftime('%Y-%m-%d')
         
         formatted_expiry = self.format_expiry(current_best_expiry)

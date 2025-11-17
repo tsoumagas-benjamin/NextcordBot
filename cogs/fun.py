@@ -1,11 +1,11 @@
 import nextcord
-import random
+from random import choice
 from aiohttp import ClientSession
 from os import getenv
 from re import findall
-import requests
-import json
-import datetime
+from requests import get, request
+from json import loads
+from datetime import date, time
 from pymongo import MongoClient
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
@@ -33,16 +33,16 @@ calendar = {
 def advice_task():
     advice = None
     while advice is None:
-        response = requests.get(url="https://api.adviceslip.com/advice", allow_redirects=False, timeout=20)
-        json_data = json.loads(response.text)
+        response = get(url="https://api.adviceslip.com/advice", allow_redirects=False, timeout=20)
+        json_data = loads(response.text)
         advice = json_data['slip']['advice']
     return advice
 
 def affirm_task():
     affirmation = None
     while affirmation is None:
-        response = requests.get(url="https://www.affirmations.dev/", allow_redirects=False, timeout=20)
-        json_data = json.loads(response.text)
+        response = get(url="https://www.affirmations.dev/", allow_redirects=False, timeout=20)
+        json_data = loads(response.text)
         affirmation = json_data['affirmation']
     return affirmation
 
@@ -50,17 +50,17 @@ def animal_task():
     animal = None
     while animal is None:
         choices = ["birb", "cats", "dogs", "sadcat", "sillycat"]
-        choice = random.choice(choices)
-        url = f"https://api.alexflipnote.dev/{choice}"
-        response = requests.get(url=url, allow_redirects=False, timeout=20)
+        animal_choice = choice(choices)
+        url = f"https://api.alexflipnote.dev/{animal_choice}"
+        response = get(url=url, allow_redirects=False, timeout=20)
         animal = response.json()["file"]
     return animal
 
 # Return list of user ID's who have a birthday today
 def birthday_task():
-    date = str(datetime.date.today()).split("-")
-    month = int(date[1].lstrip("0"))
-    day = int(date[2].lstrip("0"))
+    full_date = str(date.today()).split("-")
+    month = int(full_date[1].lstrip("0"))
+    day = int(full_date[2].lstrip("0"))
     #Checks if this day/month combo has a match in the database
     if db.birthdays.find_one({"month": month, "day": day}):
         bday = db.birthdays.find({"month": month, "day": day})
@@ -80,7 +80,7 @@ def joke_task():
         "X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com",
         "X-RapidAPI-Key": key
     }
-    response = requests.request("GET", url, headers=headers, params=querystring, allow_redirects=False, timeout=20).json()
+    response = request("GET", url, headers=headers, params=querystring, allow_redirects=False, timeout=20).json()
     jokeType = response["type"]
     jokeCategory = response["category"]
     embed = nextcord.Embed(title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(0, 128, 255))
@@ -96,7 +96,7 @@ def joke_task():
 def meme_task():
     # Get all info about the meme and take the last/best quality image preview
     base_url = "https://meme-api.com/gimme"
-    resp = requests.get(url=base_url, allow_redirects=False, timeout=20)
+    resp = get(url=base_url, allow_redirects=False, timeout=20)
     res = resp.json()
     post_title = res["title"] if res["title"] is not None else " "
     post_author = res["author"]
@@ -130,8 +130,8 @@ def meme_task():
 
 #Function to fetch the quote from an API
 def get_quote():
-  response = requests.get(url="https://zenquotes.io/api/random", allow_redirects=False, timeout=20)
-  json_data = json.loads(response.text)
+  response = get(url="https://zenquotes.io/api/random", allow_redirects=False, timeout=20)
+  json_data = loads(response.text)
   quote = f"*{json_data[0]['q']}*  -  ***{json_data[0]['a']}***"
   return quote
 
@@ -157,7 +157,7 @@ class Fun(commands.Cog, name="Fun"):
         self.daily_meme.cancel()
         self.daily_positivity.cancel()
     
-    @tasks.loop(time=datetime.time(0))
+    @tasks.loop(time=time(0))
     async def daily_meme(self):
         # Fetch the list of enrolled channels to post daily content to
         self.daily_channels = db.daily_channels.distinct("channel")
@@ -168,7 +168,7 @@ class Fun(commands.Cog, name="Fun"):
                 daily_channel = await self.bot.fetch_channel(channel_id)
             await daily_channel.send(embed=meme_task())
 
-    @tasks.loop(time=datetime.time(4))
+    @tasks.loop(time=time(4))
     async def daily_birthday(self):
         # Check for a list of people whose birthday is today, stopping if there are none
         user_list = birthday_task()
@@ -196,7 +196,7 @@ class Fun(commands.Cog, name="Fun"):
                 # Send the birthday embed for this guild
                 await target_channel.send(embed=bday_message)
     
-    @tasks.loop(time=datetime.time(12))
+    @tasks.loop(time=time(12))
     async def daily_positivity(self):
         # Creates daily positivity post
         advice = advice_task()
@@ -215,7 +215,7 @@ class Fun(commands.Cog, name="Fun"):
                 daily_channel = await self.bot.fetch_channel(channel_id)
             await daily_channel.send(embed=positivity)
 
-    @tasks.loop(time=datetime.time(16))
+    @tasks.loop(time=time(16))
     async def daily_animal(self):
         # Gets daily animal
         try:
@@ -233,7 +233,7 @@ class Fun(commands.Cog, name="Fun"):
         except Exception as e:
             print(f"The error is: {e}")
     
-    @tasks.loop(time=datetime.time(20))
+    @tasks.loop(time=time(20))
     async def daily_joke(self):
         # Fetch the list of enrolled channels to post daily content to
         self.daily_channels = db.daily_channels.distinct("channel")
@@ -317,19 +317,19 @@ class Fun(commands.Cog, name="Fun"):
         embed = nextcord.Embed(title=f'Results for {name.title()}',
         description='',color=nextcord.Colour.from_rgb(0, 128, 255))
         #Guess user age
-        response = requests.get(f"https://api.agify.io/?name={name}", allow_redirects=False, timeout=20)
-        age_data = json.loads(response.text)
+        response = get(f"https://api.agify.io/?name={name}", allow_redirects=False, timeout=20)
+        age_data = loads(response.text)
         age = age_data['age']
         embed.add_field(name='Predicted age:', value=f'{age}', inline=False)
         #Guess user gender
-        response = requests.get(f"https://api.genderize.io/?name={name}", allow_redirects=False, timeout=20)
-        gender_data = json.loads(response.text)
+        response = get(f"https://api.genderize.io/?name={name}", allow_redirects=False, timeout=20)
+        gender_data = loads(response.text)
         gender, prob = gender_data['gender'], gender_data['probability']
         embed.add_field(name='Predicted gender:', value=f'{gender}', inline=False)
         embed.add_field(name='Probability:', value=f'{prob}', inline=False)
         #Guess user nationality
-        response = requests.get(f"https://api.nationalize.io/?name={name}", allow_redirects=False, timeout=20)
-        nation_data = json.loads(response.text)
+        response = get(f"https://api.nationalize.io/?name={name}", allow_redirects=False, timeout=20)
+        nation_data = loads(response.text)
         for country in nation_data['country']:
             country_id, country_prob = country['country_id'], country['probability']
             embed.add_field(name=f'Country {country_id}', value=f'Probability: {country_prob}', inline=False)

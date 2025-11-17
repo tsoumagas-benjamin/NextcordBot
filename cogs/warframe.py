@@ -2,10 +2,10 @@ import nextcord
 from os import getenv
 from pymongo import MongoClient
 from nextcord.ext import application_checks, commands, tasks
-import requests
-import json
-import datetime
-import re
+from requests import get, exceptions
+from json import loads
+from datetime import datetime, time
+from re import sub
 
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot
@@ -19,16 +19,16 @@ def epoch_convert(epoch: str):
 
 # Function to put spaces before capitals in strings
 def string_split(string: str):
-    return re.sub(r'(?<!^)(?=[A-Z])', ' ', string)
+    return sub(r'(?<!^)(?=[A-Z])', ' ', string)
 
 # Function to perform a GET request on Warframe's worldstate URL
 def request_wf_info(url: str):
     try:
         # Return the parsed JSON as a Python object
-        wf_data = requests.get(url)
-        wf_world = json.loads(wf_data.content)
+        wf_data = get(url)
+        wf_world = loads(wf_data.content)
         return wf_world
-    except requests.exceptions.RequestException as error:
+    except exceptions.RequestException as error:
         return error   
 
 # Function to get information on current alerts
@@ -354,10 +354,10 @@ class Warframe(commands.Cog, name="Warframe"):
         self.duviri_timer.cancel()
 
     # Baro loop runs every Friday to check if Baro has arrived
-    @tasks.loop(time=datetime.time(15))
+    @tasks.loop(time=time(15))
     async def baro_timer(self):
         # Checks every day at 14:00 UTC / 9:00 am EST for Baro Ki'Teer
-        weekday = datetime.datetime.today().weekday()
+        weekday = datetime.today().weekday()
         # If date is Friday, then run the Baro function
         if weekday == 4:
             # Fetch the list of enrolled warframe channels to post daily content to
@@ -370,10 +370,10 @@ class Warframe(commands.Cog, name="Warframe"):
                 await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
 
     # Archon loop runs every Sunday for the weekly reset
-    @tasks.loop(time=datetime.time(2))
+    @tasks.loop(time=time(2))
     async def archon_timer(self):
         # Checks every day at 2:00 am UTC / 9:00 pm EST for Archon Hunts
-        weekday = datetime.datetime.today().weekday()
+        weekday = datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
         if weekday == 0:
             # Fetch the list of enrolled warframe channels to post daily content to
@@ -386,10 +386,10 @@ class Warframe(commands.Cog, name="Warframe"):
                 await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
 
     # Duviri loop runs every Sunday for the weekly reset
-    @tasks.loop(time=datetime.time(2))
+    @tasks.loop(time=time(2))
     async def duviri_timer(self):
         # Checks every day at 2:00 am UTC / 9:00 pm EST for Duviri Rewards
-        weekday = datetime.datetime.today().weekday()
+        weekday = datetime.today().weekday()
         # If date is Sunday(EST)/Monday(UTC), then run the Duviri rewards function
         if weekday == 0:
             # Fetch the list of enrolled warframe channels to post daily content to

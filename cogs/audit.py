@@ -3,7 +3,7 @@ import nextcord
 from os import getenv
 from pymongo import MongoClient
 from nextcord.ext import commands, application_checks
-import datetime
+from datetime import datetime
 
 client = MongoClient(getenv('CONN_STRING')) 
 db = client.NextcordBot 
@@ -18,7 +18,7 @@ class Audit(commands.Cog, name="Audit Logs"):
       self.bot = bot
 
     # Function to format
-    def date_format(self, time: datetime.datetime):
+    def date_format(self, time: datetime):
         return time.strftime("%m/%d/%Y %H:%M:%S")
     
     # Function to send embeds to the designated channel
@@ -91,7 +91,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         create_channel.add_field(name="Name", value=f"{channel.name}")
 
         # Format the time the channel was created at and the channel ID into the footer
-        create_channel.set_footer(text=f"Channel ID: {channel.id} | {self.date_format(datetime.datetime.now())}")
+        create_channel.set_footer(text=f"Channel ID: {channel.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], create_channel)
@@ -125,7 +125,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         delete_channel.add_field(name="Name", value=f"{channel.name}")
 
         # Format the time the channel was deleted at and the channel ID into the footer
-        delete_channel.set_footer(text=f"Channel ID: {channel.id} | {self.date_format(datetime.datetime.now())}")
+        delete_channel.set_footer(text=f"Channel ID: {channel.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], delete_channel)
@@ -160,7 +160,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             update_channel.add_field(name="New Category", value=f"{after.category}")
 
         # Format the time the channel was updated at and the channel ID into the footer
-        update_channel.set_footer(text=f"Channel ID: {before.id} | {self.date_format(datetime.datetime.now())}")
+        update_channel.set_footer(text=f"Channel ID: {before.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], update_channel)
@@ -182,7 +182,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         create_role.add_field(name="Mentionable", value=f"{role.mentionable}")
 
         # Format the time the role was created at and the role ID into the footer
-        create_role.set_footer(text=f"Role ID: {role.id} | {self.date_format(datetime.datetime.now())}")
+        create_role.set_footer(text=f"Role ID: {role.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], create_role)
@@ -204,7 +204,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         delete_role.add_field(name="Mentionable", value=f"{role.mentionable}")
 
         # Format the time the role was created at and the role ID into the footer
-        delete_role.set_footer(text=f"Role ID: {role.id} | {self.date_format(datetime.datetime.now())}")
+        delete_role.set_footer(text=f"Role ID: {role.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], delete_role)
@@ -238,7 +238,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             update_role.add_field(name="Mentionable", value=f"{before.mentionable} -> {after.mentionable}")
 
         # Format the time the role was created at and the role ID into the footer
-        update_role.set_footer(text=f"Role ID: {before.id} | {self.date_format(datetime.datetime.now())}")
+        update_role.set_footer(text=f"Role ID: {before.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], update_role)
@@ -261,7 +261,7 @@ class Audit(commands.Cog, name="Audit Logs"):
             return
 
         # Format the time the role was created at and the role ID into the footer
-        update_server.set_footer(text=f"Server ID: {before.id} | {self.date_format(datetime.datetime.now())}")
+        update_server.set_footer(text=f"Server ID: {before.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], update_server)
@@ -280,14 +280,14 @@ class Audit(commands.Cog, name="Audit Logs"):
             # Get emojis that used to exist but are deleted and add them to the embed
             deleted_emoji = [emoji for emoji in before if emoji not in after]
             emoji_update.add_field(name="Old Name", value=f"{deleted_emoji[0].name}")
-            emoji_update.set_footer(text=f"Emoji ID: {deleted_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
+            emoji_update.set_footer(text=f"Emoji ID: {deleted_emoji[0].id} | {self.date_format(datetime.now())}")
 
         elif len(before) < len(after):
             emoji_update = nextcord.Embed(title="Emoji Created", color=nextcord.Colour.green())
             # Get emojis that have been created and add them to the embed
             created_emoji = [emoji for emoji in after if emoji not in before]
             emoji_update.add_field(name="New Name", value=f"<:{created_emoji[0].name}:{created_emoji[0].id}> {created_emoji[0].name}")
-            emoji_update.set_footer(text=f"Emoji ID: {created_emoji[0].id} | {self.date_format(datetime.datetime.now())}")
+            emoji_update.set_footer(text=f"Emoji ID: {created_emoji[0].id} | {self.date_format(datetime.now())}")
         
         else:
             # Create a dict for emoji IDs and names before and after to compare
@@ -302,7 +302,7 @@ class Audit(commands.Cog, name="Audit Logs"):
                         emoji_update = nextcord.Embed(title="Emoji Updated", color=nextcord.Colour.blurple())
                         emoji_update.add_field(name="Old Name", value=old_emoji.name)
                         emoji_update.add_field(name="New Name", value=f"<:{new_emoji.name}:{new_emoji.id}> {new_emoji.name}")
-                        emoji_update.set_footer(text=f"Emoji ID: {emoji_id} | {self.date_format(datetime.datetime.now())}")
+                        emoji_update.set_footer(text=f"Emoji ID: {emoji_id} | {self.date_format(datetime.now())}")
         
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], emoji_update)
@@ -338,7 +338,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # Set the thumbnail and footer
         member_update.set_thumbnail(after.display_avatar.url)
-        member_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
+        member_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], member_update)
@@ -363,7 +363,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
             # Set the thumbnail and footer
             user_update.set_thumbnail(after.display_avatar.url)
-            user_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.datetime.now())}")
+            user_update.set_footer(text=f"Member ID: {after.id} | {self.date_format(datetime.now())}")
 
             # Send the embed to the designated channel
             await self.send_embed(server_audit_log['channel'], user_update)
@@ -382,7 +382,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         # Set the thumbnail and footer
         member_ban.set_thumbnail(user.display_avatar.url)
-        member_ban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.datetime.now())}")
+        member_ban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], member_ban)
@@ -400,7 +400,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         # Set the thumbnail and footer
         member_unban.set_thumbnail(user.display_avatar.url)
-        member_unban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.datetime.now())}")
+        member_unban.set_footer(text=f"Member ID: {user.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], member_unban)
@@ -425,7 +425,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         # Set the thumbnail and footer
         message_delete.set_thumbnail(message.author.display_avatar.url)
-        message_delete.set_footer(text=f"Message ID: {message.id} | {self.date_format(datetime.datetime.now())}")
+        message_delete.set_footer(text=f"Message ID: {message.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], message_delete)
@@ -451,7 +451,7 @@ class Audit(commands.Cog, name="Audit Logs"):
         
         # Set the thumbnail and footer
         message_edit.set_thumbnail(after.author.display_avatar.url)
-        message_edit.set_footer(text=f"Message ID: {after.id} | {self.date_format(datetime.datetime.now())}")
+        message_edit.set_footer(text=f"Message ID: {after.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], message_edit)
@@ -469,7 +469,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         # Set the thumbnail and footer
         member_join.set_thumbnail(member.display_avatar.url)
-        member_join.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.datetime.now())}")
+        member_join.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], member_join)
@@ -496,7 +496,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
         # Set the thumbnail and footer
         member_remove.set_thumbnail(member.display_avatar.url)
-        member_remove.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.datetime.now())}")
+        member_remove.set_footer(text=f"Member ID: {member.id} | {self.date_format(datetime.now())}")
 
         # Send the embed to the designated channel
         await self.send_embed(server_audit_log['channel'], member_remove)
