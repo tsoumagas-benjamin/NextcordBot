@@ -222,11 +222,75 @@ def duviri_status(url: str):
 
     return duviri_embed
 
+# Function to get information on Nightwave
+def nightwave_status(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    # Access specifically the information about Nightwave
+    nw = wf_world["SeasonInfo"]
+
+    # Get the start and end time for the Nightwave Season as dynamic timestamps
+    nw_start = epoch_convert(nw["Activation"]["$date"]["$numberLong"])
+    nw_end = epoch_convert(nw["Expiry"]["$date"]["$numberLong"])
+    nw_duration = f"{nw_start} - {nw_end}"
+
+    # Get the current Nightwave season
+    nw_season = nw["Season"]
+
+    # Get the current Nightwave challenges
+    nw_challenges = nw["ActiveChallenges"]
+
+    # Create a string with the current Nightwave season
+    nw_title = f"**Nightwave Season {nw_season}**"
+
+    # Create an embed object to return with Duviri information
+    nw_embed = nextcord.Embed(
+        title = nw_title,
+        description = nw_duration,
+        color = nextcord.Colour.from_rgb(0, 128, 255)
+    )
+
+    challenge_info = ""
+
+    for challenge in nw_challenges:
+        # Get whether the challenge is daily or weekly
+        try:
+            if challenge["Daily"]:
+                duration = "Daily"
+        except:
+            duration = "Weekly"
+        
+        # Get the start and end time for the challenge
+        start = epoch_convert(challenge["Activation"]["$date"]["$numberLong"])
+        end = epoch_convert(challenge["Expiry"]["$date"]["$numberLong"])
+
+        # Get the requirement for the challenge
+        if db.languages.find_one({"key" : challenge["Challenge"]}):
+            requirement_match = db.languages.find_one({"key" : challenge["Challenge"]})
+            requirement_name = requirement_match["value"]
+            requirement_desc = requirement_match["desc"]
+            requirement = f"{requirement_name} - {requirement_desc}"
+        elif db.languages.find_one({"key" : challenge["Challenge"].lower()}):
+            requirement_match = db.languages.find_one({"key" : challenge["Challenge"].lower()})
+            requirement_name = requirement_match["value"]
+            requirement_desc = requirement_match["desc"]
+            requirement = f"{requirement_name} - {requirement_desc}"
+        else:
+            requirement = challenge["Challenge"].split("/")[-1]
+        
+        challenge_info += f"- ({duration}) {requirement} {start}-{end}\n"
+    
+    nw_embed.add_field(name = "Rewards:", value = challenge_info)
+
+    return nw_embed
+
 # Function to get information on the current sortie
 def sortie_status(url: str):
     # Convert the response content for the world state into a Python object
     wf_world = request_wf_info(url)
 
+    # Access specifically the information about sorties
     sorties = wf_world["Sorties"][0]
 
     # Get the start and end time for sorties as a dynamic timestamp
@@ -353,6 +417,11 @@ class Warframe(commands.Cog, name="Warframe"):
     async def duviri(self, interaction: nextcord.Interaction):
         """Find information on the current Duviri cycle rewards"""
         await interaction.send(embed=duviri_status(self.worldstate_url))
+
+    @nextcord.slash_command()
+    async def nightwave(self, interaction: nextcord.Interaction):
+        """Find information on the current Nightwave season and challenges"""
+        await interaction.send(embed=nightwave_status(self.worldstate_url))
     
     @nextcord.slash_command()
     async def sortie(self, interaction: nextcord.Interaction):
