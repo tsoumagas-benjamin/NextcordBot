@@ -79,7 +79,10 @@ def alerts_search(url: str):
 
         # Get the type and quantity of additional rewards
         for item in alert_items:
-            item_type = db.languages.find_one({"key" : item["ItemType"]})["value"]
+            try:
+                item_type = db.languages.find_one({"key" : item["ItemType"]})["value"]
+            except:
+                item_type = item["ItemType"].split("/")[-1]
             item_count = item["ItemCount"]
             alert_rewards += f"- {item_count} {item_type}\n"
         
