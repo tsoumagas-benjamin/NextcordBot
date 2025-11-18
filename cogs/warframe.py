@@ -7,9 +7,10 @@ from json import loads
 from datetime import datetime, time
 from re import sub
 
-client = MongoClient(getenv('CONN_STRING')) 
+client = MongoClient(getenv("CONN_STRING"))
 db = client.NextcordBot
 worldstate_url = "https://api.warframe.com/cdn/worldState.php"
+
 
 # Function to convert an epoch timestamp into a dynamic timestamp
 def epoch_convert(epoch: str):
@@ -17,9 +18,11 @@ def epoch_convert(epoch: str):
     formatted_time = f"<t:{epoch_num}:f>"
     return formatted_time
 
+
 # Function to put spaces before capitals in strings
 def string_split(string: str):
-    return sub(r'(?<!^)(?=[A-Z])', ' ', string)
+    return sub(r"(?<!^)(?=[A-Z])", " ", string)
+
 
 # Function to perform a GET request on Warframe's worldstate URL
 def request_wf_info(url: str):
@@ -29,7 +32,8 @@ def request_wf_info(url: str):
         wf_world = loads(wf_data.content)
         return wf_world
     except exceptions.RequestException as error:
-        return error   
+        return error
+
 
 # Function to get information on current alerts
 def alerts_search(url: str):
@@ -41,9 +45,7 @@ def alerts_search(url: str):
 
     # Create an embed object to return with alert information
     alert_embed = nextcord.Embed(
-        title = "Alerts",
-        description = "",
-        color = nextcord.Colour.from_rgb(0, 128, 255)
+        title="Alerts", description="", color=nextcord.Colour.from_rgb(0, 128, 255)
     )
 
     for alert in alert_data:
@@ -53,12 +55,20 @@ def alerts_search(url: str):
 
         # Get information on the alert location, type, faction, and difficulty
         alert_mission = alert["MissionInfo"]
-        alert_location = db.worldstate.find_one({"key" : alert_mission["location"]})["value"]
-        alert_type = db.worldstate.find_one({"key" : alert_mission["missionType"]})["value"]
-        alert_faction = db.worldstate.find_one({"key" : alert_mission["faction"]})["value"]
+        alert_location = db.worldstate.find_one({"key": alert_mission["location"]})[
+            "value"
+        ]
+        alert_type = db.worldstate.find_one({"key": alert_mission["missionType"]})[
+            "value"
+        ]
+        alert_faction = db.worldstate.find_one({"key": alert_mission["faction"]})[
+            "value"
+        ]
         alert_min_level = alert_mission["minEnemyLevel"]
         alert_max_level = alert_mission["maxEnemyLevel"]
-        alert_tag = "Gift of the Lotus" if alert["Tag"] == "LotusGift" else "Tactical Alert"
+        alert_tag = (
+            "Gift of the Lotus" if alert["Tag"] == "LotusGift" else "Tactical Alert"
+        )
 
         # Get information on the alert rewards
         alert_reward = alert_mission["missionReward"]
@@ -80,15 +90,16 @@ def alerts_search(url: str):
         # Get the type and quantity of additional rewards
         for item in alert_items:
             try:
-                item_type = db.languages.find_one({"key" : item["ItemType"]})["value"]
+                item_type = db.languages.find_one({"key": item["ItemType"]})["value"]
             except:
                 item_type = item["ItemType"].split("/")[-1]
             item_count = item["ItemCount"]
             alert_rewards += f"- {item_count} {item_type}\n"
-        
-        alert_embed.add_field(name="Rewards:", value=alert_rewards)
-        
+
+        alert_embed.add_field(name="Rewards:", value=alert_rewards, inline=False)
+
     return alert_embed
+
 
 # Function to get information on this week's archon hunt
 def archon_hunt(url: str):
@@ -104,25 +115,26 @@ def archon_hunt(url: str):
     archon_duration = f"{archon_start} - {archon_end}"
 
     # Get the current Archon and the missions leading up to them
-    current_archon = db.worldstate.find_one({"key" : archon_info["Boss"]})["value"]
+    current_archon = db.worldstate.find_one({"key": archon_info["Boss"]})["value"]
     archon_missions = archon_info["Missions"]
 
     hunt_info = []
     # Append each mission type and node
     for mission in archon_missions:
-        mission_type = db.worldstate.find_one({"key" : mission["missionType"]})["value"]
-        mission_node = db.worldstate.find_one({"key" : mission["node"]})["value"]
+        mission_type = db.worldstate.find_one({"key": mission["missionType"]})["value"]
+        mission_node = db.worldstate.find_one({"key": mission["node"]})["value"]
         hunt_info.append(f"{mission_type} - {mission_node}")
 
     # Create an embed object to return with Archon information
     archon_embed = nextcord.Embed(
-        title = f"{current_archon}",
-        description = "\n".join(hunt_info),
-        color = nextcord.Colour.from_rgb(0, 128, 255)
+        title=f"{current_archon}",
+        description="\n".join(hunt_info),
+        color=nextcord.Colour.from_rgb(0, 128, 255),
     )
 
     archon_embed.add_field(name="Archon is here from:", value=archon_duration)
     return archon_embed
+
 
 # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
 def baro_kiteer(url: str):
@@ -139,9 +151,9 @@ def baro_kiteer(url: str):
     except:
         # Create an embed object to return with Baro information
         baro_embed = nextcord.Embed(
-            title = "Baro Ki'Teer has not arrived yet",
-            description = "Inventory Unknown",
-            color = nextcord.Colour.from_rgb(0, 128, 255)
+            title="Baro Ki'Teer has not arrived yet",
+            description="Inventory Unknown",
+            color=nextcord.Colour.from_rgb(0, 128, 255),
         )
         return baro_embed
 
@@ -151,13 +163,13 @@ def baro_kiteer(url: str):
     baro_duration = f"{baro_start} - {baro_end}"
 
     # Get Baro's location
-    baro_location = db.worldstate.find_one({"key" : baro["Node"]})["value"]
+    baro_location = db.worldstate.find_one({"key": baro["Node"]})["value"]
 
     # Create an embed object to return with Baro information
     baro_embed = nextcord.Embed(
-        title = "Baro Ki'Teer is here",
-        description = baro_location,
-        color = nextcord.Colour.from_rgb(0, 128, 255)
+        title="Baro Ki'Teer is here",
+        description=baro_location,
+        color=nextcord.Colour.from_rgb(0, 128, 255),
     )
 
     # Iterate Baro's inventory
@@ -167,19 +179,20 @@ def baro_kiteer(url: str):
         credits = item["RegularPrice"]
 
         # Check if the item is in the dictionary in both regular and lowercase
-        if db.languages.find_one({"key" : item["ItemType"]}):
-            name = db.languages.find_one({"key" : item["ItemType"]})["value"]
-        elif db.languages.find_one({"key" : item["ItemType"].lower()}):
-            name = db.languages.find_one({"key" : item["ItemType"].lower()})["value"]
+        if db.languages.find_one({"key": item["ItemType"]}):
+            name = db.languages.find_one({"key": item["ItemType"]})["value"]
+        elif db.languages.find_one({"key": item["ItemType"].lower()}):
+            name = db.languages.find_one({"key": item["ItemType"].lower()})["value"]
         # Otherwise take the item name as shown
         else:
             name = item["ItemType"].split("/")[-1]
-        
+
         # Format everything into one line and append it to the embed
         baro_embed.add_field(f"{name} - {ducats} D - {credits} C")
-    
-    baro_embed.add_field(name="Baro is here from:", value=baro_duration)    
+
+    baro_embed.add_field(name="Baro is here from:", value=baro_duration)
     return baro_embed
+
 
 # Function to handle the retrieval of Duviri information
 def duviri_status(url: str):
@@ -195,9 +208,9 @@ def duviri_status(url: str):
 
     # Create an embed object to return with Duviri information
     duviri_embed = nextcord.Embed(
-        title = "Weekly Duviri Rewards",
-        description = "This week's rewards in the Circuit",
-        color = nextcord.Colour.from_rgb(0, 128, 255)
+        title="Weekly Duviri Rewards",
+        description="This week's rewards in the Circuit",
+        color=nextcord.Colour.from_rgb(0, 128, 255),
     )
 
     rewards = []
@@ -215,15 +228,14 @@ def duviri_status(url: str):
 
     # Add regular and steel path rewards
     duviri_embed.add_field(
-        name="**Circuit Rewards** (Choose one)", 
-        value=duviri_regular
+        name="**Circuit Rewards** (Choose one)", value=duviri_regular
     )
     duviri_embed.add_field(
-        name="**Steel Path Circuit Rewards** (Choose one)", 
-        value=duviri_steel_path
+        name="**Steel Path Circuit Rewards** (Choose one)", value=duviri_steel_path
     )
 
     return duviri_embed
+
 
 # Function to get information on Nightwave
 def nightwave_status(url: str):
@@ -249,9 +261,9 @@ def nightwave_status(url: str):
 
     # Create an embed object to return with Duviri information
     nw_embed = nextcord.Embed(
-        title = nw_title,
-        description = nw_duration,
-        color = nextcord.Colour.from_rgb(0, 128, 255)
+        title=nw_title,
+        description=nw_duration,
+        color=nextcord.Colour.from_rgb(0, 128, 255),
     )
 
     challenge_info = ""
@@ -263,30 +275,33 @@ def nightwave_status(url: str):
                 duration = "Daily"
         except:
             duration = "Weekly"
-        
+
         # Get the start and end time for the challenge
         start = epoch_convert(challenge["Activation"]["$date"]["$numberLong"])
         end = epoch_convert(challenge["Expiry"]["$date"]["$numberLong"])
 
         # Get the requirement for the challenge
-        if db.languages.find_one({"key" : challenge["Challenge"]}):
-            requirement_match = db.languages.find_one({"key" : challenge["Challenge"]})
+        if db.languages.find_one({"key": challenge["Challenge"]}):
+            requirement_match = db.languages.find_one({"key": challenge["Challenge"]})
             requirement_name = requirement_match["value"]
             requirement_desc = requirement_match["desc"]
             requirement = f"{requirement_name} - {requirement_desc}"
-        elif db.languages.find_one({"key" : challenge["Challenge"].lower()}):
-            requirement_match = db.languages.find_one({"key" : challenge["Challenge"].lower()})
+        elif db.languages.find_one({"key": challenge["Challenge"].lower()}):
+            requirement_match = db.languages.find_one(
+                {"key": challenge["Challenge"].lower()}
+            )
             requirement_name = requirement_match["value"]
             requirement_desc = requirement_match["desc"]
             requirement = f"{requirement_name} - {requirement_desc}"
         else:
             requirement = challenge["Challenge"].split("/")[-1]
-        
+
         challenge_info += f"- ({duration}) {requirement} {start}-{end}\n"
-    
-    nw_embed.add_field(name = "Rewards:", value = challenge_info)
+
+    nw_embed.add_field(name="Rewards:", value=challenge_info)
 
     return nw_embed
+
 
 # Function to get information on the current sortie
 def sortie_status(url: str):
@@ -301,7 +316,7 @@ def sortie_status(url: str):
     sortie_end = epoch_convert(sorties["Expiry"]["$date"]["$numberLong"])
 
     # Get the sortie boss and missions
-    sortie_boss = db.worldstate.find_one({"key" : sorties["Boss"]})["value"]
+    sortie_boss = db.worldstate.find_one({"key": sorties["Boss"]})["value"]
     missions = sorties["Variants"]
 
     # Create the message for when the sortie will be around
@@ -310,19 +325,22 @@ def sortie_status(url: str):
 
     # Get each missions type, modifier, and node
     for mission in missions:
-        sortie_type = db.worldstate.find_one({"key" : mission["missionType"]})["value"]
-        sortie_modifier = db.worldstate.find_one({"key" : mission["modifierType"]})["value"]
-        sortie_node = db.worldstate.find_one({"key" : mission["node"]})["value"]
+        sortie_type = db.worldstate.find_one({"key": mission["missionType"]})["value"]
+        sortie_modifier = db.worldstate.find_one({"key": mission["modifierType"]})[
+            "value"
+        ]
+        sortie_node = db.worldstate.find_one({"key": mission["node"]})["value"]
         sortie_missions += f"{sortie_type} {sortie_node} {sortie_modifier}\n"
-    
+
     # Create an embed object to return with sortie information
     sortie_embed = nextcord.Embed(
-        title = sortie_title,
-        description = sortie_missions,
-        color = nextcord.Colour.from_rgb(0, 128, 255)
+        title=sortie_title,
+        description=sortie_missions,
+        color=nextcord.Colour.from_rgb(0, 128, 255),
     )
-    
+
     return sortie_embed
+
 
 class Warframe(commands.Cog, name="Warframe"):
     """Commands for getting Warframe information"""
@@ -333,13 +351,82 @@ class Warframe(commands.Cog, name="Warframe"):
         self.bot = bot
         # Create a dictionary of Warframe Progenitor types to retrieve later
         self.progenitor = {
-            "Impact": ["Baruuk", "Dante", "Gauss", "Grendel", "Rhino", "Sevagoth", "Wukong", "Zephyr"],
-            "Heat": ["Chroma", "Ember", "Inaros", "Jade", "Kullervo", "Nezha", "Protea", "Temple", "Vauban", "Wisp"],
-            "Cold": ["Frost", "Gara", "Hildryn", "Koumei", "Revenant", "Styanax", "Titania", "Trinity"],
-            "Electricity": ["Banshee", "Caliban", "Excalibur", "Gyre", "Limbo", "Nova", "Valkyr", "Volt"],
-            "Toxin": ["Atlas", "Dagath", "Ivara", "Khora", "Nekros", "Nidus", "Nokko", "Oberon", "Oraxia", "Saryn"],
-            "Magnetic": ["Citrine", "Cyte-09", "Harrow", "Hydroid", "Lavos", "Mag", "Mesa", "Xaku", "Yareli"],
-            "Radiation": ["Ash", "Equinox", "Garuda", "Loki", "Mirage", "Nyx", "Octavia", "Qorvex", "Voruna"]
+            "Impact": [
+                "Baruuk",
+                "Dante",
+                "Gauss",
+                "Grendel",
+                "Rhino",
+                "Sevagoth",
+                "Wukong",
+                "Zephyr",
+            ],
+            "Heat": [
+                "Chroma",
+                "Ember",
+                "Inaros",
+                "Jade",
+                "Kullervo",
+                "Nezha",
+                "Protea",
+                "Temple",
+                "Vauban",
+                "Wisp",
+            ],
+            "Cold": [
+                "Frost",
+                "Gara",
+                "Hildryn",
+                "Koumei",
+                "Revenant",
+                "Styanax",
+                "Titania",
+                "Trinity",
+            ],
+            "Electricity": [
+                "Banshee",
+                "Caliban",
+                "Excalibur",
+                "Gyre",
+                "Limbo",
+                "Nova",
+                "Valkyr",
+                "Volt",
+            ],
+            "Toxin": [
+                "Atlas",
+                "Dagath",
+                "Ivara",
+                "Khora",
+                "Nekros",
+                "Nidus",
+                "Nokko",
+                "Oberon",
+                "Oraxia",
+                "Saryn",
+            ],
+            "Magnetic": [
+                "Citrine",
+                "Cyte-09",
+                "Harrow",
+                "Hydroid",
+                "Lavos",
+                "Mag",
+                "Mesa",
+                "Xaku",
+                "Yareli",
+            ],
+            "Radiation": [
+                "Ash",
+                "Equinox",
+                "Garuda",
+                "Loki",
+                "Mirage",
+                "Nyx",
+                "Octavia",
+                "Qorvex",
+                "Voruna",
+            ],
         }
         self.worldstate_url = "https://api.warframe.com/cdn/worldState.php"
         # Fetch the list of enrolled warframe channels to post daily content to
@@ -410,7 +497,7 @@ class Warframe(commands.Cog, name="Warframe"):
     async def archon(self, interaction: nextcord.Interaction):
         """Find the current Archon, missions, and remaining time for the current hunt"""
         await interaction.send(embed=archon_hunt(self.worldstate_url))
-    
+
     @nextcord.slash_command()
     async def baro(self, interaction: nextcord.Interaction):
         """Get information on Baro Ki'Teer"""
@@ -425,42 +512,57 @@ class Warframe(commands.Cog, name="Warframe"):
     async def nightwave(self, interaction: nextcord.Interaction):
         """Find information on the current Nightwave season and challenges"""
         await interaction.send(embed=nightwave_status(self.worldstate_url))
-    
+
     @nextcord.slash_command()
     async def sortie(self, interaction: nextcord.Interaction):
         """Find information on the current sortie"""
         await interaction.send(embed=sortie_status(self.worldstate_url))
-    
+
     @nextcord.slash_command()
     async def progenitors(self, interaction: nextcord.Interaction):
         """Returns progenitor elements and their corresponding warframes"""
         # Create the initial embed
         progenitor_embed = nextcord.Embed(
-            title = "Progenitor Elements",
-            color = nextcord.Colour.from_rgb(0, 128, 255)
+            title="Progenitor Elements", color=nextcord.Colour.from_rgb(0, 128, 255)
         )
         # Unpack progenitor dictionary values
-        impact_progenitors = ', '.join(self.progenitor['Impact'])
-        heat_progenitors = ', '.join(self.progenitor['Heat'])
-        cold_progenitors = ', '.join(self.progenitor['Cold'])
-        electricity_progenitors = ', '.join(self.progenitor['Electricity'])
-        toxin_progenitors = ', '.join(self.progenitor['Toxin'])
-        magnetic_progenitors = ', '.join(self.progenitor['Magnetic'])
-        radiation_progenitors = ', '.join(self.progenitor['Radiation'])
+        impact_progenitors = ", ".join(self.progenitor["Impact"])
+        heat_progenitors = ", ".join(self.progenitor["Heat"])
+        cold_progenitors = ", ".join(self.progenitor["Cold"])
+        electricity_progenitors = ", ".join(self.progenitor["Electricity"])
+        toxin_progenitors = ", ".join(self.progenitor["Toxin"])
+        magnetic_progenitors = ", ".join(self.progenitor["Magnetic"])
+        radiation_progenitors = ", ".join(self.progenitor["Radiation"])
         # Add fields for each element and corresponding warframes
-        progenitor_embed.add_field(name="Impact", value=f"{impact_progenitors}", inline=True)
-        progenitor_embed.add_field(name="Heat", value=f"{heat_progenitors}", inline=True)
-        progenitor_embed.add_field(name="Cold", value=f"{cold_progenitors}", inline=True)
-        progenitor_embed.add_field(name="Electricity", value=f"{electricity_progenitors}", inline=True)
-        progenitor_embed.add_field(name="Toxin", value=f"{toxin_progenitors}", inline=True)
-        progenitor_embed.add_field(name="Magnetic", value=f"{magnetic_progenitors}", inline=True)
-        progenitor_embed.add_field(name="Radiation", value=f"{radiation_progenitors}", inline=True)
+        progenitor_embed.add_field(
+            name="Impact", value=f"{impact_progenitors}", inline=True
+        )
+        progenitor_embed.add_field(
+            name="Heat", value=f"{heat_progenitors}", inline=True
+        )
+        progenitor_embed.add_field(
+            name="Cold", value=f"{cold_progenitors}", inline=True
+        )
+        progenitor_embed.add_field(
+            name="Electricity", value=f"{electricity_progenitors}", inline=True
+        )
+        progenitor_embed.add_field(
+            name="Toxin", value=f"{toxin_progenitors}", inline=True
+        )
+        progenitor_embed.add_field(
+            name="Magnetic", value=f"{magnetic_progenitors}", inline=True
+        )
+        progenitor_embed.add_field(
+            name="Radiation", value=f"{radiation_progenitors}", inline=True
+        )
 
         await interaction.send(embed=progenitor_embed)
-    
+
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_guild=True)
-    async def set_warframe_channel(self, interaction: nextcord.Interaction, channel: str):
+    async def set_warframe_channel(
+        self, interaction: nextcord.Interaction, channel: str
+    ):
         """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
@@ -468,13 +570,17 @@ class Warframe(commands.Cog, name="Warframe"):
         # Prepares the new guild & channel combination for this server
         new_channel = {"guild": interaction.guild_id, "channel": wf_channel_id}
         # Updates the Warframe channel for the server or inserts it if one doesn't exist currently
-        db.warframe_channels.replace_one({"guild": interaction.guild_id}, new_channel, upsert=True)
+        db.warframe_channels.replace_one(
+            {"guild": interaction.guild_id}, new_channel, upsert=True
+        )
 
         # Let users know where the updated channel is
         updated_channel = interaction.guild.get_channel(interaction.channel_id)
         if updated_channel:
-            await interaction.send(f"Warframe content for this server will go to {updated_channel.name}.")
-    
+            await interaction.send(
+                f"Warframe content for this server will go to {updated_channel.name}."
+            )
+
     @nextcord.slash_command()
     @application_checks.has_permissions(manage_guild=True)
     async def remove_warframe_channel(self, interaction: nextcord.Interaction):
@@ -483,10 +589,15 @@ class Warframe(commands.Cog, name="Warframe"):
         # Removes the Warframe channel for the server if it exists
         if db.warframe_channels.find_one({"guild": interaction.guild_id}):
             db.warframe_channels.delete_one({"guild": interaction.guild_id})
-            await interaction.send("Warframe automated content for this server is stopped.")
+            await interaction.send(
+                "Warframe automated content for this server is stopped."
+            )
         # Lets the user know if there is no existing Warframe channel
         else:
-            await interaction.send("There is no Warframe automated content for this server.")
+            await interaction.send(
+                "There is no Warframe automated content for this server."
+            )
+
 
 def setup(bot):
     bot.add_cog(Warframe(bot))
