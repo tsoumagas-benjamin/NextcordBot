@@ -1,5 +1,5 @@
 import nextcord
-import os
+from os import getenv, listdir
 from pymongo import MongoClient
 from nextcord.ext import commands
 from log import log
@@ -9,7 +9,7 @@ from log import log
 my_intents = nextcord.Intents.all()
 
 # Database config
-client = MongoClient(os.getenv("CONN_STRING"))
+client = MongoClient(getenv("CONN_STRING"))
 
 # Instantiate the bot
 bot = commands.AutoShardedBot(
@@ -50,7 +50,7 @@ async def on_ready():
             db.create_collection(c)
 
     # Add functionality from cogs
-    for filename in os.listdir("./cogs"):
+    for filename in listdir("./cogs"):
         if filename.endswith(".py"):
             bot.load_extension(f"cogs.{filename[:-3]}")
 
@@ -84,4 +84,4 @@ async def on_member_remove(member):
 log()
 
 # Run Discord bot
-bot.run(os.getenv("DISCORD_TOKEN"))
+bot.run(getenv("DISCORD_TOKEN"))
