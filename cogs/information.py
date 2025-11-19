@@ -1,14 +1,10 @@
 import nextcord
 from asyncio import sleep
 from time import time
-from os import getenv
-from pymongo import MongoClient
 import matplotlib.pyplot as plt
 import numpy as np
 from nextcord.ext import commands, application_checks
-
-client = MongoClient(getenv("CONN_STRING"))
-db = client.NextcordBot
+from utilities import db
 
 
 # Create a cog for information commands

@@ -1,14 +1,11 @@
 import nextcord
-from os import getenv
-from pymongo import MongoClient
 from nextcord.ext import application_checks, commands, tasks
 from requests import get, exceptions
 from json import loads
 from datetime import datetime, time
 from re import sub
+from utilities import db
 
-client = MongoClient(getenv("CONN_STRING"))
-db = client.NextcordBot
 worldstate_url = "https://api.warframe.com/cdn/worldState.php"
 
 

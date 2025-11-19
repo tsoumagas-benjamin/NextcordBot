@@ -1,12 +1,8 @@
 from collections.abc import Sequence
 import nextcord
-from os import getenv
-from pymongo import MongoClient
 from nextcord.ext import commands, application_checks
 from datetime import datetime
-
-client = MongoClient(getenv("CONN_STRING"))
-db = client.NextcordBot
+from utilities import db
 
 
 # Create a cog for audit log functionality

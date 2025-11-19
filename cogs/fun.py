@@ -6,14 +6,11 @@ from re import findall
 from requests import get, request
 from json import loads
 from datetime import date, time
-from pymongo import MongoClient
 from nextcord.ext import commands, application_checks, tasks
 import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
-
-client = MongoClient(getenv("CONN_STRING"))
-db = client.NextcordBot
+from utilities import db
 
 calendar = {
     1: 31,

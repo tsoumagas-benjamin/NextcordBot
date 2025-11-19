@@ -1,13 +1,9 @@
 import nextcord
-from pymongo import MongoClient
-from os import getenv
 from nextcord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from aiohttp import ClientSession
-
-client = MongoClient(getenv("CONN_STRING"))
-db = client.NextcordBot
+from utilities import db
 
 
 # Generates xp for a given message

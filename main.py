@@ -1,9 +1,8 @@
 import nextcord
 from os import getenv, listdir
-from pymongo import MongoClient
 from nextcord.ext import commands
 from log import log
-from utilities import client, db, collections, collection_names
+from utilities import db, collections, collection_names
 
 # Allows privileged intents for monitoring members joining, roles editing, and role assignments
 # These need to be enabled in the developer portal as well

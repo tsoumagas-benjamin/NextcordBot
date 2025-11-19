@@ -1,13 +1,10 @@
 import nextcord
 from os import getenv
-from pymongo import MongoClient
 from nextcord.ext import commands, application_checks, tasks
 from requests import get, post
 from json import loads, dumps
 from datetime import datetime, date, time, timedelta
-
-client = MongoClient(getenv("CONN_STRING"))
-db = client.NextcordBot
+from utilities import db
 
 
 # Create a cog for checking sales on games
