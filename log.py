@@ -1,10 +1,20 @@
 import sys, logging
 
 
+class LogFilter(logging.Filter):
+    def filter(self, record):
+        black_list = ["socket_event_type", "presence update", "guild_available"]
+        return not any(banned_str in record.getMessage() for banned_str in black_list)
+
+
 def log():
     # Create logger
     client_logger = logging.getLogger("nextcord.client")
     state_logger = logging.getLogger("nextcord.state")
+
+    # Add filters
+    client_logger.addFilter(LogFilter())
+    state_logger.addFilter(LogFilter())
 
     # Format log entries
     FORMAT = "[{asctime}][{filename}][{lineno:3}][{funcName}][{levelname}] {message}"
