@@ -1,10 +1,23 @@
 import sys, logging
 
 
+# Filter out logs with the following strings to keep logs more concise
+class LogFilter(logging.Filter):
+    def filter_log(self, record):
+        return (
+            not [
+                "guild_available",
+                "presence_update",
+                "socket_event_type",
+            ]
+            in record.getMessage()
+        )
+
+
 def log():
     # Create logger
-    client_logger = logging.getLogger("nextcord.client")
-    state_logger = logging.getLogger("nextcord.state")
+    client_logger = logging.getLogger("nextcord.client").addFilter(LogFilter())
+    state_logger = logging.getLogger("nextcord.state").addFilter(LogFilter())
 
     # Format log entries
     FORMAT = "[{asctime}][{filename}][{lineno:3}][{funcName}][{levelname}] {message}"
