@@ -70,7 +70,7 @@ class Trivia(commands.Cog, name="Trivia"):
     COG_EMOJI = "🎲"
 
     # Initialize all the default variables we need for trivia
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.AutoShardedBot) -> None:
         self.bot = bot
 
     @nextcord.slash_command()
@@ -115,5 +115,5 @@ class Trivia(commands.Cog, name="Trivia"):
 
 
 # Add the cog to the bot
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Trivia(bot))

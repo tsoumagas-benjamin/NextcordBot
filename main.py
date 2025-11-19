@@ -3,13 +3,11 @@ from os import getenv, listdir
 from pymongo import MongoClient
 from nextcord.ext import commands
 from log import log
+from utilities import client, db, collections, collection_names
 
 # Allows privileged intents for monitoring members joining, roles editing, and role assignments
 # These need to be enabled in the developer portal as well
 my_intents = nextcord.Intents.all()
-
-# Database config
-client = MongoClient(getenv("CONN_STRING"))
 
 # Instantiate the bot
 bot = commands.AutoShardedBot(
@@ -20,31 +18,13 @@ bot = commands.AutoShardedBot(
     ),
 )
 
-# Name our access to our client database
-db = client.NextcordBot
-
-# Get all the existing collections
-collections = db.list_collection_names()
-
 
 # Define bot behaviour on start up
 @bot.event
 async def on_ready():
     """When bot is connected to Discord"""
     # Initialize default collections
-    for c in [
-        "sales",
-        "Viktor",
-        "worldstate",
-        "sales_channels",
-        "levels",
-        "daily_channels",
-        "languages",
-        "birthdays",
-        "warframe_channels",
-        "audit_logs",
-        "rules",
-    ]:
+    for c in collection_names:
         if c not in collections:
             db.create_collection(c)
 

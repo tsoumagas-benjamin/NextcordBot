@@ -347,7 +347,7 @@ class Warframe(commands.Cog, name="Warframe"):
 
     COG_EMOJI = "⚔️"
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
         # Create a dictionary of Warframe Progenitor types to retrieve later
         self.progenitor = {
@@ -573,5 +573,5 @@ class Warframe(commands.Cog, name="Warframe"):
             )
 
 
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Warframe(bot))

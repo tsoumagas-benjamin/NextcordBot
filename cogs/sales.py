@@ -16,7 +16,7 @@ class Sales(commands.Cog, name="Game Sales"):
 
     COG_EMOJI = "💲"
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.AutoShardedBot) -> None:
         self.bot = bot
         # Fetch the list of sales channels to post sale information to
         self.sales_channels = db.sales_channels.distinct("channel")
@@ -326,5 +326,5 @@ class Sales(commands.Cog, name="Game Sales"):
         await interaction.send(embed=current_sale_embed)
 
 
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Sales(bot))

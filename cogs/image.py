@@ -35,7 +35,7 @@ class Image(commands.Cog, name="Image"):
 
     COG_EMOJI = "📷"
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.AutoShardedBot) -> None:
         self.bot = bot
 
     @nextcord.slash_command(name="contrast")
@@ -140,5 +140,5 @@ class Image(commands.Cog, name="Image"):
 
 
 # Add the cog to the bot
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Image(bot))

@@ -17,8 +17,8 @@ class Information(commands.Cog, name="Information"):
 
     COG_EMOJI = "📗"
 
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: commands.AutoShardedBot):
+        self.bot: commands.AutoShardedBot = bot
         self.title: str = ""
         self.id: int = 0
         self.count: list[int] = [0, 0]
@@ -317,5 +317,5 @@ class Information(commands.Cog, name="Information"):
             await interaction.followup.send("Please enter a valid unit of time.")
 
 
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Information(bot))

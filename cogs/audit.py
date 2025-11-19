@@ -15,7 +15,7 @@ class Audit(commands.Cog, name="Audit Logs"):
 
     COG_EMOJI = "📋"
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.AutoShardedBot) -> None:
         self.bot = bot
 
     # Function to format
@@ -664,5 +664,5 @@ class Audit(commands.Cog, name="Audit Logs"):
         await self.send_embed(server_audit_log["channel"], member_remove)
 
 
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Audit(bot))

@@ -4,7 +4,7 @@ from nextcord.ext import commands
 
 # Create a cog for error handling
 class Error(commands.Cog):
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.AutoShardedBot) -> None:
         self.bot = bot
 
     # Occurs whenever an error appears from a command
@@ -56,5 +56,5 @@ class Error(commands.Cog):
 
 
 # Add the cog to the bot
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Error(bot))

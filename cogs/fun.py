@@ -164,7 +164,7 @@ class Fun(commands.Cog, name="Fun"):
 
     COG_EMOJI = "😃"
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_channels = db.daily_channels.distinct("channel")
@@ -502,5 +502,5 @@ class Fun(commands.Cog, name="Fun"):
             )
 
 
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Fun(bot))

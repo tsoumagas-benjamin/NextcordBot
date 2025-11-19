@@ -10,7 +10,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
     COG_EMOJI = "🔨"
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @nextcord.slash_command()
@@ -127,5 +127,5 @@ class Moderation(commands.Cog, name="Moderation"):
             )
 
 
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Moderation(bot))

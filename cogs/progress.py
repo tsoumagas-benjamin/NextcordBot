@@ -34,7 +34,7 @@ class Progress(commands.Cog, name="Progress"):
 
     COG_EMOJI = "📈"
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.AutoShardedBot) -> None:
         self.bot = bot
 
     # Code inspired
@@ -204,5 +204,5 @@ class Progress(commands.Cog, name="Progress"):
 
 
 # Add the cog to the bot
-def setup(bot):
+def setup(bot: commands.AutoShardedBot):
     bot.add_cog(Progress(bot))
