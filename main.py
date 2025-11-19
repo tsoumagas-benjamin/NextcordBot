@@ -1,6 +1,6 @@
 import nextcord
 import os
-from pymongo import  MongoClient
+from pymongo import MongoClient
 from nextcord.ext import commands
 from log import log
 
@@ -9,38 +9,51 @@ from log import log
 my_intents = nextcord.Intents.all()
 
 # Database config
-client = MongoClient(os.getenv('CONN_STRING')) 
+client = MongoClient(os.getenv("CONN_STRING"))
 
 # Instantiate the bot
 bot = commands.AutoShardedBot(
     intents=my_intents,
     status=nextcord.Status.online,
     activity=nextcord.Activity(
-    type=nextcord.ActivityType.listening, 
-    name="/commands for help!"
-    ))  
+        type=nextcord.ActivityType.listening, name="/commands for help!"
+    ),
+)
 
 # Name our access to our client database
-db = client.NextcordBot   
+db = client.NextcordBot
 
-#Get all the existing collections
+# Get all the existing collections
 collections = db.list_collection_names()
-    
+
+
 # Define bot behaviour on start up
 @bot.event
 async def on_ready():
     """When bot is connected to Discord"""
     # Initialize default collections
     collections = db.list_collection_names()
-    for c in ['sales', 'Viktor', 'worldstate', 'sales_channels', 'levels', 'daily_channels', 'languages', 'birthdays', 'warframe_channels', 'audit_logs', 'rules']:
+    for c in [
+        "sales",
+        "Viktor",
+        "worldstate",
+        "sales_channels",
+        "levels",
+        "daily_channels",
+        "languages",
+        "birthdays",
+        "warframe_channels",
+        "audit_logs",
+        "rules",
+    ]:
         if c not in collections:
             db.create_collection(c)
-    
+
     # Add functionality from cogs
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            bot.load_extension(f'cogs.{filename[:-3]}')
-    
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            bot.load_extension(f"cogs.{filename[:-3]}")
+
     # Ensure all commands are added and synced
     bot.add_all_application_commands()
     await bot.sync_all_application_commands()
@@ -48,14 +61,16 @@ async def on_ready():
 
     print(f"Collections: {collections}")
     print(f"Intents: {dict(bot.intents)}")
-    print(f'We have logged in as {bot.user}')
-    
+    print(f"We have logged in as {bot.user}")
+
+
 # When leaving a server, delete all collections pertaining to that server.
 @bot.event
 async def on_guild_remove(guild):
     for collection in db.list_collection_names():
         mycol = db[collection]
         mycol.delete_many({"_id": guild.id})
+
 
 # Remove user from birthdays if they no longer share servers with the bot.
 @bot.event
@@ -64,8 +79,9 @@ async def on_member_remove(member):
         if db.birthdays.find_one({"_id": member.id}):
             db.birthdays.delete_many({"_id": member.id})
 
+
 # Tell the bot to store logs in nextcord.log
 log()
 
 # Run Discord bot
-bot.run(os.getenv('DISCORD_TOKEN'))
+bot.run(os.getenv("DISCORD_TOKEN"))

@@ -6,8 +6,9 @@ from requests import get, post
 from json import loads, dumps
 from datetime import datetime, date, time, timedelta
 
-client = MongoClient(getenv('CONN_STRING')) 
-db = client.NextcordBot 
+client = MongoClient(getenv("CONN_STRING"))
+db = client.NextcordBot
+
 
 # Create a cog for checking sales on games
 class Sales(commands.Cog, name="Game Sales"):
@@ -21,11 +22,11 @@ class Sales(commands.Cog, name="Game Sales"):
         self.sales_channels = db.sales_channels.distinct("channel")
         self.daily_prune.start()
         self.daily_sales.start()
-    
+
     def cog_unload(self):
         self.daily_prune.cancel()
-        self.daily_sales.cancel()    
-        
+        self.daily_sales.cancel()
+
     permitted_guilds = [686394755009347655, 793685160931098696]
 
     # Dictionary of Game titles and IDs to regularly check for sales
@@ -55,29 +56,31 @@ class Sales(commands.Cog, name="Game Sales"):
         # Run a function similar to update_sales where all games are checked for sales and the database is updated
         for game_id in self.target_games.values():
             self.compare_cut(game_id)
-    
+
     def prune_task(self):
         # Delete all sales with expiries older than the present datetime
-        db.sales.delete_many({"expiry" : {"$lt": datetime.now()}})
+        db.sales.delete_many({"expiry": {"$lt": datetime.now()}})
 
         # Delete all sales with discounts lower or equal to 0% if they exist
-        db.sales.delete_many({"cut" : {"$lte": 0}})
+        db.sales.delete_many({"cut": {"$lte": 0}})
 
     @tasks.loop(time=time(4))
     async def daily_sales(self):
         # Check for better updated sales
         self.sale_task()
-    
+
     @tasks.loop(time=time(5))
     async def daily_prune(self):
         # Prune expired sales from the database daily
         self.prune_task()
-    
+
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):
-        base_url = "https://api.isthereanydeal.com" + substring + "?key=" + getenv('DEAL_KEY')
+        base_url = (
+            "https://api.isthereanydeal.com" + substring + "?key=" + getenv("DEAL_KEY")
+        )
         return base_url
-    
+
     # Function to get a game's ID on IsThereAnyDeal given it's title
     def get_game_id(self, title: str):
         # Put the game title in lower case, separate each word and then join with +'s
@@ -90,11 +93,11 @@ class Sales(commands.Cog, name="Game Sales"):
         # Query the API and return the ID field
         game = get(query_url)
         game_json = loads(game.content)
-        game_id = game_json['game']['id']
+        game_id = game_json["game"]["id"]
 
         return game_id
-    
-     # Function to format expiry as a date object
+
+    # Function to format expiry as a date object
     def format_expiry(self, expiry: str):
         # Isolate the year, month, and day parts of the string
         date_info = expiry.split("-")
@@ -104,11 +107,12 @@ class Sales(commands.Cog, name="Game Sales"):
         year, month, day = list(map(int, date))
 
         # Create and return our date object
-        expiry_date = datetime(year, month, day, 0, 0, 0) 
+        expiry_date = datetime(year, month, day, 0, 0, 0)
 
         return expiry_date
-    
+
         # Function to check for the best cut on a game and when it expires
+
     def best_cut(self, game_id: str):
         # Format game ID as a payload and set up header and API URL
         payload = [game_id]
@@ -124,21 +128,21 @@ class Sales(commands.Cog, name="Game Sales"):
             return
 
         # Gather information on the current best cut according to IsThereAnyDeal
-        best_deal = sale_json[0]['deals'][0]
-        best_cut = best_deal['cut']
-        expiry = best_deal['expiry']
+        best_deal = sale_json[0]["deals"][0]
+        best_cut = best_deal["cut"]
+        expiry = best_deal["expiry"]
         if expiry:
             expiry_date = expiry[:10]
             return [best_cut, expiry_date]
         else:
-            return [best_cut, None]  
-    
+            return [best_cut, None]
+
     # Function to return the corresponding title for a given game ID
     def get_title(self, game_id: str):
         for title, id in self.target_games.items():
             if id == game_id:
                 return title
-    
+
     # Function to return sale contents for a game
     def get_sale_content(self, game_id: str):
         # Format game ID as a payload and set up header and API URL
@@ -151,7 +155,7 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_json = loads(sale.content)
 
         return sale_json
-    
+
     # Function to format content to be sent to sales channels(see best_price())
     def format_sale(self, game_id: str):
         # Get the title and sale information for the game
@@ -159,49 +163,46 @@ class Sales(commands.Cog, name="Game Sales"):
         sale_json = self.get_sale_content(game_id)
 
         # Gather information on the historic lows for the game's price
-        historic_low = sale_json[0]['historyLow']
-        all_time = historic_low['all']['amount']
-        last_year = historic_low['y1']['amount']
-        three_month = historic_low['m3']['amount']
-        
+        historic_low = sale_json[0]["historyLow"]
+        all_time = historic_low["all"]["amount"]
+        last_year = historic_low["y1"]["amount"]
+        three_month = historic_low["m3"]["amount"]
+
         # Gather information on the current best deal according to IsThereAnyDeal
-        best_deal = sale_json[0]['deals'][0]
-        best_shop = best_deal['shop']['name']
-        best_price = best_deal['price']['amount']
-        best_cut = best_deal['cut']
-        deal_url = best_deal['url']
+        best_deal = sale_json[0]["deals"][0]
+        best_shop = best_deal["shop"]["name"]
+        best_price = best_deal["price"]["amount"]
+        best_cut = best_deal["cut"]
+        deal_url = best_deal["url"]
 
         # Create the embed to send with relevant information that was gathered
         sale_embed = nextcord.Embed(
-            title=f"Sale Information for {game_title.title()}", 
+            title=f"Sale Information for {game_title.title()}",
             description=f"Current best deal at {best_shop} for ${best_price} USD (-{best_cut}%) | {deal_url}",
-            color=nextcord.Colour.blurple()
+            color=nextcord.Colour.blurple(),
         )
-        
+
         # Add information on the best prices for the game over various timespans
         sale_embed.add_field(name="All Time Low", value=f"${all_time} USD")
         sale_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
         sale_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
 
         return sale_embed
-    
+
     # Function to report on all the active sales in the database
     def get_current_sales(self):
         current_sale_embed = nextcord.Embed(
             title="Current Sales on IsThereAnyDeal",
             description="Use /best_price on a game here to see more details",
-            colour=nextcord.Colour.blurple()
+            colour=nextcord.Colour.blurple(),
         )
 
         for sale in db.sales.find():
             # Retrieve the game's title, discount, and expiry and format them for the embed
-            sale_title = self.get_title(sale['_id'])
-            sale_expiry = sale['expiry'].strftime('%m-%d-%Y')
+            sale_title = self.get_title(sale["_id"])
+            sale_expiry = sale["expiry"].strftime("%m-%d-%Y")
             sale_description = f"{sale['cut']}% off until {sale_expiry}"
-            current_sale_embed.add_field(
-                name=sale_title,
-                value=sale_description
-            )
+            current_sale_embed.add_field(name=sale_title, value=sale_description)
 
         return current_sale_embed
 
@@ -224,7 +225,7 @@ class Sales(commands.Cog, name="Game Sales"):
 
         # Write to the servers about the new best sale
         self.send_sale_info(self.format_sale(game_id))
-    
+
     # Function to compare a game's current best price against the database or append it if it's better
     def compare_cut(self, game_id: str):
         # Get the current best sale info on a game
@@ -246,24 +247,26 @@ class Sales(commands.Cog, name="Game Sales"):
             # Get today's date and increment it by one day to get tomorrow's date
             today = date.today()
             tomorrow = today + timedelta(days=1)
-            current_best_expiry = tomorrow.strftime('%Y-%m-%d')
-        
+            current_best_expiry = tomorrow.strftime("%Y-%m-%d")
+
         formatted_expiry = self.format_expiry(current_best_expiry)
 
         # Check database for the if there is already a sale stored for this game
-        game_sale = db.sales.find_one({"_id": game_id}, {"_id": False, "best_cut": True})
+        game_sale = db.sales.find_one(
+            {"_id": game_id}, {"_id": False, "best_cut": True}
+        )
         if game_sale:
             # Check the cut for the existing record
-            previous_cut = game_sale['best_cut']
+            previous_cut = game_sale["best_cut"]
 
             # Replace previous sale if new sale is better
             if current_best_cut > previous_cut:
                 self.store_sale(game_id, current_best_cut, formatted_expiry)
-        
+
         # If a sale is not already recorded, record the new one
         else:
             self.store_sale(game_id, current_best_cut, formatted_expiry)
-    
+
     # Function to set sales channel for this server
     @nextcord.slash_command(guild_ids=permitted_guilds)
     @application_checks.has_permissions(manage_guild=True)
@@ -275,14 +278,18 @@ class Sales(commands.Cog, name="Game Sales"):
         # Prepares the new guild & channel combination for this server
         new_channel = {"guild": interaction.guild_id, "channel": sales_channel_id}
         # Updates the sales channel for the server or inserts it if one doesn't exist currently
-        db.sales_channels.replace_one({"guild": interaction.guild_id}, new_channel, upsert=True)
+        db.sales_channels.replace_one(
+            {"guild": interaction.guild_id}, new_channel, upsert=True
+        )
 
         # Let users know where the updated channel is
         updated_channel = interaction.guild.get_channel(sales_channel_id)
         if updated_channel is None:
             updated_channel = await self.bot.fetch_channel(sales_channel_id)
-        await interaction.send(f"Sales for this server will go to {updated_channel.name}.")
-    
+        await interaction.send(
+            f"Sales for this server will go to {updated_channel.name}."
+        )
+
     # Function to remove sales channel for this server
     @nextcord.slash_command(guild_ids=permitted_guilds)
     @application_checks.has_permissions(manage_guild=True)
@@ -308,8 +315,8 @@ class Sales(commands.Cog, name="Game Sales"):
         # Retrieve the embed with formatted information about the sale
         sale_embed = self.format_sale(game_id)
 
-        await interaction.send(embed=sale_embed)   
-    
+        await interaction.send(embed=sale_embed)
+
     # Function to get all current sales as an embed
     @nextcord.slash_command(guild_ids=permitted_guilds)
     async def current_sales(self, interaction: nextcord.Interaction):
@@ -317,6 +324,7 @@ class Sales(commands.Cog, name="Game Sales"):
         current_sale_embed = self.get_current_sales()
 
         await interaction.send(embed=current_sale_embed)
+
 
 def setup(bot):
     bot.add_cog(Sales(bot))
