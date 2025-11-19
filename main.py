@@ -32,7 +32,6 @@ collections = db.list_collection_names()
 async def on_ready():
     """When bot is connected to Discord"""
     # Initialize default collections
-    collections = db.list_collection_names()
     for c in [
         "sales",
         "Viktor",
@@ -56,7 +55,11 @@ async def on_ready():
 
     # Ensure all commands are added and synced
     bot.add_all_application_commands()
-    await bot.sync_all_application_commands()
+    try:
+        await bot.sync_application_commands()
+    except Exception as e:
+        print(f"Error syncing: {e}")
+
     print(f"Registered commands: {bot.commands}")
 
     print(f"Collections: {collections}")
