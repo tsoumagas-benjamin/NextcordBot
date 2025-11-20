@@ -141,6 +141,17 @@ def baro_kiteer(url: str):
     # Access specifically the information about Baro Ki'Teer
     baro = wf_world["VoidTraders"][0]
 
+    # Get the start and end times as dynamic timestamps
+    baro_start = epoch_convert(baro["Activation"]["$date"]["$numberLong"])
+    baro_end = epoch_convert(baro["Expiry"]["$date"]["$numberLong"])
+    baro_duration = f"{baro_start} - {baro_end}"
+
+    # Get Baro's location
+    try:
+        baro_location = db.worldstate.find_one({"key": baro["Node"]})["value"]
+    except:
+        baro_location = "an unknown location"
+
     try:
         # Check if Baro has inventory/is available
         if baro["Manifest"]:
@@ -148,19 +159,11 @@ def baro_kiteer(url: str):
     except:
         # Create an embed object to return with Baro information
         baro_embed = nextcord.Embed(
-            title="Baro Ki'Teer has not arrived yet",
+            title=f"Baro Ki'Teer will be at {baro_location} between {baro_duration}",
             description="Inventory Unknown",
             color=nextcord.Colour.from_rgb(0, 128, 255),
         )
         return baro_embed
-
-    # Get the start and end times as dynamic timestamps
-    baro_start = epoch_convert(baro["Activation"]["$date"]["$numberLong"])
-    baro_end = epoch_convert(baro["Expiry"]["$date"]["$numberLong"])
-    baro_duration = f"{baro_start} - {baro_end}"
-
-    # Get Baro's location
-    baro_location = db.worldstate.find_one({"key": baro["Node"]})["value"]
 
     # Create an embed object to return with Baro information
     baro_embed = nextcord.Embed(
