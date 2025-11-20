@@ -191,6 +191,77 @@ def baro_kiteer(url: str):
     return baro_embed
 
 
+# Function to get information on the current Deep Archimedea
+def deep_archimedea_status(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    # Access specifically the information about sorties
+    da = wf_world["Conquests"][0]
+
+    # Get the start and end times as dynamic timestamps
+    da_start = epoch_convert(da["Activation"]["$date"]["$numberLong"])
+    da_end = epoch_convert(da["Expiry"]["$date"]["$numberLong"])
+    da_duration = f"{da_start} - {da_end}"
+
+    # Create the Deep Archimedea embed
+    da_embed = nextcord.Embed(
+        title="Deep Archimedea",
+        description=da_duration,
+        color=nextcord.Colour.from_rgb(0, 128, 255),
+    )
+
+    # Get the Deep Archimedea missions
+    da_missions = da["Missions"]
+
+    # Get each mission's faction, type, and modifiers
+    for mission in da_missions:
+        # Add mission type and enemy faction to the embed
+        da_faction = db.worldstate.find_one({"key": mission["faction"]})["value"]
+        da_type = db.worldstate.find_one({"key": mission["missionType"]})["value"]
+        da_embed.add_field(name=da_type, value=da_faction, inline=False)
+
+        # Get modifiers for both regular and elite difficulties
+        da_difficulties = mission["difficulties"]
+
+        # Handle risks and deviations for normal difficulties
+        da_normal = da_difficulties[0]
+        normal_dev = string_split(da_normal["deviation"])
+        da_embed.add_field(name="Deviations", value=normal_dev, inline=False)
+
+        normal_risks = da_normal["risks"]
+        da_risks = []
+
+        for risk in normal_risks:
+            da_risks.append(f"  - {string_split(risk)}")
+
+        da_embed.add_field(name="Risks", value="\n".join(da_risks), inline=False)
+
+        # Handle additional risks for elite difficulties
+        da_elite = da_difficulties[1]
+
+        elite_risks = da_elite["risks"]
+        eda_risks = []
+
+        for risk in elite_risks:
+            eda_risks.append(f"  - {string_split(risk)}")
+
+        da_embed.add_field(name="Elite Risks", value="\n".join(da_risks), inline=False)
+
+        # Get Deep Archimedea variables
+        da_variables = da["Variables"]
+        parsed_variables = []
+
+        for variable in da_variables:
+            parsed_variables.append(f"  - {string_split(variable)}")
+
+        da_embed.add_field(
+            name="Variables", value="\n".join(parsed_variables), inline=False
+        )
+
+        return da_embed
+
+
 # Function to handle the retrieval of Duviri information
 def duviri_status(url: str):
     # Convert the response content for the world state into a Python object
@@ -339,6 +410,77 @@ def sortie_status(url: str):
     return sortie_embed
 
 
+# Function to get information on the current Temporal Archimedea
+def temporal_archimedea_status(url: str):
+    # Convert the response content for the world state into a Python object
+    wf_world = request_wf_info(url)
+
+    # Access specifically the information about sorties
+    ta = wf_world["Conquests"][1]
+
+    # Get the start and end times as dynamic timestamps
+    ta_start = epoch_convert(ta["Activation"]["$date"]["$numberLong"])
+    ta_end = epoch_convert(ta["Expiry"]["$date"]["$numberLong"])
+    ta_duration = f"{ta_start} - {ta_end}"
+
+    # Create the Deep Archimedea embed
+    ta_embed = nextcord.Embed(
+        title="Temporal Archimedea",
+        description=ta_duration,
+        color=nextcord.Colour.from_rgb(0, 128, 255),
+    )
+
+    # Get the Deep Archimedea missions
+    ta_missions = ta["Missions"]
+
+    # Get each mission's faction, type, and modifiers
+    for mission in ta_missions:
+        # Add mission type and enemy faction to the embed
+        ta_faction = db.worldstate.find_one({"key": mission["faction"]})["value"]
+        ta_type = db.worldstate.find_one({"key": mission["missionType"]})["value"]
+        ta_embed.add_field(name=ta_type, value=ta_faction, inline=False)
+
+        # Get modifiers for both regular and elite difficulties
+        ta_difficulties = mission["difficulties"]
+
+        # Handle risks and deviations for normal difficulties
+        ta_normal = ta_difficulties[0]
+        normal_dev = string_split(ta_normal["deviation"])
+        ta_embed.add_field(name="Deviations", value=normal_dev, inline=False)
+
+        normal_risks = ta_normal["risks"]
+        ta_risks = []
+
+        for risk in normal_risks:
+            ta_risks.append(f"  - {string_split(risk)}")
+
+        ta_embed.add_field(name="Risks", value="\n".join(ta_risks), inline=False)
+
+        # Handle additional risks for elite difficulties
+        ta_elite = ta_difficulties[1]
+
+        elite_risks = ta_elite["risks"]
+        eta_risks = []
+
+        for risk in elite_risks:
+            eta_risks.append(f"  - {string_split(risk)}")
+
+        ta_embed.add_field(name="Elite Risks", value="\n".join(ta_risks), inline=False)
+
+        # Get Temporal Archimedea variables
+        ta_variables = ta["Variables"]
+        parsed_variables = []
+
+        for variable in ta_variables:
+            parsed_variables.append(f"  - {string_split(variable)}")
+
+        ta_embed.add_field(
+            name="Variables", value="\n".join(parsed_variables), inline=False
+        )
+
+        return ta_embed
+
+
 class Warframe(commands.Cog, name="Warframe"):
     """Commands for getting Warframe information"""
 
@@ -453,6 +595,27 @@ class Warframe(commands.Cog, name="Warframe"):
                     daily_wf_channel = await self.bot.fetch_channel(channel_id)
                 await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
 
+    # Archimedea loop runs every Sunday for the weekly reset
+    @tasks.loop(time=time(2))
+    async def archimedea_timer(self):
+        # Checks every day at 2:00 am UTC / 9:00 pm EST for Archimedea
+        weekday = datetime.today().weekday()
+        # If date is Sunday(EST)/Monday(UTC), then run the Deep and Temporal Archimedea functions
+        if weekday == 0:
+            # Fetch the list of enrolled warframe channels to post daily content to
+            self.daily_wf_channels = db.warframe_channels.distinct("channel")
+            # Send the content to each of the daily warframe channels
+            for channel_id in self.daily_wf_channels:
+                daily_wf_channel = self.bot.get_channel(channel_id)
+                if daily_wf_channel is None:
+                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
+                await daily_wf_channel.send(
+                    embed=deep_archimedea_status(self.worldstate_url)
+                )
+                await daily_wf_channel.send(
+                    embed=temporal_archimedea_status(self.worldstate_url)
+                )
+
     # Archon loop runs every Sunday for the weekly reset
     @tasks.loop(time=time(2))
     async def archon_timer(self):
@@ -501,6 +664,11 @@ class Warframe(commands.Cog, name="Warframe"):
         await interaction.send(embed=baro_kiteer(self.worldstate_url))
 
     @nextcord.slash_command()
+    async def deep_archimedea(self, interaction: nextcord.Interaction):
+        """Get information on Deep Archimedea"""
+        await interaction.send(embed=deep_archimedea_status(self.worldstate_url))
+
+    @nextcord.slash_command()
     async def duviri(self, interaction: nextcord.Interaction):
         """Find information on the current Duviri cycle rewards"""
         await interaction.send(embed=duviri_status(self.worldstate_url))
@@ -514,6 +682,11 @@ class Warframe(commands.Cog, name="Warframe"):
     async def sortie(self, interaction: nextcord.Interaction):
         """Find information on the current sortie"""
         await interaction.send(embed=sortie_status(self.worldstate_url))
+
+    @nextcord.slash_command()
+    async def temporal_archimedea(self, interaction: nextcord.Interaction):
+        """Get information on Temporal Archimedea"""
+        await interaction.send(embed=temporal_archimedea_status(self.worldstate_url))
 
     @nextcord.slash_command()
     async def progenitors(self, interaction: nextcord.Interaction):
