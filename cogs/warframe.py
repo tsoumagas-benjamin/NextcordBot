@@ -192,8 +192,16 @@ def baro_kiteer(url: str):
         # Format everything into one line and append it to the list
         baro_list.append(f"{name} - {ducats} D {credits} C")
 
-    # Append everything from the list into the embed
-    baro_embed.add_field(name="Inventory", value=f"\n".join(baro_list), inline=False)
+    # Break Baro's inventory into chunks of 10 items to avoid going over Discord's limits per field
+    chunk_size = 10
+    baro_chunked = [
+        baro_list[item : item + chunk_size]
+        for item in range(0, (len(baro_list), chunk_size))
+    ]
+
+    # Append each chunk's information to the embed
+    for chunk in baro_chunked:
+        baro_embed.add_field(name="", value=f"\n".join(chunk), inline=False)
 
     baro_embed.add_field(name="Baro is here from:", value=baro_duration)
     return baro_embed
