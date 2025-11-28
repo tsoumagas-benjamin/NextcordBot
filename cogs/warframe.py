@@ -172,6 +172,8 @@ def baro_kiteer(url: str):
         color=nextcord.Colour.from_rgb(0, 128, 255),
     )
 
+    baro_list = []
+
     # Iterate Baro's inventory
     for item in baro_inventory:
         # Get each item's name, ducat, and credit cost
@@ -187,10 +189,11 @@ def baro_kiteer(url: str):
         else:
             name = item["ItemType"].split("/")[-1]
 
-        # Format everything into one line and append it to the embed
-        baro_embed.add_field(
-            name=f"{name}", value=f"{ducats} D {credits} C", inline=False
-        )
+        # Format everything into one line and append it to the list
+        baro_list.append(f"{name} - {ducats} D {credits} C")
+
+    # Append everything from the list into the embed
+    baro_embed.add_field(name="Inventory", value=f"\n".join(baro_list), inline=False)
 
     baro_embed.add_field(name="Baro is here from:", value=baro_duration)
     return baro_embed
