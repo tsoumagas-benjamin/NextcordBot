@@ -196,7 +196,7 @@ def baro_kiteer(url: str):
     chunk_size = 10
     baro_chunked = [
         baro_list[item : item + chunk_size]
-        for item in range(0, (len(baro_list), chunk_size))
+        for item in range(0, len(baro_list), chunk_size)
     ]
 
     # Append each chunk's information to the embed
