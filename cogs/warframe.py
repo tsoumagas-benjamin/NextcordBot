@@ -188,7 +188,9 @@ def baro_kiteer(url: str):
             name = item["ItemType"].split("/")[-1]
 
         # Format everything into one line and append it to the embed
-        baro_embed.add_field(f"{name} - {ducats} D - {credits} C")
+        baro_embed.add_field(
+            name=f"{name}", value=f"{ducats} D {credits} C", inline=False
+        )
 
     baro_embed.add_field(name="Baro is here from:", value=baro_duration)
     return baro_embed
