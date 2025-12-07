@@ -180,71 +180,80 @@ class Fun(commands.Cog, name="Fun"):
 
     @tasks.loop(time=time(0))
     async def daily_meme(self):
-        # Fetch the list of enrolled channels to post daily content to
-        self.daily_channels = db.daily_channels.distinct("channel")
-        # Send a meme to each of the daily channels
-        for channel_id in self.daily_channels:
-            daily_channel = self.bot.get_channel(channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(channel_id)
-            await daily_channel.send(embed=meme_task())
+        try:
+            # Fetch the list of enrolled channels to post daily content to
+            self.daily_channels = db.daily_channels.distinct("channel")
+            # Send a meme to each of the daily channels
+            for channel_id in self.daily_channels:
+                daily_channel = self.bot.get_channel(channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(channel_id)
+                await daily_channel.send(embed=meme_task())
+        except Exception as e:
+            print(f"The meme task error is: {e}")
 
     @tasks.loop(time=time(4))
     async def daily_birthday(self):
-        # Check for a list of people whose birthday is today, stopping if there are none
-        user_list = birthday_task()
-        if user_list is not None:
-            # Get all daily content guilds and channels
-            birthday_channels = db.daily_channels.find({})
-            for channel in birthday_channels:
-                # Start the birthday embed for this guild
-                bday_message = nextcord.Embed(
-                    title=f"🥳\tHappy Birthday!\t🎉",
-                    colour=nextcord.Colour.from_rgb(0, 128, 255),
-                )
-                # Get the target channel from the registered channel IDs stored
-                target_channel = self.bot.get_channel(channel["channel"])
-                if target_channel is None:
-                    target_channel = self.bot.fetch_channel(channel["guild"])
-                # Get the target guild from the registered guild IDs stored
-                target_guild: nextcord.Guild = self.bot.get_guild(channel["guild"])
-                if target_guild is None:
-                    target_guild: nextcord.Guild = self.bot.fetch_guild(
-                        channel["guild"]
+        try:
+            # Check for a list of people whose birthday is today, stopping if there are none
+            user_list = birthday_task()
+            if user_list is not None:
+                # Get all daily content guilds and channels
+                birthday_channels = db.daily_channels.find({})
+                for channel in birthday_channels:
+                    # Start the birthday embed for this guild
+                    bday_message = nextcord.Embed(
+                        title=f"🥳\tHappy Birthday!\t🎉",
+                        colour=nextcord.Colour.from_rgb(0, 128, 255),
                     )
-                # Add each birthday user to the embed if they are in the current guild
-                for user_id in user_list:
-                    if target_guild.get_member(user_id) is not None:
-                        user: nextcord.User = self.bot.get_user(user_id)
-                        if user is None:
-                            user: nextcord.User = await self.bot.fetch_user(user_id)
-                        bday_message.add_field(
-                            name="", value=f"**{user.display_name.capitalize()}**"
+                    # Get the target channel from the registered channel IDs stored
+                    target_channel = self.bot.get_channel(channel["channel"])
+                    if target_channel is None:
+                        target_channel = self.bot.fetch_channel(channel["guild"])
+                    # Get the target guild from the registered guild IDs stored
+                    target_guild: nextcord.Guild = self.bot.get_guild(channel["guild"])
+                    if target_guild is None:
+                        target_guild: nextcord.Guild = self.bot.fetch_guild(
+                            channel["guild"]
                         )
-                # Send the birthday embed for this guild
-                await target_channel.send(embed=bday_message)
+                    # Add each birthday user to the embed if they are in the current guild
+                    for user_id in user_list:
+                        if target_guild.get_member(user_id) is not None:
+                            user: nextcord.User = self.bot.get_user(user_id)
+                            if user is None:
+                                user: nextcord.User = await self.bot.fetch_user(user_id)
+                            bday_message.add_field(
+                                name="", value=f"**{user.display_name.capitalize()}**"
+                            )
+                    # Send the birthday embed for this guild
+                    await target_channel.send(embed=bday_message)
+        except Exception as e:
+            print(f"The birthday task error is: {e}")
 
     @tasks.loop(time=time(12))
     async def daily_positivity(self):
-        # Creates daily positivity post
-        advice = advice_task()
-        affirm = affirm_task()
-        quote = get_quote()
-        positivity = nextcord.Embed(
-            title=f"😊\tHere's your reminder to stay positive today!\t😊",
-            colour=nextcord.Colour.from_rgb(0, 128, 255),
-        )
-        positivity.add_field(name="Advice of the day:", value=f"{advice}")
-        positivity.add_field(name="Affirmation of the day:", value=f"{affirm}")
-        positivity.add_field(name="", value=quote, inline=True)
-        # Fetch the list of enrolled channels to post daily content to
-        self.daily_channels = db.daily_channels.distinct("channel")
-        # Send some positivity to each of the daily channels
-        for channel_id in self.daily_channels:
-            daily_channel = self.bot.get_channel(channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(channel_id)
-            await daily_channel.send(embed=positivity)
+        try:
+            # Creates daily positivity post
+            advice = advice_task()
+            affirm = affirm_task()
+            quote = get_quote()
+            positivity = nextcord.Embed(
+                title=f"😊\tHere's your reminder to stay positive today!\t😊",
+                colour=nextcord.Colour.from_rgb(0, 128, 255),
+            )
+            positivity.add_field(name="Advice of the day:", value=f"{advice}")
+            positivity.add_field(name="Affirmation of the day:", value=f"{affirm}")
+            positivity.add_field(name="", value=quote, inline=True)
+            # Fetch the list of enrolled channels to post daily content to
+            self.daily_channels = db.daily_channels.distinct("channel")
+            # Send some positivity to each of the daily channels
+            for channel_id in self.daily_channels:
+                daily_channel = self.bot.get_channel(channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(channel_id)
+                await daily_channel.send(embed=positivity)
+        except Exception as e:
+            print(f"The positivity task error is: {e}")
 
     @tasks.loop(time=time(16))
     async def daily_animal(self):
@@ -265,18 +274,21 @@ class Fun(commands.Cog, name="Fun"):
                     daily_channel = await self.bot.fetch_channel(channel_id)
                 await daily_channel.send(embed=animal)
         except Exception as e:
-            print(f"The error is: {e}")
+            print(f"The animal task error is: {e}")
 
     @tasks.loop(time=time(20))
     async def daily_joke(self):
-        # Fetch the list of enrolled channels to post daily content to
-        self.daily_channels = db.daily_channels.distinct("channel")
-        # Send a joke to each of the daily channels
-        for channel_id in self.daily_channels:
-            daily_channel = self.bot.get_channel(channel_id)
-            if daily_channel is None:
-                daily_channel = await self.bot.fetch_channel(channel_id)
-            await daily_channel.send(embed=joke_task())
+        try:
+            # Fetch the list of enrolled channels to post daily content to
+            self.daily_channels = db.daily_channels.distinct("channel")
+            # Send a joke to each of the daily channels
+            for channel_id in self.daily_channels:
+                daily_channel = self.bot.get_channel(channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(channel_id)
+                await daily_channel.send(embed=joke_task())
+        except Exception as e:
+            print(f"The joke task error is: {e}")
 
     @nextcord.slash_command()
     async def animal(self, interaction: nextcord.Interaction):
