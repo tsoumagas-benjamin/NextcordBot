@@ -3,7 +3,12 @@ import sys, logging
 
 class LogFilter(logging.Filter):
     def filter(self, record):
-        black_list = ["socket_event_type", "presence_update", "guild_available"]
+        black_list = [
+            "socket_event_type",
+            "presence_update",
+            "guild_available",
+            "Dispatching event",
+        ]
         return not any(banned_str in record.getMessage() for banned_str in black_list)
 
 
