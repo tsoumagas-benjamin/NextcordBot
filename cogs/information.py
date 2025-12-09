@@ -52,22 +52,6 @@ class Information(commands.Cog, name="Information"):
         await interaction.send(f" Result of {equation} is {evaluation}")
 
     @nextcord.slash_command()
-    async def commands(self, interaction: nextcord.Interaction):
-        """Get a list of commands for the bot"""
-        commands_list = self.bot.get_application_commands()
-        cmds = []
-        for cmd in commands_list:
-            cmds.append(cmd.qualified_name)
-        cmds.sort()
-        bot_commands = ", ".join(cmds)
-        embed = nextcord.Embed(
-            title=f"{self.bot.user.name} Commands",
-            description=bot_commands,
-            color=nextcord.Colour.from_rgb(0, 128, 255),
-        )
-        await interaction.send(embed=embed)
-
-    @nextcord.slash_command()
     async def info(self, interaction: nextcord.Interaction, member: nextcord.Member):
         """Get information on a user"""
         embed = nextcord.Embed(
