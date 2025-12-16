@@ -78,38 +78,6 @@ def birthday_task():
         return None
 
 
-def joke_task():
-    url = "https://jokeapi-v2.p.rapidapi.com/joke/Any"
-    querystring = {
-        "format": "json",
-        "blacklistFlags": "nsfw,racist",
-        "safe-mode": "true",
-    }
-    key = getenv("JOKE_KEY")
-    headers = {"X-RapidAPI-Host": "jokeapi-v2.p.rapidapi.com", "X-RapidAPI-Key": key}
-    response = request(
-        "GET",
-        url,
-        headers=headers,
-        params=querystring,
-        allow_redirects=False,
-        timeout=20,
-    ).json()
-    jokeType = response["type"]
-    jokeCategory = response["category"]
-    embed = nextcord.Embed(
-        title=f"{jokeCategory}", color=nextcord.Colour.from_rgb(0, 128, 255)
-    )
-    if jokeType == "single":
-        joke = response["joke"]
-        embed.description = joke
-    else:
-        jokeSetup = response["setup"]
-        jokeDelivery = response["delivery"]
-        embed.description = f"{jokeSetup}\n\n||{jokeDelivery}||"
-    return embed
-
-
 def meme_task():
     # Get all info about the meme and take the last/best quality image preview
     base_url = "https://meme-api.com/gimme"
@@ -276,20 +244,6 @@ class Fun(commands.Cog, name="Fun"):
         except Exception as e:
             print(f"The animal task error is: {e}")
 
-    @tasks.loop(time=time(20))
-    async def daily_joke(self):
-        try:
-            # Fetch the list of enrolled channels to post daily content to
-            self.daily_channels = db.daily_channels.distinct("channel")
-            # Send a joke to each of the daily channels
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                await daily_channel.send(embed=joke_task())
-        except Exception as e:
-            print(f"The joke task error is: {e}")
-
     @nextcord.slash_command()
     async def animal(self, interaction: nextcord.Interaction):
         """Get a random animal picture"""
@@ -437,12 +391,6 @@ class Fun(commands.Cog, name="Fun"):
             title="", description=quote, color=nextcord.Colour.from_rgb(0, 128, 255)
         )
         await interaction.send(embed=embed)
-
-    @nextcord.slash_command()
-    async def joke(self, interaction: nextcord.Interaction):
-        """Gets a random joke from a joke API"""
-        result = joke_task()
-        await interaction.send(embed=result)
 
     @nextcord.slash_command()
     async def meme(self, interaction: nextcord.Interaction):
