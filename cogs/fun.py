@@ -399,19 +399,6 @@ class Fun(commands.Cog, name="Fun"):
         await interaction.send(embed=meme_post)
 
     @nextcord.slash_command()
-    async def viktor(self, interaction: nextcord.Interaction):
-        """Gets a random Viktor quote."""
-        object = db["Viktor"].aggregate([{"$sample": {"size": 1}}])
-        for x in object:
-            quote = x["quote"]
-        embed = nextcord.Embed(
-            title="Viktor:",
-            description=f"*{quote}*",
-            color=nextcord.Colour.from_rgb(0, 128, 255),
-        )
-        await interaction.send(embed=embed)
-
-    @nextcord.slash_command()
     async def youtube(self, interaction: nextcord.Interaction, *, message: str):
         """Search youtube for a video"""
         query_string = parse.urlencode({"search_query": message})

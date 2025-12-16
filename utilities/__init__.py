@@ -12,7 +12,6 @@ db = client.NextcordBot
 collections = db.list_collection_names()
 collection_names = [
     "sales",
-    "Viktor",
     "worldstate",
     "sales_channels",
     "levels",
