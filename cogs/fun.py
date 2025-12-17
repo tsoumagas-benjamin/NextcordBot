@@ -432,6 +432,7 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def joke(self, interaction: nextcord.Interaction):
+        """Gets a random joke from Sv443's Joke API Wrapper"""
         joke, category = asyncio.run(joke_task())
         joke_embed = nextcord.Embed(
             title=f"{category} Joke",
