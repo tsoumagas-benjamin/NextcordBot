@@ -13,7 +13,7 @@ bot = commands.AutoShardedBot(
     intents=my_intents,
     status=nextcord.Status.online,
     activity=nextcord.Activity(
-        type=nextcord.ActivityType.listening, name="/commands for help!"
+        type=nextcord.ActivityType.listening, name="Type / to look for commands!"
     ),
 )
 
