@@ -53,33 +53,19 @@ class Information(commands.Cog, name="Information"):
 
     @nextcord.slash_command()
     async def commands(self, interaction: nextcord.Interaction):
-        """Returns a list of the bot's cogs and corresponding commands"""
-        cog_mapping = self.bot.cogs
-
-        command_embed = nextcord.Embed(
-            title="Chaos Bot Commands",
+        """Get a list of commands for the bot"""
+        commands_list = self.bot.get_application_commands()
+        cmds = []
+        for cmd in commands_list:
+            cmds.append(cmd.qualified_name)
+        cmds.sort()
+        bot_commands = ", ".join(cmds)
+        embed = nextcord.Embed(
+            title=f"{self.bot.user.name} Commands",
+            description=bot_commands,
             color=nextcord.Colour.from_rgb(0, 128, 255),
         )
-
-        # Get each cog name and commands for each cog
-        for cog_name, cog in cog_mapping.items():
-            # Get the list of commands for a given cog
-            cog_commands = cog.get_commands()
-
-            cog_command_list = []
-            # Get the command's qualified name and description
-            for cog_command in cog_commands:
-                # Skip the command if it is hidden or disabled
-                if not cog_command.enabled or not cog_command.hidden:
-                    continue
-                cog_command_list.append(cog_command.qualified_name)
-
-            # Add each command belonging to the cog as an embed field
-            command_embed.add_field(
-                name=cog_name, value="\n".join(cog_command_list), inline=False
-            )
-
-        return interaction.send(embed=command_embed)
+        await interaction.send(embed=embed)
 
     @nextcord.slash_command()
     async def info(self, interaction: nextcord.Interaction, member: nextcord.Member):
