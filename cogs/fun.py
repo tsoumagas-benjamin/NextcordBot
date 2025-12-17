@@ -1,7 +1,6 @@
 import nextcord
 from random import choice
 from aiohttp import ClientSession
-from os import getenv
 from re import findall
 from requests import get, request
 from json import loads
@@ -11,6 +10,8 @@ import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
 from utilities import db
+from jokeapi import Jokes
+import asyncio
 
 calendar = {
     1: 31,
@@ -76,6 +77,22 @@ def birthday_task():
         return member_list
     else:
         return None
+
+
+async def joke_task():
+    # Initialize the jokes class
+    joke_class = await Jokes()
+
+    # Retrieve a random joke
+    joke = await joke_class.get_joke(
+        blacklist=["nsfw", "religious", "political", "racist", "sexist"]
+    )
+    # Modify the return if it is a single or two part joke
+    if joke["type"] == "twopart":
+        full_joke: str = f"{joke["setup"]}\n||{joke["delivery"]}||"
+    else:
+        full_joke: str = joke["joke"]
+    return [full_joke, joke["category"]]
 
 
 def meme_task():
@@ -243,6 +260,28 @@ class Fun(commands.Cog, name="Fun"):
                 await daily_channel.send(embed=animal)
         except Exception as e:
             print(f"The animal task error is: {e}")
+    
+    @tasks.loop(time=time(20))
+    async def daily_joke(self):
+        # Gets daily joke
+        try:
+            joke, category = asyncio.run(joke_task())
+            joke_embed = nextcord.Embed(
+                title=f"{category} Joke",
+                description=joke,
+                color=nextcord.Colour.from_rgb(0, 128, 255),
+            )
+            # Fetch the list of enrolled channels to post daily content to
+            self.daily_channels = db.daily_channels.distinct("channel")
+            # Send a cute animal to each of the daily channels
+            for channel_id in self.daily_channels:
+                daily_channel = self.bot.get_channel(channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(channel_id)
+                await daily_channel.send(embed=joke_embed)
+        except Exception as e:
+            print(f"The animal task error is: {e}")
+            
 
     @nextcord.slash_command()
     async def animal(self, interaction: nextcord.Interaction):
@@ -391,6 +430,17 @@ class Fun(commands.Cog, name="Fun"):
             title="", description=quote, color=nextcord.Colour.from_rgb(0, 128, 255)
         )
         await interaction.send(embed=embed)
+
+    @nextcord.slash_command()
+    async def joke(self, interaction: nextcord.Interaction):
+        joke, category = asyncio.run(joke_task())
+        joke_embed = nextcord.Embed(
+            title = f"{category} Joke",
+            description= joke,
+            color = nextcord.Colour.from_rgb(0, 128, 255)
+        )
+
+        await interaction.send(embed=joke_embed)
 
     @nextcord.slash_command()
     async def meme(self, interaction: nextcord.Interaction):
