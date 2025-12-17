@@ -10,8 +10,6 @@ import urllib.parse as parse
 import urllib.request as request
 from io import BytesIO
 from utilities import db
-from jokeapi import Jokes
-import asyncio
 
 calendar = {
     1: 31,
@@ -79,20 +77,15 @@ def birthday_task():
         return None
 
 
-async def joke_task():
-    # Initialize the jokes class
-    joke_class = await Jokes()
-
-    # Retrieve a random joke
-    joke = await joke_class.get_joke(
-        blacklist=["nsfw", "religious", "political", "racist", "sexist"]
-    )
-    # Modify the return if it is a single or two part joke
-    if joke["type"] == "twopart":
-        full_joke: str = f"{joke['setup']}\n||{joke['delivery']}||"
-    else:
-        full_joke: str = joke["joke"]
-    return [full_joke, joke["category"]]
+def joke_task():
+    joke = None
+    while joke is None:
+        url = "https://official-joke-api.appspot.com/random_joke"
+        response = get(url=url, allow_redirects=False, timeout=20)
+        joke_json = response.json()
+        category = joke_json["type"].capitalize()
+        joke = f"{joke_json['setup']}\n||{joke_json['punchline']}||"
+    return joke, category
 
 
 def meme_task():
@@ -265,7 +258,7 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_joke(self):
         # Gets daily joke
         try:
-            joke, category = asyncio.run(joke_task())
+            joke, category = joke_task()
             joke_embed = nextcord.Embed(
                 title=f"{category} Joke",
                 description=joke,
@@ -432,8 +425,8 @@ class Fun(commands.Cog, name="Fun"):
 
     @nextcord.slash_command()
     async def joke(self, interaction: nextcord.Interaction):
-        """Gets a random joke from Sv443's Joke API Wrapper"""
-        joke, category = asyncio.run(joke_task())
+        """Gets a random joke"""
+        joke, category = joke_task()
         joke_embed = nextcord.Embed(
             title=f"{category} Joke",
             description=joke,
