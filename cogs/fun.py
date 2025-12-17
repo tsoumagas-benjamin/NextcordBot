@@ -89,7 +89,7 @@ async def joke_task():
     )
     # Modify the return if it is a single or two part joke
     if joke["type"] == "twopart":
-        full_joke: str = f"{joke["setup"]}\n||{joke["delivery"]}||"
+        full_joke: str = f"{joke['setup']}\n||{joke['delivery']}||"
     else:
         full_joke: str = joke["joke"]
     return [full_joke, joke["category"]]
@@ -260,7 +260,7 @@ class Fun(commands.Cog, name="Fun"):
                 await daily_channel.send(embed=animal)
         except Exception as e:
             print(f"The animal task error is: {e}")
-    
+
     @tasks.loop(time=time(20))
     async def daily_joke(self):
         # Gets daily joke
@@ -281,7 +281,6 @@ class Fun(commands.Cog, name="Fun"):
                 await daily_channel.send(embed=joke_embed)
         except Exception as e:
             print(f"The animal task error is: {e}")
-            
 
     @nextcord.slash_command()
     async def animal(self, interaction: nextcord.Interaction):
@@ -435,9 +434,9 @@ class Fun(commands.Cog, name="Fun"):
     async def joke(self, interaction: nextcord.Interaction):
         joke, category = asyncio.run(joke_task())
         joke_embed = nextcord.Embed(
-            title = f"{category} Joke",
-            description= joke,
-            color = nextcord.Colour.from_rgb(0, 128, 255)
+            title=f"{category} Joke",
+            description=joke,
+            color=nextcord.Colour.from_rgb(0, 128, 255),
         )
 
         await interaction.send(embed=joke_embed)
