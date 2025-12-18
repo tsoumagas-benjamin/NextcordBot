@@ -90,7 +90,7 @@ class Sales(commands.Cog, name="Game Sales"):
         # Query the API and return the ID field
         game = get(query_url)
         game_json = loads(game.content)
-        game_id = game_json["game"]["id"]
+        game_id: str = game_json["game"]["id"]
 
         return game_id
 
@@ -307,7 +307,12 @@ class Sales(commands.Cog, name="Game Sales"):
     async def best_price(self, interaction: nextcord.Interaction, game: str):
         """Searches IsThereAnyDeal for the best discount on a game given a title."""
         # Get the game's ID given its title
-        game_id = self.get_game_id(game)
+        try:
+            game_id = self.get_game_id(game)
+        except:
+            await interaction.send(
+                "Unable to retrieve information on this game, sorry!"
+            )
 
         # Retrieve the embed with formatted information about the sale
         sale_embed = self.format_sale(game_id)
@@ -321,6 +326,19 @@ class Sales(commands.Cog, name="Game Sales"):
         current_sale_embed = self.get_current_sales()
 
         await interaction.send(embed=current_sale_embed)
+
+    # Function to fetch a game's ID on IsThereAnyDeal
+    @nextcord.slash_command(guild_ids=permitted_guilds)
+    @application_checks.has_permissions(manage_guild=True)
+    async def fetch_game_id(self, interaction: nextcord.Interaction, game: str):
+        """Fetches the corresponding ID for a given game title, if possible"""
+        # Get the game's ID given its title
+        try:
+            game_id = self.get_game_id(game)
+        except:
+            await interaction.send("Unable to retrieve the ID for this game, sorry!")
+
+        await interaction.send(f"ID for {game} is {game_id}")
 
 
 def setup(bot: commands.AutoShardedBot):
