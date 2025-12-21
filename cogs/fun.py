@@ -203,6 +203,9 @@ class Fun(commands.Cog, name="Fun"):
                             bday_message.add_field(
                                 name="", value=f"**{user.display_name.capitalize()}**"
                             )
+                    # If birthday embed has no fields/no users with birthdays for that server, skip it
+                    if bday_message.fields is None:
+                        continue
                     # Send the birthday embed for this guild
                     await target_channel.send(embed=bday_message)
         except Exception as e:
