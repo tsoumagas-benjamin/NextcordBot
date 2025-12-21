@@ -339,7 +339,7 @@ class Fun(commands.Cog, name="Fun"):
     async def edit_embed(
         self,
         interaction: nextcord.Interaction,
-        embed_id: int,
+        embed_id: str,
         *,
         title: str = None,
         message: str = None,
@@ -348,7 +348,7 @@ class Fun(commands.Cog, name="Fun"):
         # Get the embed message from the message ID or return an error if it can't be found
         try:
             old_embed: nextcord.Message = nextcord.abc.Messageable.fetch_message(
-                id=embed_id
+                id=int(embed_id)
             )
         except:
             return await interaction.send(
