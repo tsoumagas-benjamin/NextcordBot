@@ -336,6 +336,44 @@ class Fun(commands.Cog, name="Fun"):
                 await interaction.send(f"Added birthday for {member.name}.")
 
     @nextcord.slash_command()
+    async def edit_embed(
+        self,
+        interaction: nextcord.Interaction,
+        embed_id: int,
+        *,
+        title: str = None,
+        message: str = None,
+    ):
+        """Edit an embed, will only work if you are the author of the original embed."""
+        # Get the embed message from the message ID or return an error if it can't be found
+        try:
+            old_embed: nextcord.Message = nextcord.abc.Messageable.fetch_message(
+                id=embed_id
+            )
+        except:
+            return await interaction.send(
+                content="Could not retrieve original embed.", ephemeral=True
+            )
+        # Allow users to add newlines to their embed messages
+        if message is not None:
+            split_message = message.split("[]")
+            message = "\n".join(split_message)
+        edited_embed = nextcord.Embed(
+            title=title,
+            description=message,
+            color=nextcord.Colour.from_rgb(0, 128, 255),
+        )
+        try:
+            await old_embed.edit(embed=edited_embed)
+            return await interaction.send(
+                content=f"Embed with ID: {embed_id} should be updated", ephemeral=True
+            )
+        except Exception as e:
+            return await interaction.send(
+                content=f"Unable to update embed with ID: {embed_id}", ephemeral=True
+            )
+
+    @nextcord.slash_command()
     async def embed(
         self,
         interaction: nextcord.Interaction,
