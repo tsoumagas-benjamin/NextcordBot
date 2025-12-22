@@ -344,16 +344,14 @@ class Fun(commands.Cog, name="Fun"):
         title: str = None,
         message: str = None,
     ):
-        """Edit an embed, will only work if you are the author of the original embed."""
+        """Edit an embed, will only work if you are the author of the original embed. Type [] in your string to indicate any blank lines you want added to your message."""
         # Get the embed message from the message ID or return an error if it can't be found
         try:
-            old_embed: nextcord.Message = nextcord.abc.Messageable.fetch_message(
+            old_embed: nextcord.Message = await interaction.channel.fetch_message(
                 id=int(embed_id)
             )
-        except:
-            return await interaction.send(
-                content="Could not retrieve original embed.", ephemeral=True
-            )
+        except Exception as e:
+            return await interaction.send(content=f"Error: {e}", ephemeral=True)
         # Allow users to add newlines to their embed messages
         if message is not None:
             split_message = message.split("[]")
