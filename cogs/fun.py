@@ -348,7 +348,7 @@ class Fun(commands.Cog, name="Fun"):
         # Get the embed message from the message ID or return an error if it can't be found
         try:
             old_embed: nextcord.Message = await interaction.channel.fetch_message(
-                id=int(embed_id)
+                int(embed_id)
             )
         except Exception as e:
             return await interaction.send(content=f"Error: {e}", ephemeral=True)
