@@ -234,7 +234,7 @@ class Fun(commands.Cog, name="Fun"):
             self.daily_channels = db.daily_channels.distinct("channel")
             # Send some positivity to each of the daily channels
 
-            await original.edit(embed=positivity)
+            await original.edit(content=None, embed=positivity)
         except Exception as e:
             print(f"The positivity task error is: {e}")
 
@@ -296,7 +296,7 @@ class Fun(commands.Cog, name="Fun"):
             description=f"{advice}.",
             color=nextcord.Colour.from_rgb(0, 128, 255),
         )
-        await interaction.edit_original_message(embed=embed)
+        await interaction.edit_original_message(content=None, embed=embed)
 
     @nextcord.slash_command()
     async def affirmation(self, interaction: nextcord.Interaction):
