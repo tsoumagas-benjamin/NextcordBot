@@ -214,6 +214,11 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=time(12))
     async def daily_positivity(self):
         try:
+            for channel_id in self.daily_channels:
+                daily_channel = self.bot.get_channel(channel_id)
+                if daily_channel is None:
+                    daily_channel = await self.bot.fetch_channel(channel_id)
+            original = await daily_channel.send("Gathering positivity, please wait!")
             # Creates daily positivity post
             advice = advice_task()
             affirm = affirm_task()
@@ -228,11 +233,8 @@ class Fun(commands.Cog, name="Fun"):
             # Fetch the list of enrolled channels to post daily content to
             self.daily_channels = db.daily_channels.distinct("channel")
             # Send some positivity to each of the daily channels
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                await daily_channel.send(embed=positivity)
+
+            await original.edit(embed=positivity)
         except Exception as e:
             print(f"The positivity task error is: {e}")
 
@@ -287,13 +289,14 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def advice(self, interaction: nextcord.Interaction):
         """Get a random piece of advice"""
+        await interaction.send("Gathering advice, please wait.")
         advice = advice_task()
         embed = nextcord.Embed(
             title=f"Advice for {interaction.user.display_name}:",
             description=f"{advice}.",
             color=nextcord.Colour.from_rgb(0, 128, 255),
         )
-        await interaction.send(embed=embed)
+        await interaction.edit_original_message(embed=embed)
 
     @nextcord.slash_command()
     async def affirmation(self, interaction: nextcord.Interaction):
