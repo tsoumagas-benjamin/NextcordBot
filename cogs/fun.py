@@ -292,7 +292,6 @@ class Fun(commands.Cog, name="Fun"):
     @nextcord.slash_command()
     async def advice(self, interaction: nextcord.Interaction):
         """Get a random piece of advice"""
-        await interaction.send("Gathering advice, please wait.")
         await interaction.response.defer()
         advice = advice_task()
         embed = nextcord.Embed(
