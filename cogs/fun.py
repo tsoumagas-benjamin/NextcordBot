@@ -214,15 +214,6 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=time(12))
     async def daily_positivity(self):
         try:
-            # Fetch the list of enrolled channels to post daily content to
-            self.daily_channels = db.daily_channels.distinct("channel")
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                original = await daily_channel.send(
-                    "Gathering today's positivity post, please wait!"
-                )
 
             # Creates daily positivity post
             advice = advice_task()
@@ -237,11 +228,12 @@ class Fun(commands.Cog, name="Fun"):
             positivity.add_field(name="", value=quote, inline=True)
 
             # Send some positivity to each of the daily channels
+            self.daily_channels = db.daily_channels.distinct("channel")
             for channel_id in self.daily_channels:
                 daily_channel = self.bot.get_channel(channel_id)
                 if daily_channel is None:
                     daily_channel = await self.bot.fetch_channel(channel_id)
-                await original.edit(content=None, embed=positivity)
+                await daily_channel.send(embed=positivity)
 
         except Exception as e:
             print(f"The positivity task error is: {e}")
@@ -250,15 +242,6 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_animal(self):
         # Gets daily animal
         try:
-            # Fetch the list of enrolled channels to post daily content to
-            self.daily_channels = db.daily_channels.distinct("channel")
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                original = await daily_channel.send(
-                    "Gathering today's animal post, please wait!"
-                )
 
             # Create daily animal post
             animal = nextcord.Embed(
@@ -269,11 +252,12 @@ class Fun(commands.Cog, name="Fun"):
             animal.set_image(animal_url)
 
             # Send an animal post to each of the daily channels
+            self.daily_channels = db.daily_channels.distinct("channel")
             for channel_id in self.daily_channels:
                 daily_channel = self.bot.get_channel(channel_id)
                 if daily_channel is None:
                     daily_channel = await self.bot.fetch_channel(channel_id)
-                await original.edit(content=None, embed=animal)
+                await daily_channel.send(embed=animal)
 
         except Exception as e:
             print(f"The animal task error is: {e}")
