@@ -293,13 +293,14 @@ class Fun(commands.Cog, name="Fun"):
     async def advice(self, interaction: nextcord.Interaction):
         """Get a random piece of advice"""
         await interaction.send("Gathering advice, please wait.")
+        await interaction.response.defer()
         advice = advice_task()
         embed = nextcord.Embed(
             title=f"Advice for {interaction.user.display_name}:",
             description=f"{advice}.",
             color=nextcord.Colour.from_rgb(0, 128, 255),
         )
-        await interaction.edit_original_message(content=None, embed=embed)
+        await interaction.followup.send(embed=embed)
 
     @nextcord.slash_command()
     async def affirmation(self, interaction: nextcord.Interaction):
