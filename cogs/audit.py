@@ -459,26 +459,26 @@ class Audit(commands.Cog, name="Audit Logs"):
 
             # Check if the user's avatar is changed
             if before.display_avatar != after.display_avatar:
-                user_update = nextcord.Embed(
+                update_embed = nextcord.Embed(
                     title="Avatar Update",
                     description=f"{after.mention}",
                     color=nextcord.Colour.blurple(),
                 )
-                user_update.add_field(
+                update_embed.add_field(
                     name="Old Avatar", value=f"[View]({before.display_avatar.url})"
                 )
-                user_update.add_field(
+                update_embed.add_field(
                     name="New Avatar", value=f"[View]({after.display_avatar.url})"
                 )
 
             # Set the thumbnail and footer
-            user_update.set_thumbnail(after.display_avatar.url)
-            user_update.set_footer(
+            update_embed.set_thumbnail(after.display_avatar.url)
+            update_embed.set_footer(
                 text=f"Member ID: {after.id} | {self.date_format(datetime.now())}"
             )
 
             # Send the embed to the designated channel
-            await self.send_embed(server_audit_log["channel"], user_update)
+            await self.send_embed(server_audit_log["channel"], update_embed)
 
     # Records when a member is banned
     @commands.Cog.listener()
