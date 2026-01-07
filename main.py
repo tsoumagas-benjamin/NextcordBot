@@ -30,7 +30,14 @@ async def on_ready():
     # Add functionality from cogs
     for filename in listdir("./cogs"):
         if filename.endswith(".py"):
-            bot.load_extension(f"cogs.{filename[:-3]}")
+            try:
+                # Reload the cog if it already exists, otherwise load the new cog
+                if bot.get_cog(filename[:-3]):
+                    bot.reload_extension(f"cogs.{filename[:-3]}")
+                else:
+                    bot.load_extension(f"cogs.{filename[:-3]}")
+            except Exception as e:
+                print(f"Cog Error: {e}")
 
     # Ensure all commands are added and synced
     bot.add_all_application_commands()
