@@ -121,8 +121,8 @@ class Sales(commands.Cog, name="Game Sales"):
         sale = post(sale_url, data=dumps(payload), headers=headers)
         try:
             sale_json = loads(sale.content)
-        except:
-            print(f"JSON for {game_id} could not be decoded")
+        except Exception as e:
+            print(f"JSON for {game_id} could not be decoded because {e}")
             return
 
         # Gather information on the current best cut according to IsThereAnyDeal
@@ -229,8 +229,8 @@ class Sales(commands.Cog, name="Game Sales"):
         # Get the current best sale info on a game
         try:
             current_best = self.best_cut(game_id)
-        except:
-            print(f"Could not retrieve current sale date for {game_id}")
+        except Exception as e:
+            print(f"Could not retrieve current sale date for {game_id} because {e}")
             return
         current_best_cut = current_best[0]
         current_best_expiry = current_best[1]
@@ -310,10 +310,11 @@ class Sales(commands.Cog, name="Game Sales"):
         # Get the game's ID given its title
         try:
             game_id = self.get_game_id(game)
-        except:
+        except Exception as e:
             await interaction.send(
                 "Unable to retrieve information on this game, sorry!"
             )
+            print(f"Best_price error: {e}")
 
         # Retrieve the embed with formatted information about the sale
         sale_embed = self.format_sale(game_id)
@@ -336,8 +337,9 @@ class Sales(commands.Cog, name="Game Sales"):
         # Get the game's ID given its title
         try:
             game_id = self.get_game_id(game)
-        except:
+        except Exception as e:
             await interaction.send("Unable to retrieve the ID for this game, sorry!")
+            print(f"fetch_game_id error: {e}")
 
         await interaction.send(f"ID for {game} is {game_id}")
 
