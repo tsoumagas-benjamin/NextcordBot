@@ -92,7 +92,7 @@ class Information(commands.Cog, name="Information"):
                 role_list.append(role.mention)
             role_list.reverse()
         embed.add_field(name="Roles", value=", ".join(role_list), inline=False)
-        if member.activity != None:
+        if member.activity is not None:
             embed.add_field(name="Activity", value=member.activity.name, inline=False)
         embed.set_thumbnail(url=member.display_avatar)
         embed.set_footer(
@@ -110,10 +110,8 @@ class Information(commands.Cog, name="Information"):
         )
         end_time = time()
 
-        embed.add_field(name=f"Ping:", value=f"{round(self.bot.latency * 1000)}ms")
-        embed.add_field(
-            name=f"API:", value=f"{round((end_time - start_time) * 1000)}ms"
-        )
+        embed.add_field(name="Ping:", value=f"{round(self.bot.latency * 1000)}ms")
+        embed.add_field(name="API:", value=f"{round((end_time - start_time) * 1000)}ms")
 
         await interaction.send(embed=embed)
 
@@ -158,7 +156,7 @@ class Information(commands.Cog, name="Information"):
     @nextcord.slash_command()
     async def rule(self, interaction: nextcord.Interaction, number: int):
         """Returns a numbered server rule"""
-        if db.rules.find_one({"_id": interaction.guild.id}) != None:
+        if db.rules.find_one({"_id": interaction.guild.id}) is not None:
             output = db.rules.find_one({"_id": interaction.guild.id})
             if number < 1 or number >= len(output["rules"]):
                 await interaction.send(f"Rule {number} doesn't exist!")
@@ -180,7 +178,7 @@ class Information(commands.Cog, name="Information"):
     @nextcord.slash_command()
     async def rules(self, interaction: nextcord.Interaction):
         """Returns all server rules"""
-        if db.rules.find_one({"_id": interaction.guild.id}) != None:
+        if db.rules.find_one({"_id": interaction.guild.id}) is not None:
             output = db.rules.find_one({"_id": interaction.guild.id})
             description = ""
             for rule in output["rules"]:
@@ -224,21 +222,21 @@ class Information(commands.Cog, name="Information"):
     async def socials(self, interaction: nextcord.Interaction):
         """Returns links to Ben's socials"""
         embed = nextcord.Embed(
-            title=f"Ben's Socials", color=nextcord.Colour.from_rgb(0, 128, 255)
+            title="Ben's Socials", color=nextcord.Colour.from_rgb(0, 128, 255)
         )
         embed.add_field(
-            name=f"Twitch:", value="https://www.twitch.tv/chaosherald2", inline=False
+            name="Twitch:", value="https://www.twitch.tv/chaosherald2", inline=False
         )
         embed.add_field(
-            name=f"YouTube:",
+            name="YouTube:",
             value="https://www.youtube.com/channel/UC147mLQpBtta_ykHdo-fZDw",
             inline=False,
         )
         embed.add_field(
-            name=f"Twitter:", value="https://twitter.com/ChaosHerald2", inline=False
+            name="Twitter:", value="https://twitter.com/ChaosHerald2", inline=False
         )
         embed.add_field(
-            name=f"Instagram:",
+            name="Instagram:",
             value="https://www.instagram.com/chaos.herald2/",
             inline=False,
         )
@@ -294,7 +292,7 @@ class Information(commands.Cog, name="Information"):
         description: str = None,
     ):
         """Sets a timer with an optional description"""
-        if description == None:
+        if description is None:
             description = ""
         else:
             description += " "
