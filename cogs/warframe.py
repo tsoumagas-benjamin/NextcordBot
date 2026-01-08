@@ -88,7 +88,7 @@ def alerts_search(url: str):
         for item in alert_items:
             try:
                 item_type = db.languages.find_one({"key": item["ItemType"]})["value"]
-            except:
+            except Exception:
                 item_type = item["ItemType"].split("/")[-1]
             item_count = item["ItemCount"]
             alert_rewards += f"- {item_count} {item_type}\n"
@@ -149,14 +149,14 @@ def baro_kiteer(url: str):
     # Get Baro's location
     try:
         baro_location = db.worldstate.find_one({"key": baro["Node"]})["value"]
-    except:
+    except Exception:
         baro_location = "an unknown location"
 
     try:
         # Check if Baro has inventory/is available
         if baro["Manifest"]:
             baro_inventory = baro["Manifest"]
-    except:
+    except Exception:
         # Create an embed object to return with Baro information
         baro_embed = nextcord.Embed(
             title=f"Baro Ki'Teer will be at {baro_location} between {baro_duration}",
@@ -201,7 +201,7 @@ def baro_kiteer(url: str):
 
     # Append each chunk's information to the embed
     for chunk in baro_chunked:
-        baro_embed.add_field(name="", value=f"\n".join(chunk), inline=False)
+        baro_embed.add_field(name="", value="\n".join(chunk), inline=False)
 
     baro_embed.add_field(name="Baro is here from:", value=baro_duration)
     return baro_embed
@@ -357,7 +357,7 @@ def nightwave_status(url: str):
         try:
             if challenge["Daily"]:
                 duration = "Daily"
-        except:
+        except Exception:
             duration = "Weekly"
 
         # Get the start and end time for the challenge
