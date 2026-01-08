@@ -2,7 +2,7 @@ import nextcord
 from random import choice
 from aiohttp import ClientSession
 from re import findall
-from requests import get, request
+from requests import get
 from json import loads
 from datetime import date, time
 from nextcord.ext import commands, application_checks, tasks
@@ -181,7 +181,7 @@ class Fun(commands.Cog, name="Fun"):
                 for channel in birthday_channels:
                     # Start the birthday embed for this guild
                     bday_message = nextcord.Embed(
-                        title=f"🥳\tHappy Birthday!\t🎉",
+                        title="🥳\tHappy Birthday!\t🎉",
                         colour=nextcord.Colour.from_rgb(0, 128, 255),
                     )
                     # Get the target channel from the registered channel IDs stored
@@ -214,13 +214,12 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=time(12))
     async def daily_positivity(self):
         try:
-
             # Creates daily positivity post
             advice = advice_task()
             affirm = affirm_task()
             quote = get_quote()
             positivity = nextcord.Embed(
-                title=f"😊\tHere's your reminder to stay positive today!\t😊",
+                title="😊\tHere's your reminder to stay positive today!\t😊",
                 colour=nextcord.Colour.from_rgb(0, 128, 255),
             )
             positivity.add_field(name="Advice of the day:", value=f"{advice}")
@@ -242,10 +241,9 @@ class Fun(commands.Cog, name="Fun"):
     async def daily_animal(self):
         # Gets daily animal
         try:
-
             # Create daily animal post
             animal = nextcord.Embed(
-                title=f"😊\tHere's your cute animal of the day!\t😊",
+                title="😊\tHere's your cute animal of the day!\t😊",
                 colour=nextcord.Colour.from_rgb(0, 128, 255),
             )
             animal_url = animal_task()
@@ -372,7 +370,7 @@ class Fun(commands.Cog, name="Fun"):
             return await interaction.send(
                 content=f"Embed with ID: {embed_id} should be updated", ephemeral=True
             )
-        except Exception as e:
+        except Exception:
             return await interaction.send(
                 content=f"Unable to update embed with ID: {embed_id}", ephemeral=True
             )
