@@ -134,6 +134,18 @@ def get_quote():
     return quote
 
 
+# Function to send content to all the daily channels
+async def send_dailies(bot: commands.AutoShardedBot, task_embed: nextcord.Embed):
+    # Fetch the list of enrolled channels to post daily content to
+    daily_channels = db.daily_channels.distinct("channel")
+    # Send a meme to each of the daily channels
+    for channel_id in daily_channels:
+        daily_channel = bot.get_channel(channel_id)
+        if daily_channel is None:
+            daily_channel = await bot.fetch_channel(channel_id)
+        await daily_channel.send(embed=task_embed)
+
+
 class Fun(commands.Cog, name="Fun"):
     """Commands for your entertainment"""
 
@@ -159,14 +171,9 @@ class Fun(commands.Cog, name="Fun"):
     @tasks.loop(time=time(0))
     async def daily_meme(self):
         try:
-            # Fetch the list of enrolled channels to post daily content to
-            self.daily_channels = db.daily_channels.distinct("channel")
-            # Send a meme to each of the daily channels
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                await daily_channel.send(embed=meme_task())
+            # Get the meme embed and send it to each daily channel
+            meme_embed: nextcord.Embed = meme_task()
+            await send_dailies(self.bot, meme_embed)
         except Exception as e:
             print(f"The meme task error is: {e}")
 
@@ -226,13 +233,8 @@ class Fun(commands.Cog, name="Fun"):
             positivity.add_field(name="Affirmation of the day:", value=f"{affirm}")
             positivity.add_field(name="", value=quote, inline=True)
 
-            # Send some positivity to each of the daily channels
-            self.daily_channels = db.daily_channels.distinct("channel")
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                await daily_channel.send(embed=positivity)
+            # Get the positivity embed and send it to each daily channel
+            await send_dailies(self.bot, positivity)
 
         except Exception as e:
             print(f"The positivity task error is: {e}")
@@ -249,13 +251,8 @@ class Fun(commands.Cog, name="Fun"):
             animal_url = animal_task()
             animal.set_image(animal_url)
 
-            # Send an animal post to each of the daily channels
-            self.daily_channels = db.daily_channels.distinct("channel")
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                await daily_channel.send(embed=animal)
+            # Get the animal embed and send it to each daily channel
+            await send_dailies(self.bot, animal)
 
         except Exception as e:
             print(f"The animal task error is: {e}")
@@ -270,14 +267,10 @@ class Fun(commands.Cog, name="Fun"):
                 description=joke,
                 color=nextcord.Colour.from_rgb(0, 128, 255),
             )
-            # Fetch the list of enrolled channels to post daily content to
-            self.daily_channels = db.daily_channels.distinct("channel")
-            # Send a cute animal to each of the daily channels
-            for channel_id in self.daily_channels:
-                daily_channel = self.bot.get_channel(channel_id)
-                if daily_channel is None:
-                    daily_channel = await self.bot.fetch_channel(channel_id)
-                await daily_channel.send(embed=joke_embed)
+
+            # Get the joke embed and send it to each daily channel
+            await send_dailies(self.bot, joke_embed)
+
         except Exception as e:
             print(f"The animal task error is: {e}")
 
