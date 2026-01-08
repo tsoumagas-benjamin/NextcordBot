@@ -1,4 +1,5 @@
-import sys, logging
+import sys
+import logging
 
 
 class LogFilter(logging.Filter):
