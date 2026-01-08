@@ -1,7 +1,8 @@
 import nextcord
 from requests import get
 from nextcord.ext import commands
-import PIL.Image, PIL.ImageFilter
+import PIL.Image
+import PIL.ImageFilter
 
 filters = {
     "Blur": PIL.ImageFilter.BLUR,
