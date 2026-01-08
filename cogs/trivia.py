@@ -51,7 +51,7 @@ class TriviaView(nextcord.ui.View):
 # Class to handle trivia setup and initialization
 class TriviaSetup:
     def __init__(self):
-        self.url = f"https://the-trivia-api.com/api/questions/"
+        self.url = "https://the-trivia-api.com/api/questions/"
         self.categories: list[str] = []
         self.corrects: list[str] = []
         self.incorrects: list[str] = []
