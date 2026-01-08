@@ -84,7 +84,7 @@ class Moderation(commands.Cog, name="Moderation"):
         init_time = amount
         amount = parse_timespan(amount)
         await member.edit(timeout=nextcord.utils.utcnow() + timedelta(seconds=amount))
-        if reason == None:
+        if reason is None:
             await interaction.send(
                 f"Member {member.name} has been muted for {init_time}."
             )
@@ -119,7 +119,7 @@ class Moderation(commands.Cog, name="Moderation"):
     ):
         """Removes member from timeout"""
         await member.edit(timeout=None)
-        if reason == None:
+        if reason is None:
             await interaction.send(f"Member {member.name} has been unmuted.")
         else:
             await interaction.send(
