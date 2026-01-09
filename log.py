@@ -45,13 +45,15 @@ def log():
     client_logger.addFilter(LogFilter())
     state_logger.addFilter(LogFilter())
 
-    # Format log entries
-    FORMAT = "[{asctime}][{filename}][{lineno:3}][{funcName}][{levelname}] {message}"
-    formatter = logging.setFormatter(Formatter(FORMAT, "%Y-%m-%d %H:%M:%S", style="{"))
-
     # Create file handler to write to the log
     console_handler = logging.StreamHandler(sys.stdout)
     file_handler = logging.FileHandler("latest.log", mode="w")
+
+    # Format log entries
+    FORMAT = "[{asctime}][{filename}][{lineno:3}][{funcName}][{levelname}] {message}"
+    formatter = file_handler.setFormatter(
+        Formatter(FORMAT, "%Y-%m-%d %H:%M:%S", style="{")
+    )
 
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
