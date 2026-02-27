@@ -1,76 +1,110 @@
-import nextcord
+from stoat.ext import commands
+from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
 from os import getenv, listdir
-from nextcord.ext import commands
 from log import log
 from utilities import db, collections, collection_names
 
-# Allows privileged intents for monitoring members joining, roles editing, and role assignments
-# These need to be enabled in the developer portal as well
-my_intents = nextcord.Intents.all()
+# TODO: Define bot permissions, see: enums / UserPermissions
+permissions = Permissions(
+    manage_channels=False,
+    manage_server=False,
+    manage_roles=True,
+    manage_customization=True,
+    kick_members=True,
+    ban_members=True,
+    timeout_members=True,
+    assign_roles=True,
+    change_nickname=False,
+    manage_nicknames=False,
+    change_avatar=False,
+    remove_avatars=False,
+    view_channel=False,
+    read_message_history=True,
+    send_messages=True,
+    manage_messages=True,
+    manage_webhooks=False,
+    create_invites=False,
+    send_embeds=True,
+    upload_files=True,
+    use_masquerade=False,
+    react=True,
+    mention_everyone=False,
+    mention_roles=False,
+    connect=False,
+    speak=False,
+    video=False,
+    mute_members=False,
+    deafen_members=False,
+    move_members=False,
+    listen=False,
+)
 
 # Instantiate the bot
-bot = commands.AutoShardedBot(
-    intents=my_intents,
-    status=nextcord.Status.online,
-    activity=nextcord.Activity(
-        type=nextcord.ActivityType.listening, name="Type / to look for commands!"
-    ),
+bot = commands.Bot(
+    case_insensitive=True,
+    command_prefix=commands.when_mentioned_or("/"),
+    description="Multi-purpose Stoat bot\nAuthor: ChaosHerald2\nUsing Nextcord, hosted on Fly.io.\nWIP Porting from Discord",
+    self_bot=True,
+    strip_after_prefix=True,
+    token=getenv("STOAT_TOKEN"),
+    owner_ids=["01KHMEY5VV8E9NF0NY840EFF4R"],
 )
 
 
 # Define bot behaviour on start up
-@bot.event
-async def on_ready():
-    """When bot is connected to Discord"""
+@bot.listen()
+async def on_ready(event: ReadyEvent):
+    """When bot is connected to Stoat"""
     # Initialize default collections
-    for c in collection_names:
-        if c not in collections:
-            db.create_collection(c)
+    for collection in collection_names:
+        if collection not in collections:
+            db.create_collection(collection)
 
-    # Add functionality from cogs
-    for filename in listdir("./cogs"):
+    # Add functionality from gears
+    for filename in listdir("./gears"):
         if filename.endswith(".py"):
             try:
-                # Reload the cog if it already exists, otherwise load the new cog
-                if bot.get_cog(filename[:-3]):
-                    bot.reload_extension(f"cogs.{filename[:-3]}")
+                # Reload the gear if it already exists, otherwise load the new gear
+                if bot.get_gear(filename[:-3]):
+                    await bot.reload_extension(f"gears.{filename[:-3]}")
                 else:
-                    bot.load_extension(f"cogs.{filename[:-3]}")
+                    await bot.load_extension(f"gears.{filename[:-3]}")
             except Exception as e:
-                print(f"Cog Error: {e}")
+                print(f"Gear Error: {e}")
 
-    # Ensure all commands are added and synced
-    bot.add_all_application_commands()
-    try:
-        await bot.sync_application_commands()
-    except Exception as e:
-        print(f"Error syncing: {e}")
+    # Print loaded extensions
+    print(f"Extensions: {bot.extensions.keys()}")
 
-    print(f"Registered commands: {bot.commands}")
+    # Print commands per gear
+    for name, gear in bot.gears.items():
+        gear_commands = gear.get_commands()
+        print(f"{name}: {gear_commands}")
 
+    # Print database collections
     print(f"Collections: {collections}")
-    print(f"Intents: {dict(bot.intents)}")
-    print(f"We have logged in as {bot.user}")
+
+    # Print that the bot is set up
+    print(f"We have set up as {bot.user}")
 
 
-# When leaving a server, delete all collections pertaining to that server.
-@bot.event
-async def on_guild_remove(guild):
-    for collection in db.list_collection_names():
-        mycol = db[collection]
-        mycol.delete_many({"_id": guild.id})
+# Handle when a user leaves a server
+@bot.listen()
+async def on_member_remove(event: ServerMemberRemoveEvent):
+    # If user and this bot have no mutual servers, remove their birthday information
+    mutual_servers: list[str] | None = await event.member.mutual_server_ids()
+    if mutual_servers is None:
+        if db.birthdays.find_one({"_id": event.member.id}):
+            db.birthdays.delete_many({"_id": event.member.id})
 
-
-# Remove user from birthdays if they no longer share servers with the bot.
-@bot.event
-async def on_member_remove(member):
-    if member.mutual_guilds is None:
-        if db.birthdays.find_one({"_id": member.id}):
-            db.birthdays.delete_many({"_id": member.id})
+    # If user is this bot, delete all collections pertaining to that server
+    if event.user_id == getenv("STOAT_ID"):
+        for collection in db.list_collection_names():
+            mycol = db[collection]
+            mycol.delete_many({"_id": event.server_id})
 
 
 # Tell the bot to store logs in nextcord.log
 log()
 
 # Run Discord bot
-bot.run(getenv("DISCORD_TOKEN"))
+bot.run(getenv("STOAT_TOKEN"))

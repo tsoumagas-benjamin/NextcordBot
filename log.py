@@ -15,8 +15,8 @@ class LogFilter(logging.Filter):
 
 def log():
     # Create logger
-    client_logger = logging.getLogger("nextcord.client")
-    state_logger = logging.getLogger("nextcord.state")
+    client_logger = logging.getLogger("stoat.client")
+    state_logger = logging.getLogger("stoat.state")
 
     # Add filters
     client_logger.addFilter(LogFilter())
