@@ -1,13 +1,14 @@
-import nextcord
-from nextcord.ext import commands
+import stoat
+from stoat.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from aiohttp import ClientSession
-from utilities import db
+from utilities import db, Client
+
+# TODO: Switch from MongoDB
 
 
 # Generates xp for a given message
-def give_xp(message: nextcord.Message):
+def give_xp(message: stoat.Message):
     words = message.content.split()
     if len(words) < 5:
         return 5
@@ -24,40 +25,40 @@ def level_up(xp: int, level: int):
         return False
 
 
-# Create a cog for levelling
-class Progress(commands.Cog, name="Progress"):
+# Create a gear for levelling
+class Progress(commands.Gear, name="Progress"):
     """Commands about economy/levelling."""
 
-    COG_EMOJI = "📈"
+    GEAR_EMOJI = "📈"
 
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    # Code inspired
-    async def card_maker(
-        self, interaction: nextcord.Interaction, uid: int, guild_id: int
-    ):
+    async def card_maker(self, ctx: commands.Context, uid: int, server_id: int):
         # Get user information from ID
-        target = db.levels.find_one({"uid": uid, "guild": guild_id})
-        user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
-        username = user.display_name if self.bot.get_user(uid) else uid
-        avatar_url = user.avatar.url if self.bot.get_user(uid) else None
+        target = db.levels.find_one({"uid": uid, "server": server_id})
+        if self.bot.get_user(uid):
+            user = self.bot.get_user(uid)
+            username = user.display_name
+            avatar_url = user.avatar.url()
+        else:
+            return await ctx.send(f"Could not get user {uid}!")
+
+        # Gather information for the level card
         level = target["level"]
         xp = target["xp"]
         threshold = (level + 1) * 25
         progress = (xp / threshold) * 870
-        textcard = "/main/assets/textcard.png"
-        levelcard = "/main/assets/levelcard.png"
-        font = "/main/assets/RobotoSlab-Regular.ttf"
-        result = "/main/assets/result.png"
-        avatar_mask = "/main/assets/avatar_mask.png"
-        bar_mask = "/main/assets/bar_mask.png"
+        textcard = "../assets/textcard.png"
+        levelcard = "../assets/levelcard.png"
+        font = "../assets/RobotoSlab-Regular.ttf"
+        result = "../assets/result.png"
+        avatar_mask = "../assets/avatar_mask.png"
+        bar_mask = "../assets/bar_mask.png"
 
         # Get the avatar of the target user from URL
-        async with ClientSession() as c:
-            async with c.get(avatar_url) as resp:
-                avatar = await resp.read()
-        avatar = Image.open(BytesIO(avatar)).resize((170, 170))
+        avatar_bytes = await Client.get_bytes(avatar_url)
+        avatar = Image.open(BytesIO(avatar_bytes)).resize((170, 170))
 
         # Overlay the text card and avatar on the level card
         background = Image.open(levelcard)
@@ -106,18 +107,19 @@ class Progress(commands.Cog, name="Progress"):
         # Create and save the file and send it
         file = open(result, "wb")
         background.save(file, "PNG")
-        await interaction.send(file=nextcord.File(result))
+        await ctx.send(attachments=[stoat.Asset(filename="../assets/result.png")])
+        file.close()
 
-    @commands.Cog.listener("on_message")
-    async def xp(self, message: nextcord.Message):
+    @commands.Gear.listener("on_message")
+    async def xp(self, message: stoat.Message):
         if message.author.bot:
             return
         author = message.author
-        guild = message.guild
+        server = message.server
         channel = message.channel
-        interaction = message.interaction
+        ctx = message.ctx
         person = message.author
-        target = {"uid": author.id, "guild": guild.id}
+        target = {"uid": author.id, "server": server.id}
 
         # If xp collection doesn't exist for server, make one
         if "levels" not in db.list_collection_names():
@@ -126,7 +128,7 @@ class Progress(commands.Cog, name="Progress"):
         # If member is not registered, create an entry for them
         if not db.levels.find_one(target):
             db.levels.insert_one(
-                {"uid": author.id, "guild": guild.id, "level": 0, "xp": 0}
+                {"uid": author.id, "server": server.id, "level": 0, "xp": 0}
             )
 
         # Increase user xp and level as necessary
@@ -136,49 +138,42 @@ class Progress(commands.Cog, name="Progress"):
         if level_up(xp, level):
             level += 1
             xp = 0
-            if interaction is None:
+            if ctx is None:
                 await channel.send(
-                    f"**{author.display_name}** reached level {level} on {guild}!"
+                    f"**{author.display_name}** reached level {level} on {server}!"
                 )
             else:
-                await Progress.card_maker(
-                    self, interaction, person.id, message.guild.id
-                )
+                await self.card_maker(self, ctx, person.id, message.server.id)
         db.levels.replace_one(
-            target, {"uid": author.id, "guild": guild.id, "level": level, "xp": xp}
+            target, {"uid": author.id, "server": server.id, "level": level, "xp": xp}
         )
 
-    @nextcord.slash_command()
+    @stoat.slash_command()
     async def level(
         self,
-        interaction: nextcord.Interaction,
-        person: nextcord.Member | nextcord.User | None = None,
+        ctx: commands.Context,
+        person: stoat.Member | stoat.User | None = None,
     ):
         """Check level of a person, defaults to checking your own level"""
         if person is None:
-            person = interaction.user
-        target = {"uid": person.id, "guild": interaction.guild.id}
+            person = ctx.user
+        target = {"uid": person.id, "server": ctx.server.id}
         record = db.levels.find_one(target)
 
         # Return XP and level or nothing if user is not registered
         if not record:
-            return await interaction.send(f"{person.display_name} has no levels or XP!")
+            return await ctx.send(f"{person.display_name} has no levels or XP!")
         else:
-            return await Progress.card_maker(
-                self, interaction, person.id, interaction.guild.id
-            )
+            return await self.card_maker(self, ctx, person.id, ctx.server.id)
 
-    @nextcord.slash_command()
-    async def leaderboard(self, interaction: nextcord.Interaction):
+    @stoat.slash_command()
+    async def leaderboard(self, ctx: commands.Context):
         """Gets the top 10 highest ranked people on the server"""
-        server = interaction.guild
+        server = ctx.server
         # Sort the database for the highest 10 scoring on the server
-        cursor = db.levels.find({"guild": server.id})
+        cursor = db.levels.find({"server": server.id})
         leaders = cursor.sort([("level", -1), ("xp", -1)]).limit(10)
-        embed = nextcord.Embed(
-            title=f"{server.name} Leaderboard",
-            color=nextcord.Colour.from_rgb(0, 128, 255),
-        )
+        embed_description = ""
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10
             uid = leader["uid"]
@@ -187,18 +182,18 @@ class Progress(commands.Cog, name="Progress"):
             xp = leader["xp"]
             level = leader["level"]
             threshold = (level + 1) * 25
-            embed.add_field(
-                name=f"{position+1}. {username} Level: {level}",
-                value=f"{xp}/{threshold} XP",
-                inline=False,
+            embed_description += (
+                f"{position + 1}. {username}\tLevel: {level}\t{xp}/{threshold} XP\n"
             )
-        embed.set_footer(
-            text=f"Requested by {interaction.user.display_name}",
-            icon_url=interaction.guild.icon.url,
+        embed_description += f"Requested by {ctx.author.display_name}"
+        embed = stoat.SendableEmbed(
+            title=f"{server.name} Leaderboard",
+            color=stoat.Colour.from_rgb(0, 128, 255),
+            icon_url=ctx.server.icon.url(),
         )
-        await interaction.send(embed=embed)
+        await ctx.send(embeds=[embed])
 
 
-# Add the cog to the bot
-def setup(bot: commands.AutoShardedBot):
-    bot.add_cog(Progress(bot))
+# Add the gear to the bot
+def setup(bot: commands.Bot):
+    bot.add_gear(Progress(bot))

@@ -4,7 +4,9 @@ from os import getenv, listdir
 from log import log
 from utilities import db, collections, collection_names
 
-# TODO: Define bot permissions, see: enums / UserPermissions
+# TODO: Switch from MongoDB
+
+# Define bot permissions, see: enums / UserPermissions
 permissions = Permissions(
     manage_channels=False,
     manage_server=False,

@@ -1,12 +1,10 @@
-import nextcord
-from nextcord.ext import application_checks, commands, tasks
-from requests import get, exceptions
-from json import loads
-from datetime import datetime, time
+import stoat
+from stoat.ext import commands
 from re import sub
-from utilities import db
+from utilities import Client, db, delay_until, schedule, time_from_string
+import asyncio
 
-worldstate_url = "https://api.warframe.com/cdn/worldState.php"
+# TODO: Switch from MongoDB
 
 
 # Function to convert an epoch timestamp into a dynamic timestamp
@@ -25,10 +23,9 @@ def string_split(string: str):
 def request_wf_info(url: str):
     try:
         # Return the parsed JSON as a Python object
-        wf_data = get(url)
-        wf_world = loads(wf_data.content)
+        wf_world = await Client.get_content(url)
         return wf_world
-    except exceptions.RequestException as error:
+    except Exception as error:
         return error
 
 
@@ -40,10 +37,8 @@ def alerts_search(url: str):
     # Access specifically the information about alerts
     alert_data = wf_world["Alerts"]
 
-    # Create an embed object to return with alert information
-    alert_embed = nextcord.Embed(
-        title="Alerts", description="", color=nextcord.Colour.from_rgb(0, 128, 255)
-    )
+    # Store all the alert information to pass to the embed
+    alert_info = ""
 
     for alert in alert_data:
         # Get the start and end times as dynamic timestamps
@@ -79,7 +74,7 @@ def alerts_search(url: str):
         alert_desc = f"Level {alert_min_level}-{alert_max_level} {alert_faction} {alert_type} on {alert_location}\n"
 
         # Append information about the alert
-        alert_embed.add_field(name=alert_title, value=alert_desc)
+        alert_info += f"**{alert_title}**\t- {alert_desc}"
 
         # Append the alert credit reward
         alert_rewards = f"- {alert_credits} credits\n"
@@ -93,7 +88,12 @@ def alerts_search(url: str):
             item_count = item["ItemCount"]
             alert_rewards += f"- {item_count} {item_type}\n"
 
-        alert_embed.add_field(name="Rewards:", value=alert_rewards, inline=False)
+        alert_info += f"**Rewards:**\n{alert_rewards}"
+
+    # Create an embed object to return with alert information
+    alert_embed = stoat.SendableEmbed(
+        title="Alerts", description=alert_info, color=stoat.Colour.from_rgb(0, 128, 255)
+    )
 
     return alert_embed
 
@@ -123,13 +123,12 @@ def archon_hunt(url: str):
         hunt_info.append(f"{mission_type} - {mission_node}")
 
     # Create an embed object to return with Archon information
-    archon_embed = nextcord.Embed(
-        title=f"{current_archon}",
+    archon_embed = stoat.SendableEmbed(
+        title=f"{current_archon} is here between {archon_duration}",
         description="\n".join(hunt_info),
-        color=nextcord.Colour.from_rgb(0, 128, 255),
+        color=stoat.Colour.from_rgb(0, 128, 255),
     )
 
-    archon_embed.add_field(name="Archon is here from:", value=archon_duration)
     return archon_embed
 
 
@@ -158,19 +157,12 @@ def baro_kiteer(url: str):
             baro_inventory = baro["Manifest"]
     except Exception:
         # Create an embed object to return with Baro information
-        baro_embed = nextcord.Embed(
+        baro_embed = stoat.SendableEmbed(
             title=f"Baro Ki'Teer will be at {baro_location} between {baro_duration}",
             description="Inventory Unknown",
-            color=nextcord.Colour.from_rgb(0, 128, 255),
+            color=stoat.Colour.from_rgb(0, 128, 255),
         )
         return baro_embed
-
-    # Create an embed object to return with Baro information
-    baro_embed = nextcord.Embed(
-        title="Baro Ki'Teer is here",
-        description=baro_location,
-        color=nextcord.Colour.from_rgb(0, 128, 255),
-    )
 
     baro_list = []
 
@@ -192,18 +184,24 @@ def baro_kiteer(url: str):
         # Format everything into one line and append it to the list
         baro_list.append(f"{name} - {ducats} D {credits} C")
 
-    # Break Baro's inventory into chunks of 10 items to avoid going over Discord's limits per field
-    chunk_size = 10
-    baro_chunked = [
-        baro_list[item : item + chunk_size]
-        for item in range(0, len(baro_list), chunk_size)
-    ]
+    # # Break Baro's inventory into chunks of 10 items to avoid going over Discord's limits per field
+    # chunk_size = 10
+    # baro_chunked = [
+    #     baro_list[item : item + chunk_size]
+    #     for item in range(0, len(baro_list), chunk_size)
+    # ]
 
-    # Append each chunk's information to the embed
-    for chunk in baro_chunked:
-        baro_embed.add_field(name="", value="\n".join(chunk), inline=False)
+    # # Append each chunk's information to the embed
+    # for chunk in baro_chunked:
+    #     baro_embed.add_field(name="", value="\n".join(chunk), inline=False)
 
-    baro_embed.add_field(name="Baro is here from:", value=baro_duration)
+    # Create an embed object to return with Baro information
+    baro_embed = stoat.SendableEmbed(
+        title=f"Baro Ki'Teer is at {baro_location} between {baro_duration}",
+        description=baro_list,
+        color=stoat.Colour.from_rgb(0, 128, 255),
+    )
+
     return baro_embed
 
 
@@ -220,22 +218,18 @@ def deep_archimedea_status(url: str):
     da_end = epoch_convert(da["Expiry"]["$date"]["$numberLong"])
     da_duration = f"{da_start} - {da_end}"
 
-    # Create the Deep Archimedea embed
-    da_embed = nextcord.Embed(
-        title="Deep Archimedea",
-        description=da_duration,
-        color=nextcord.Colour.from_rgb(0, 128, 255),
-    )
-
     # Get the Deep Archimedea missions
     da_missions = da["Missions"]
+
+    # Store information on the deep archimedea
+    da_description = ""
 
     # Get each mission's faction, type, and modifiers
     for mission in da_missions:
         # Add mission type and enemy faction to the embed
         da_faction = db.worldstate.find_one({"key": mission["faction"]})["value"]
         da_type = db.worldstate.find_one({"key": mission["missionType"]})["value"]
-        da_embed.add_field(name=da_type, value=da_faction, inline=False)
+        da_description += f"**{da_type}** - {da_faction}\n"
 
         # Get modifiers for both regular and elite difficulties
         da_difficulties = mission["difficulties"]
@@ -243,7 +237,7 @@ def deep_archimedea_status(url: str):
         # Handle risks and deviations for normal difficulties
         da_normal = da_difficulties[0]
         normal_dev = string_split(da_normal["deviation"])
-        da_embed.add_field(name="Deviations", value=normal_dev, inline=False)
+        da_description += f"Deviations {normal_dev}\n"
 
         normal_risks = da_normal["risks"]
         da_risks = []
@@ -251,7 +245,7 @@ def deep_archimedea_status(url: str):
         for risk in normal_risks:
             da_risks.append(f"  - {string_split(risk)}")
 
-        da_embed.add_field(name="Risks", value="\n".join(da_risks), inline=False)
+        da_description += f"Risks:{'\t'.join(da_risks)}\n"
 
         # Handle additional risks for elite difficulties
         da_elite = da_difficulties[1]
@@ -262,7 +256,7 @@ def deep_archimedea_status(url: str):
         for risk in elite_risks:
             eda_risks.append(f"  - {string_split(risk)}")
 
-        da_embed.add_field(name="Elite Risks", value="\n".join(da_risks), inline=False)
+        da_description += f"Elite Risks:{'\t'.join(eda_risks)}\n"
 
         # Get Deep Archimedea variables
         da_variables = da["Variables"]
@@ -271,11 +265,16 @@ def deep_archimedea_status(url: str):
         for variable in da_variables:
             parsed_variables.append(f"  - {string_split(variable)}")
 
-        da_embed.add_field(
-            name="Variables", value="\n".join(parsed_variables), inline=False
-        )
+        da_description += f"Variables:{'\t'.join(parsed_variables)}"
 
-        return da_embed
+    # Create the Deep Archimedea embed
+    da_embed = stoat.SendableEmbed(
+        title=f"Deep Archimedea {da_duration}",
+        description=da_description,
+        color=stoat.Colour.from_rgb(0, 128, 255),
+    )
+
+    return da_embed
 
 
 # Function to handle the retrieval of Duviri information
@@ -289,13 +288,6 @@ def duviri_status(url: str):
     # Look in both regular and steel path variants for reward choices
     regular_choices = duviri[0]["Choices"]
     steel_path_choices = duviri[1]["Choices"]
-
-    # Create an embed object to return with Duviri information
-    duviri_embed = nextcord.Embed(
-        title="Weekly Duviri Rewards",
-        description="This week's rewards in the Circuit",
-        color=nextcord.Colour.from_rgb(0, 128, 255),
-    )
 
     rewards = []
     sp_rewards = []
@@ -311,11 +303,16 @@ def duviri_status(url: str):
     duviri_steel_path = "\n".join(sp_rewards)
 
     # Add regular and steel path rewards
-    duviri_embed.add_field(
-        name="**Circuit Rewards** (Choose one)", value=duviri_regular
+    duviri_description = f"**Circuit Rewards** (Choose one)\n{duviri_regular}\n"
+    duviri_description += (
+        f"**Steel Path Circuit Rewards (Choose two)\n{duviri_steel_path}\n"
     )
-    duviri_embed.add_field(
-        name="**Steel Path Circuit Rewards** (Choose one)", value=duviri_steel_path
+
+    # Create an embed object to return with Duviri information
+    duviri_embed = stoat.SendableEmbed(
+        title="Weekly Duviri Rewards",
+        description=duviri_description,
+        color=stoat.Colour.from_rgb(0, 128, 255),
     )
 
     return duviri_embed
@@ -342,13 +339,6 @@ def nightwave_status(url: str):
 
     # Create a string with the current Nightwave season
     nw_title = f"**Nightwave Season {nw_season}**"
-
-    # Create an embed object to return with Duviri information
-    nw_embed = nextcord.Embed(
-        title=nw_title,
-        description=nw_duration,
-        color=nextcord.Colour.from_rgb(0, 128, 255),
-    )
 
     challenge_info = ""
 
@@ -382,7 +372,12 @@ def nightwave_status(url: str):
 
         challenge_info += f"- ({duration}) {requirement} {start}-{end}\n"
 
-    nw_embed.add_field(name="Rewards:", value=challenge_info)
+    # Create an embed object to return with Duviri information
+    nw_embed = stoat.SendableEmbed(
+        title=f"{nw_title} - {nw_duration}",
+        description=f"Rewards:\n{challenge_info}",
+        color=stoat.Colour.from_rgb(0, 128, 255),
+    )
 
     return nw_embed
 
@@ -417,10 +412,10 @@ def sortie_status(url: str):
         sortie_missions += f"{sortie_type} {sortie_node} {sortie_modifier}\n"
 
     # Create an embed object to return with sortie information
-    sortie_embed = nextcord.Embed(
+    sortie_embed = stoat.SendableEmbed(
         title=sortie_title,
         description=sortie_missions,
-        color=nextcord.Colour.from_rgb(0, 128, 255),
+        color=stoat.Colour.from_rgb(0, 128, 255),
     )
 
     return sortie_embed
@@ -439,22 +434,18 @@ def temporal_archimedea_status(url: str):
     ta_end = epoch_convert(ta["Expiry"]["$date"]["$numberLong"])
     ta_duration = f"{ta_start} - {ta_end}"
 
-    # Create the Deep Archimedea embed
-    ta_embed = nextcord.Embed(
-        title="Temporal Archimedea",
-        description=ta_duration,
-        color=nextcord.Colour.from_rgb(0, 128, 255),
-    )
-
     # Get the Deep Archimedea missions
     ta_missions = ta["Missions"]
+
+    # Store information on the temporal archimedea
+    ta_description = ""
 
     # Get each mission's faction, type, and modifiers
     for mission in ta_missions:
         # Add mission type and enemy faction to the embed
         ta_faction = db.worldstate.find_one({"key": mission["faction"]})["value"]
         ta_type = db.worldstate.find_one({"key": mission["missionType"]})["value"]
-        ta_embed.add_field(name=ta_type, value=ta_faction, inline=False)
+        ta_description += f"**{ta_type}** - {ta_faction}\n"
 
         # Get modifiers for both regular and elite difficulties
         ta_difficulties = mission["difficulties"]
@@ -462,7 +453,7 @@ def temporal_archimedea_status(url: str):
         # Handle risks and deviations for normal difficulties
         ta_normal = ta_difficulties[0]
         normal_dev = string_split(ta_normal["deviation"])
-        ta_embed.add_field(name="Deviations", value=normal_dev, inline=False)
+        ta_description += f"Deviations {normal_dev}\n"
 
         normal_risks = ta_normal["risks"]
         ta_risks = []
@@ -470,7 +461,7 @@ def temporal_archimedea_status(url: str):
         for risk in normal_risks:
             ta_risks.append(f"  - {string_split(risk)}")
 
-        ta_embed.add_field(name="Risks", value="\n".join(ta_risks), inline=False)
+        ta_description += f"Risks:{'\t'.join(ta_risks)}\n"
 
         # Handle additional risks for elite difficulties
         ta_elite = ta_difficulties[1]
@@ -481,7 +472,7 @@ def temporal_archimedea_status(url: str):
         for risk in elite_risks:
             eta_risks.append(f"  - {string_split(risk)}")
 
-        ta_embed.add_field(name="Elite Risks", value="\n".join(ta_risks), inline=False)
+        ta_description += f"Elite Risks:{'\t'.join(eta_risks)}\n"
 
         # Get Temporal Archimedea variables
         ta_variables = ta["Variables"]
@@ -490,19 +481,24 @@ def temporal_archimedea_status(url: str):
         for variable in ta_variables:
             parsed_variables.append(f"  - {string_split(variable)}")
 
-        ta_embed.add_field(
-            name="Variables", value="\n".join(parsed_variables), inline=False
-        )
+        ta_description += f"Variables:{'\t'.join(parsed_variables)}"
 
-        return ta_embed
+    # Create the Deep Archimedea embed
+    ta_embed = stoat.SendableEmbed(
+        title=f"Temporal Archimedea {ta_duration}",
+        description=ta_description,
+        color=stoat.Colour.from_rgb(0, 128, 255),
+    )
+
+    return ta_embed
 
 
-class Warframe(commands.Cog, name="Warframe"):
+class Warframe(commands.Gear, name="Warframe"):
     """Commands for getting Warframe information"""
 
-    COG_EMOJI = "⚔️"
+    GEAR_EMOJI = "⚔️"
 
-    def __init__(self, bot: commands.AutoShardedBot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         # Create a dictionary of Warframe Progenitor types to retrieve later
         self.progenitor = {
@@ -525,7 +521,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 "Nezha",
                 "Protea",
                 "Temple",
-                "Vauban",
+                "UrielVauban",
                 "Wisp",
             ],
             "Cold": [
@@ -542,6 +538,7 @@ class Warframe(commands.Cog, name="Warframe"):
                 "Banshee",
                 "Caliban",
                 "Excalibur",
+                "Follie",
                 "Gyre",
                 "Limbo",
                 "Nova",
@@ -586,169 +583,182 @@ class Warframe(commands.Cog, name="Warframe"):
         self.worldstate_url = "https://api.warframe.com/cdn/worldState.php"
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_wf_channels = db.warframe_channels.distinct("channel")
-        self.archon_timer.start()
-        self.baro_timer.start()
-        self.duviri_timer.start()
+        self.loop = asyncio.get_event_loop()
 
-    def cog_unload(self):
-        self.archon_timer.cancel()
-        self.baro_timer.cancel()
-        self.duviri_timer.cancel()
+    def gear_load(self):
+        self.loop.run_forever(self.daily_warframe())
 
-    # Baro loop runs every Friday to check if Baro has arrived
-    @tasks.loop(time=time(15))
-    async def baro_timer(self):
-        # Checks every day at 14:00 UTC / 9:00 am EST for Baro Ki'Teer
-        weekday = datetime.today().weekday()
-        # If date is Friday, then run the Baro function
-        if weekday == 4:
-            # Fetch the list of enrolled warframe channels to post daily content to
-            self.daily_wf_channels = db.warframe_channels.distinct("channel")
-            # Send the content to each of the daily warframe channels
-            for channel_id in self.daily_wf_channels:
-                daily_wf_channel = self.bot.get_channel(channel_id)
-                if daily_wf_channel is None:
-                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
+    def gear_unload(self):
+        self.loop.stop(self.daily_warframe())
 
-    # Archimedea loop runs every Sunday for the weekly reset
-    @tasks.loop(time=time(2))
     async def archimedea_timer(self):
-        # Checks every day at 2:00 am UTC / 9:00 pm EST for Archimedea
-        weekday = datetime.today().weekday()
-        # If date is Sunday(EST)/Monday(UTC), then run the Deep and Temporal Archimedea functions
-        if weekday == 0:
-            # Fetch the list of enrolled warframe channels to post daily content to
-            self.daily_wf_channels = db.warframe_channels.distinct("channel")
-            # Send the content to each of the daily warframe channels
-            for channel_id in self.daily_wf_channels:
-                daily_wf_channel = self.bot.get_channel(channel_id)
-                if daily_wf_channel is None:
-                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(
-                    embed=deep_archimedea_status(self.worldstate_url)
-                )
-                await daily_wf_channel.send(
-                    embed=temporal_archimedea_status(self.worldstate_url)
-                )
+        # Fetch the list of enrolled warframe channels to post daily content to
+        self.daily_wf_channels = db.warframe_channels.distinct("channel")
+        # Send the content to each of the daily warframe channels
+        for channel_id in self.daily_wf_channels:
+            daily_wf_channel = self.bot.get_channel(channel_id)
+            if daily_wf_channel is None:
+                daily_wf_channel = await self.bot.fetch_channel(channel_id)
+            await daily_wf_channel.send(
+                embed=deep_archimedea_status(self.worldstate_url)
+            )
+            await daily_wf_channel.send(
+                embed=temporal_archimedea_status(self.worldstate_url)
+            )
 
-    # Archon loop runs every Sunday for the weekly reset
-    @tasks.loop(time=time(2))
     async def archon_timer(self):
-        # Checks every day at 2:00 am UTC / 9:00 pm EST for Archon Hunts
-        weekday = datetime.today().weekday()
-        # If date is Sunday(EST)/Monday(UTC), then run the Archon Hunt function
-        if weekday == 0:
-            # Fetch the list of enrolled warframe channels to post daily content to
-            self.daily_wf_channels = db.warframe_channels.distinct("channel")
-            # Send the content to each of the daily warframe channels
-            for channel_id in self.daily_wf_channels:
-                daily_wf_channel = self.bot.get_channel(channel_id)
-                if daily_wf_channel is None:
-                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
+        # Fetch the list of enrolled warframe channels to post daily content to
+        self.daily_wf_channels = db.warframe_channels.distinct("channel")
+        # Send the content to each of the daily warframe channels
+        for channel_id in self.daily_wf_channels:
+            daily_wf_channel = self.bot.get_channel(channel_id)
+            if daily_wf_channel is None:
+                daily_wf_channel = await self.bot.fetch_channel(channel_id)
+            await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
 
-    # Duviri loop runs every Sunday for the weekly reset
-    @tasks.loop(time=time(2))
+    async def baro_timer(self):
+        # Fetch the list of enrolled warframe channels to post daily content to
+        self.daily_wf_channels = db.warframe_channels.distinct("channel")
+        # Send the content to each of the daily warframe channels
+        for channel_id in self.daily_wf_channels:
+            daily_wf_channel = self.bot.get_channel(channel_id)
+            if daily_wf_channel is None:
+                daily_wf_channel = await self.bot.fetch_channel(channel_id)
+            await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
+
     async def duviri_timer(self):
-        # Checks every day at 2:00 am UTC / 9:00 pm EST for Duviri Rewards
-        weekday = datetime.today().weekday()
-        # If date is Sunday(EST)/Monday(UTC), then run the Duviri rewards function
-        if weekday == 0:
-            # Fetch the list of enrolled warframe channels to post daily content to
-            self.daily_wf_channels = db.warframe_channels.distinct("channel")
-            # Send the content to each of the daily warframe channels
-            for channel_id in self.daily_wf_channels:
-                daily_wf_channel = self.bot.get_channel(channel_id)
-                if daily_wf_channel is None:
-                    daily_wf_channel = await self.bot.fetch_channel(channel_id)
-                await daily_wf_channel.send(embed=duviri_status(self.worldstate_url))
+        # Fetch the list of enrolled warframe channels to post daily content to
+        self.daily_wf_channels = db.warframe_channels.distinct("channel")
+        # Send the content to each of the daily warframe channels
+        for channel_id in self.daily_wf_channels:
+            daily_wf_channel = self.bot.get_channel(channel_id)
+            if daily_wf_channel is None:
+                daily_wf_channel = await self.bot.fetch_channel(channel_id)
+            await daily_wf_channel.send(embed=duviri_status(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def alerts(self, interaction: nextcord.Interaction):
+    # Handle all weekly Warframe tasks
+    async def daily_warframe(self):
+        archimedea_task = asyncio.create_task(
+            schedule(
+                delay=delay_until("Sunday", 21),
+                loop_time=time_from_string(1, "week"),
+                function=self.archimedea_timer(),
+            )
+        )
+        archon_task = asyncio.create_task(
+            schedule(
+                delay=delay_until("Sunday", 21),
+                loop_time=time_from_string(1, "week"),
+                function=self.archon_timer(),
+            )
+        )
+        baro_task = asyncio.create_task(
+            schedule(
+                delay=delay_until("Friday", 10),
+                loop_time=time_from_string(1, "week"),
+                function=self.baro_timer(),
+            )
+        )
+        duviri_task = asyncio.create_task(
+            schedule(
+                delay=delay_until("Sunday", 21),
+                loop_time=time_from_string(1, "week"),
+                function=self.duviri_timer(),
+            )
+        )
+        await archimedea_task
+        await archon_task
+        await baro_task
+        await duviri_task
+
+    @commands.command()
+    async def alerts(self, interaction: stoat.Interaction):
         """Find information on current alerts, if there are any"""
         await interaction.send(embed=alerts_search(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def archon(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def archon(self, interaction: stoat.Interaction):
         """Find the current Archon, missions, and remaining time for the current hunt"""
         await interaction.send(embed=archon_hunt(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def baro(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def baro(self, interaction: stoat.Interaction):
         """Get information on Baro Ki'Teer"""
         await interaction.send(embed=baro_kiteer(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def deep_archimedea(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def deep_archimedea(self, interaction: stoat.Interaction):
         """Get information on Deep Archimedea"""
         await interaction.send(embed=deep_archimedea_status(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def duviri(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def duviri(self, interaction: stoat.Interaction):
         """Find information on the current Duviri cycle rewards"""
         await interaction.send(embed=duviri_status(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def nightwave(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def nightwave(self, interaction: stoat.Interaction):
         """Find information on the current Nightwave season and challenges"""
         await interaction.send(embed=nightwave_status(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def sortie(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def sortie(self, interaction: stoat.Interaction):
         """Find information on the current sortie"""
         await interaction.send(embed=sortie_status(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def temporal_archimedea(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def temporal_archimedea(self, interaction: stoat.Interaction):
         """Get information on Temporal Archimedea"""
         await interaction.send(embed=temporal_archimedea_status(self.worldstate_url))
 
-    @nextcord.slash_command()
-    async def progenitors(self, interaction: nextcord.Interaction):
+    @commands.command()
+    async def progenitors(self, interaction: stoat.Interaction):
         """Returns progenitor elements and their corresponding warframes"""
-        # Create the initial embed
-        progenitor_embed = nextcord.Embed(
-            title="Progenitor Elements", color=nextcord.Colour.from_rgb(0, 128, 255)
-        )
+        progenitor_description = ""
+
         # Add fields for each element and corresponding warframes
         for key in self.progenitor:
             progenitors = ", ".join(self.progenitor[key])
-            progenitor_embed.add_field(name=key, value=progenitors)
+            progenitor_description += f"**{key}** - {progenitors}\n"
+
+        # Create the initial embed
+        progenitor_embed = stoat.SendableEmbed(
+            title="Progenitor Elements",
+            description=progenitor_description,
+            color=stoat.Colour.from_rgb(0, 128, 255),
+        )
 
         await interaction.send(embed=progenitor_embed)
 
-    @nextcord.slash_command()
-    @application_checks.has_permissions(manage_guild=True)
-    async def set_warframe_channel(
-        self, interaction: nextcord.Interaction, channel: str
-    ):
+    @commands.command()
+    @commands.has_permissions(manage_server=True)
+    async def set_warframe_channel(self, interaction: stoat.Interaction, channel: str):
         """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
         wf_channel_id = int(channel.split("/")[-1])
-        # Prepares the new guild & channel combination for this server
-        new_channel = {"guild": interaction.guild_id, "channel": wf_channel_id}
+        # Prepares the new server & channel combination for this server
+        new_channel = {"server": interaction.server_id, "channel": wf_channel_id}
         # Updates the Warframe channel for the server or inserts it if one doesn't exist currently
         db.warframe_channels.replace_one(
-            {"guild": interaction.guild_id}, new_channel, upsert=True
+            {"server": interaction.server_id}, new_channel, upsert=True
         )
 
         # Let users know where the updated channel is
-        updated_channel = interaction.guild.get_channel(interaction.channel_id)
+        updated_channel = interaction.server.get_channel(interaction.channel_id)
         if updated_channel:
             await interaction.send(
                 f"Warframe content for this server will go to {updated_channel.name}."
             )
 
-    @nextcord.slash_command()
-    @application_checks.has_permissions(manage_guild=True)
-    async def remove_warframe_channel(self, interaction: nextcord.Interaction):
+    @commands.command()
+    @commands.has_permissions(manage_server=True)
+    async def remove_warframe_channel(self, interaction: stoat.Interaction):
         """Removes the automated Warframe channel for this server, if it exists."""
 
         # Removes the Warframe channel for the server if it exists
-        if db.warframe_channels.find_one({"guild": interaction.guild_id}):
-            db.warframe_channels.delete_one({"guild": interaction.guild_id})
+        if db.warframe_channels.find_one({"server": interaction.server_id}):
+            db.warframe_channels.delete_one({"server": interaction.server_id})
             await interaction.send(
                 "Warframe automated content for this server is stopped."
             )
@@ -759,5 +769,5 @@ class Warframe(commands.Cog, name="Warframe"):
             )
 
 
-def setup(bot: commands.AutoShardedBot):
-    bot.add_cog(Warframe(bot))
+def setup(bot: commands.Bot):
+    bot.add_gear(Warframe(bot))

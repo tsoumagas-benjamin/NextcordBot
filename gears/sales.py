@@ -1,33 +1,42 @@
-import nextcord
+import stoat
 from os import getenv
-from nextcord.ext import commands, application_checks, tasks
-from requests import get, post
-from json import loads, dumps
-from datetime import datetime, date, time, timedelta
-from utilities import db
+from stoat.ext import commands
+from json import dumps
+from datetime import datetime, date, timedelta
+from utilities import (
+    Client,
+    db,
+    check_permitted_servers,
+    delay_until,
+    schedule,
+    time_from_string,
+)
+import asyncio
+
+# TODO: Switch from MongoDB
+# TODO: Test sales functions in Tinkering
 
 
-# Create a cog for checking sales on games
-class Sales(commands.Cog, name="Game Sales"):
+# Create a gear for checking sales on games
+class Sales(commands.Gear, name="Sales"):
     """Commands for checking for game sales"""
 
-    COG_EMOJI = "💲"
+    GEAR_EMOJI = "💲"
 
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         # Fetch the list of sales channels to post sale information to
         self.sales_channels = db.sales_channels.distinct("channel")
-        self.daily_prune.start()
-        self.daily_sales.start()
+        self.loop = asyncio.get_event_loop()
 
-    def cog_unload(self):
-        self.daily_prune.cancel()
-        self.daily_sales.cancel()
+    def gear_load(self):
+        self.loop.run_forever(self.daily_sales())
 
-    permitted_guilds = [686394755009347655, 793685160931098696]
+    def gear_unload(self):
+        self.loop.stop(self.daily_sales())
 
     # Dictionary of Game titles and IDs to regularly check for sales
-    target_games = {
+    target_games: dict = {
         "Balatro": "018d937f-700e-7161-9c8d-5423af1b7c99",
         "Blasphemous": "018d937f-046c-70c2-89ad-3db21e19f40f",
         "Blasphemous 2": "018d937f-6ee2-70f6-940c-6212ac74369e",
@@ -50,27 +59,36 @@ class Sales(commands.Cog, name="Game Sales"):
         "Terraria": "018d937f-30fa-705e-8a3a-f39719bdde93",
     }
 
-    def sale_task(self):
+    def get_sales(self):
         # Run a function similar to update_sales where all games are checked for sales and the database is updated
         for game_id in self.target_games.values():
             self.compare_cut(game_id)
 
-    def prune_task(self):
+    def prune_sales(self):
         # Delete all sales with expiries older than the present datetime
         db.sales.delete_many({"expiry": {"$lt": datetime.now()}})
 
         # Delete all sales with discounts lower or equal to 0% if they exist
         db.sales.delete_many({"cut": {"$lte": 0}})
 
-    @tasks.loop(time=time(4))
+    # Handle all daily sales related tasks
     async def daily_sales(self):
-        # Check for better updated sales
-        self.sale_task()
-
-    @tasks.loop(time=time(5))
-    async def daily_prune(self):
-        # Prune expired sales from the database daily
-        self.prune_task()
+        sale_task = asyncio.create_task(
+            schedule(
+                delay=delay_until("Tomorrow", 12),
+                loop_time=time_from_string(1, "day"),
+                function=self.get_sales(),
+            )
+        )
+        prune_task = asyncio.create_task(
+            schedule(
+                delay=delay_until("Tomorrow", 0),
+                loop_time=time_from_string(1, "day"),
+                function=self.prune_sales(),
+            )
+        )
+        await sale_task
+        await prune_task
 
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):
@@ -89,9 +107,8 @@ class Sales(commands.Cog, name="Game Sales"):
         query_url = base_url + f"&title={format_title}"
 
         # Query the API and return the ID field
-        game = get(query_url)
-        game_json = loads(game.content)
-        game_id: str = game_json["game"]["id"]
+        game = await Client.get_content(query_url)
+        game_id: str = game["game"]["id"]
 
         return game_id
 
@@ -109,24 +126,30 @@ class Sales(commands.Cog, name="Game Sales"):
 
         return expiry_date
 
-        # Function to check for the best cut on a game and when it expires
-
-    def best_cut(self, game_id: str):
+    # Function to return sale contents for a game
+    def get_sale_content(self, game_id: str):
         # Format game ID as a payload and set up header and API URL
         payload = [game_id]
         headers = {"content-type": "application/json"}
         sale_url = self.get_base_url("/games/prices/v3")
 
         # Make a POST request to the API and load the response as a python iterable object
-        sale = post(sale_url, data=dumps(payload), headers=headers)
+        sale = await Client.post(url=sale_url, data=dumps(payload), headers=headers)
+
+        return sale
+
+    # Function to check for the best cut on a game and when it expires
+    def best_cut(self, game_id: str):
+
+        # Make a POST request to the API and load the response as a python iterable object
         try:
-            sale_json = loads(sale.content)
+            sale = self.get_sale_content(game_id=game_id)
         except Exception as e:
             print(f"JSON for {game_id} could not be decoded because {e}")
             return
 
         # Gather information on the current best cut according to IsThereAnyDeal
-        best_deal = sale_json[0]["deals"][0]
+        best_deal = sale[0]["deals"][0]
         best_cut = best_deal["cut"]
         expiry = best_deal["expiry"]
         if expiry:
@@ -140,19 +163,6 @@ class Sales(commands.Cog, name="Game Sales"):
         for title, id in self.target_games.items():
             if id == game_id:
                 return title
-
-    # Function to return sale contents for a game
-    def get_sale_content(self, game_id: str):
-        # Format game ID as a payload and set up header and API URL
-        payload = [game_id]
-        headers = {"content-type": "application/json"}
-        sale_url = self.get_base_url("/games/prices/v3")
-
-        # Make a POST request to the API and load the response as a python iterable object
-        sale = post(sale_url, data=dumps(payload), headers=headers)
-        sale_json = loads(sale.content)
-
-        return sale_json
 
     # Function to format content to be sent to sales channels(see best_price())
     def format_sale(self, game_id: str):
@@ -173,45 +183,49 @@ class Sales(commands.Cog, name="Game Sales"):
         best_cut = best_deal["cut"]
         deal_url = best_deal["url"]
 
-        # Create the embed to send with relevant information that was gathered
-        sale_embed = nextcord.Embed(
-            title=f"Sale Information for {game_title.title()}",
-            description=f"Current best deal at {best_shop} for ${best_price} USD (-{best_cut}%) | {deal_url}",
-            color=nextcord.Colour.blurple(),
-        )
+        # Format sale description with best shop, price, discount, and sale history
+        sale_description = f"Current best deal at {best_shop} for ${best_price} USD (-{best_cut}%) | {deal_url}\n"
+        sale_description += f"All Time Low:\t${all_time} USD\n"
+        sale_description += f"Last Year Low:\t${last_year} USD\n"
+        sale_description += f"3 Month Low:\t${three_month} USD\n"
 
-        # Add information on the best prices for the game over various timespans
-        sale_embed.add_field(name="All Time Low", value=f"${all_time} USD")
-        sale_embed.add_field(name="Last Year Low", value=f"${last_year} USD")
-        sale_embed.add_field(name="3 Month Low", value=f"${three_month} USD")
+        # Create the embed to send with relevant information that was gathered
+        sale_embed = stoat.SendableEmbed(
+            title=f"Sale Information for {game_title.title()}",
+            description=sale_description,
+            color="blue",
+        )
 
         return sale_embed
 
     # Function to report on all the active sales in the database
     def get_current_sales(self):
-        current_sale_embed = nextcord.Embed(
-            title="Current Sales on IsThereAnyDeal",
-            description="Use /best_price on a game here to see more details",
-            colour=nextcord.Colour.blurple(),
-        )
+        sale_description = "Use /best_price on a game here to see more details\n"
 
         for sale in db.sales.find():
             # Retrieve the game's title, discount, and expiry and format them for the embed
             sale_title = self.get_title(sale["_id"])
             sale_expiry = sale["expiry"].strftime("%m-%d-%Y")
-            sale_description = f"{sale['cut']}% off until {sale_expiry}"
-            current_sale_embed.add_field(name=sale_title, value=sale_description)
+            sale_description += (
+                f"**{sale_title}**:\t{sale['cut']}% off until {sale_expiry}\n"
+            )
+
+        current_sale_embed = stoat.SendableEmbed(
+            title="Current Sales on IsThereAnyDeal",
+            description=sale_description,
+            colour="blue",
+        )
 
         return current_sale_embed
 
     # Function to send formatted content to sales channels
-    async def send_sale_info(self, sale_embed: nextcord.Embed):
+    async def send_sale_info(self, sale_embed: stoat.SendableEmbed):
         # Send a meme to each of the daily channels
         for channel_id in self.sales_channels:
             sales_channel = self.bot.get_channel(channel_id)
             if sales_channel is None:
                 sales_channel = await self.bot.fetch_channel(channel_id)
-            await sales_channel.send(embed=sale_embed())
+            await sales_channel.send(embeds=[sale_embed()])
 
     # Function to store information on a game's sale cut and expiry in the database
     def store_sale(self, game_id: str, cut: int, expiry_date: date):
@@ -266,83 +280,84 @@ class Sales(commands.Cog, name="Game Sales"):
             self.store_sale(game_id, current_best_cut, formatted_expiry)
 
     # Function to set sales channel for this server
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    @application_checks.has_permissions(manage_guild=True)
-    async def set_sales_channel(self, interaction: nextcord.Interaction, channel: str):
+    @commands.command()
+    @commands.check(check_permitted_servers)
+    @commands.has_permissions(manage_server=True)
+    async def set_sales_channel(self, ctx: stoat.ctx, channel: str):
         """Takes in a channel link/ID and sets it as the automated sales channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
         sales_channel_id = int(channel.split("/")[-1])
-        # Prepares the new guild & channel combination for this server
-        new_channel = {"guild": interaction.guild_id, "channel": sales_channel_id}
+        # Prepares the new server & channel combination for this server
+        new_channel = {"server": ctx.server_id, "channel": sales_channel_id}
         # Updates the sales channel for the server or inserts it if one doesn't exist currently
         db.sales_channels.replace_one(
-            {"guild": interaction.guild_id}, new_channel, upsert=True
+            {"server": ctx.server_id}, new_channel, upsert=True
         )
 
         # Let users know where the updated channel is
-        updated_channel = interaction.guild.get_channel(sales_channel_id)
+        updated_channel = ctx.server.get_channel(sales_channel_id)
         if updated_channel is None:
             updated_channel = await self.bot.fetch_channel(sales_channel_id)
-        await interaction.send(
-            f"Sales for this server will go to {updated_channel.name}."
-        )
+        await ctx.send(f"Sales for this server will go to {updated_channel.name}.")
 
     # Function to remove sales channel for this server
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    @application_checks.has_permissions(manage_guild=True)
-    async def remove_sales_channel(self, interaction: nextcord.Interaction):
+    @commands.command()
+    @commands.check(check_permitted_servers)
+    @commands.has_permissions(manage_server=True)
+    async def remove_sales_channel(self, ctx: stoat.ctx):
         """Removes the automated sales channel for this server, if it exists."""
 
         # Removes the daily channel for the server if it exists
-        if db.sales_channels.find_one({"guild": interaction.guild_id}):
-            db.sales_channels.delete_one({"guild": interaction.guild_id})
-            await interaction.send("Sales for this server are stopped.")
+        if db.sales_channels.find_one({"server": ctx.server_id}):
+            db.sales_channels.delete_one({"server": ctx.server_id})
+            await ctx.send("Sales for this server are stopped.")
 
         # Lets the user know if there is no existing sales channel
         else:
-            await interaction.send("There is no sales channel for this server.")
+            await ctx.send("There is no sales channel for this server.")
 
     # Function to get the best price for a given game according to IsThereAnyDeal
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def best_price(self, interaction: nextcord.Interaction, game: str):
+    @commands.command()
+    @commands.check(check_permitted_servers)
+    async def best_price(self, ctx: stoat.ctx, game: str):
         """Searches IsThereAnyDeal for the best discount on a game given a title."""
         # Get the game's ID given its title
         try:
             game_id = self.get_game_id(game)
         except Exception as e:
-            await interaction.send(
-                "Unable to retrieve information on this game, sorry!"
-            )
+            await ctx.send("Unable to retrieve information on this game, sorry!")
             print(f"Best_price error: {e}")
 
         # Retrieve the embed with formatted information about the sale
         sale_embed = self.format_sale(game_id)
 
-        await interaction.send(embed=sale_embed)
+        await ctx.send(embeds=[sale_embed])
 
     # Function to get all current sales as an embed
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    async def current_sales(self, interaction: nextcord.Interaction):
+    @commands.command()
+    @commands.check(check_permitted_servers)
+    async def current_sales(self, ctx: stoat.ctx):
         """Displays all currently stored game sales"""
         current_sale_embed = self.get_current_sales()
 
-        await interaction.send(embed=current_sale_embed)
+        await ctx.send(embeds=[current_sale_embed])
 
     # Function to fetch a game's ID on IsThereAnyDeal
-    @nextcord.slash_command(guild_ids=permitted_guilds)
-    @application_checks.has_permissions(manage_guild=True)
-    async def fetch_game_id(self, interaction: nextcord.Interaction, game: str):
+    @commands.command()
+    @commands.check(check_permitted_servers)
+    @commands.has_permissions(manage_server=True)
+    async def fetch_game_id(self, ctx: stoat.ctx, game: str):
         """Fetches the corresponding ID for a given game title, if possible"""
         # Get the game's ID given its title
         try:
             game_id = self.get_game_id(game)
         except Exception as e:
-            await interaction.send("Unable to retrieve the ID for this game, sorry!")
+            await ctx.send("Unable to retrieve the ID for this game, sorry!")
             print(f"fetch_game_id error: {e}")
 
-        await interaction.send(f"ID for {game} is {game_id}")
+        await ctx.send(f"ID for {game} is {game_id}")
 
 
-def setup(bot: commands.AutoShardedBot):
-    bot.add_cog(Sales(bot))
+def setup(bot: commands.Bot):
+    bot.add_gear(Sales(bot))

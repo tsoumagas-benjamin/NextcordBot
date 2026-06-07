@@ -1,22 +1,23 @@
-import nextcord
-from nextcord.ext import commands
+import stoat
+from stoat.ext import commands
+from asyncio import sleep
 
 
-# Create a cog for error handling
-class Error(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
+# Create a gear for error handling
+class Error(commands.Gear, name="Error"):
+    """Listeners for command errors"""
+
+    GEAR_EMOJI = "❌"
+
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     # Occurs whenever an error appears from a command
-    @commands.Cog.listener()
-    async def on_command_error(self, interaction: nextcord.Interaction, error):
-
-        # Error if user misses a necessary command parameter
-        if isinstance(error, commands.MissingRequiredArgument):
-            message = f"`{error.param.name}` is a required argument."
+    @commands.Gear.listener()
+    async def on_command_error(self, error: commands.CommandErrorEvent):
 
         # Error if command is on cooldown
-        elif isinstance(error, commands.CommandOnCooldown):
+        if isinstance(error, commands.CommandOnCooldown):
             message = f"This command is on cooldown. Please try again after {round(error.retry_after, 1)} seconds."
 
         # Error if a user enters something wrong
@@ -26,6 +27,10 @@ class Error(commands.Cog):
         # Error when a command is entered that does not exist
         elif isinstance(error, commands.CommandNotFound):
             message = "Could not find the command."
+
+        # Error if the command has been run too many times in a short timespan
+        elif isinstance(error, commands.MaxConcurrencyReached):
+            message = "You are trying to run the same command too often. Please wait a bit before retrying."
 
         # Error when a user tries a command that is only for the owner
         elif isinstance(error, commands.NotOwner):
@@ -39,22 +44,22 @@ class Error(commands.Cog):
         elif isinstance(error, commands.BotMissingPermissions):
             message = f"I need the following permission(s) for that command: {commands.MissingPermissions}."
 
-        # Error if the command has been run too many times in a short timespan
-        elif isinstance(error, commands.MaxConcurrencyReached):
-            message = "You are trying to run the same command too often. Please wait a bit before retrying."
+        # Error if user misses a necessary command parameter
+        if isinstance(error, commands.MissingRequiredArgument):
+            message = f"`{error.param.name}` is a required argument."
 
         else:
             raise error
 
-        embed = nextcord.Embed(
+        embed = stoat.SendableEmbed(
             title=error,
             description=message,
-            color=nextcord.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
-        await interaction.send(embed=embed, delete_after=5)
-        await interaction.message.delete(delay=5)
+        command_error_embed = await error.context.channel.send(embeds=[embed])
+        await sleep(5)
+        await command_error_embed.delete()
 
 
-# Add the cog to the bot
-def setup(bot: commands.AutoShardedBot):
-    bot.add_cog(Error(bot))
+async def setup(bot: commands.Bot):
+    bot.add_gear(Error(bot))

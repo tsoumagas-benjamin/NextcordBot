@@ -1,8 +1,8 @@
-import nextcord
-from requests import get
-from nextcord.ext import commands
+import stoat
+from stoat.ext import commands
 import PIL.Image
 import PIL.ImageFilter
+from utilities import Client
 
 filters = {
     "Blur": PIL.ImageFilter.BLUR,
@@ -30,116 +30,108 @@ def is_grey_scale(img_path):
     return True
 
 
-# Create a cog for image manipulation
-class Image(commands.Cog, name="Image"):
+# Create a gear for image manipulation
+class Image(commands.Gear, name="Image"):
     """Commands to do image manipulation."""
 
-    COG_EMOJI = "📷"
+    GEAR_EMOJI = "📷"
 
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @nextcord.slash_command(name="contrast")
-    async def contrast_image(
-        self, interaction: nextcord.Interaction, url: str, value: float = 1.5
-    ):
+    @commands.command()
+    async def contrast_image(self, ctx: commands.Context, url: str, value: float = 1.5):
         """Increase image contrast by choosing a high value, decrease by choosing a low value, given its URL"""
-        img_data = get(url).content
+        img_data = await Client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
         if im:
             out = im.point(lambda i: i * value)
             out.save("../output.jpg")
-            await interaction.send(file=nextcord.File("../output.jpg"))
+            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
         else:
-            await interaction.send("Could not load the image, sorry!")
+            await ctx.channel.send("Could not load the image, sorry!")
 
-    @nextcord.slash_command(name="convert")
-    async def convert_image(
-        self, interaction: nextcord.Interaction, url: str, style: str = "Greyscale"
-    ):
+    @commands.command()
+    async def convert_image(self, ctx: commands.Context, url: str):
         """Convert an image to greyscale, given its URL"""
-        img_data = get(url).content
+        img_data = await Client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
         if im:
             out = im.convert("L")
             out.save("../output.jpg")
-            await interaction.send(file=nextcord.File("../output.jpg"))
+            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
         else:
-            await interaction.send("Could not load the image, sorry!")
+            await ctx.channel.send("Could not load the image, sorry!")
 
-    @nextcord.slash_command(name="filter")
-    async def filter_image(
-        self,
-        interaction: nextcord.Interaction,
-        url: str,
-        filter: str = nextcord.SlashOption(
-            name="filters",
-            description="Choose a filter to apply to the image",
-            choices=filters.keys(),
-        ),
-    ):
+    @commands.command()
+    async def filter_image(self, ctx: commands.Context, url: str, filter: str = "Blur"):
         """Apply filters to an image, given its URL"""
-        img_data = get(url).content
+        # If the given filter is invalid, return an error message
+        if filter.capitalize() not in filters.keys():
+            return await ctx.channel.send(
+                f"Please try again with a valid filter: {list(filters.keys())}"
+            )
+        img_data = await Client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
         if im:
-            out = im.filter(filters[filter])
+            out = im.filter(filters[filter.capitalize()])
             out.save("../output.jpg")
-            await interaction.send(file=nextcord.File("../output.jpg"))
+            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
         else:
-            await interaction.send("Could not load the image, sorry!")
+            await ctx.channel.send("Could not load the image, sorry!")
 
-    @nextcord.slash_command(name="flip")
+    @commands.command()
     async def flip_image(
         self,
-        interaction: nextcord.Interaction,
+        ctx: commands.Context,
         url: str,
-        style: str = nextcord.SlashOption(
-            name="orientation",
-            description="Flip vertically or horizontally",
-            choices=["Vertical", "Horizontal"],
-        ),
+        style: str = "Horizontal",
     ):
         """Flip an image vertically or horizontally, given its URL"""
-        img_data = get(url).content
+        if style.capitalize() not in {"Horizontal", "Vertical"}:
+            return await ctx.channel.send(
+                "Please try again with a style of either `horizontal` or `vertical`"
+            )
+        img_data = await Client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
         if im:
-            if style == "Vertical":
+            if style.capitalize() == "Vertical":
                 out = im.transpose(PIL.Image.Transpose.FLIP_TOP_BOTTOM)
             else:
                 out = im.transpose(PIL.Image.Transpose.FLIP_LEFT_RIGHT)
             out.save("../output.jpg")
-            await interaction.send(file=nextcord.File("../output.jpg"))
+            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
         else:
-            await interaction.send("Could not load the image, sorry!")
+            await ctx.channel.send("Could not load the image, sorry!")
 
-    @nextcord.slash_command(name="invert")
-    async def invert_image(self, interaction: nextcord.Interaction, url: str):
+    @commands.command()
+    async def invert_image(self, ctx: commands.Context, url: str):
         """Invert the colours of an colour image, given its URL"""
-        img_data = get(url).content
+        img_data = await Client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
         if is_grey_scale("../image.jpg"):
-            return await interaction.send(
+            return await ctx.channel.send(
                 "This image doesn't contain any colour to invert!"
             )
         if im:
             r, g, b = im.split()
             out = PIL.Image.merge("RGB", (b, g, r))
             out.save("../output.jpg")
-            await interaction.send(file=nextcord.File("../output.jpg"))
+            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
         else:
-            await interaction.send("Could not load the image, sorry!")
+            await ctx.channel.send("Could not load the image, sorry!")
 
 
-# Add the cog to the bot
-def setup(bot: commands.AutoShardedBot):
-    bot.add_cog(Image(bot))
+# Add the gear to the bot
+def setup(bot: commands.Bot):
+    bot.add_gear(Image(bot))
