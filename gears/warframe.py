@@ -1,7 +1,7 @@
 import stoat
 from stoat.ext import commands
 from re import sub
-from utilities import Client, db, delay_until, schedule, time_from_string
+from utilities import ChaosBot, db, delay_until, schedule, time_from_string
 import asyncio
 
 # TODO: Switch from MongoDB
@@ -20,19 +20,19 @@ def string_split(string: str):
 
 
 # Function to perform a GET request on Warframe's worldstate URL
-def request_wf_info(url: str):
+async def request_wf_info(bot: ChaosBot, url: str):
     try:
         # Return the parsed JSON as a Python object
-        wf_world = await Client.get_content(url)
+        wf_world = await bot.client.get_content(url)
         return wf_world
     except Exception as error:
         return error
 
 
 # Function to get information on current alerts
-def alerts_search(url: str):
+async def alerts_search(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about alerts
     alert_data = wf_world["Alerts"]
@@ -99,9 +99,9 @@ def alerts_search(url: str):
 
 
 # Function to get information on this week's archon hunt
-def archon_hunt(url: str):
+async def archon_hunt(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about Archon Hunts
     archon_info = wf_world["LiteSorties"][0]
@@ -133,9 +133,9 @@ def archon_hunt(url: str):
 
 
 # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
-def baro_kiteer(url: str):
+async def baro_kiteer(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about Baro Ki'Teer
     baro = wf_world["VoidTraders"][0]
@@ -206,9 +206,9 @@ def baro_kiteer(url: str):
 
 
 # Function to get information on the current Deep Archimedea
-def deep_archimedea_status(url: str):
+async def deep_archimedea_status(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about sorties
     da = wf_world["Conquests"][0]
@@ -278,9 +278,9 @@ def deep_archimedea_status(url: str):
 
 
 # Function to handle the retrieval of Duviri information
-def duviri_status(url: str):
+async def duviri_status(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about Duviri
     duviri = wf_world["EndlessXpChoices"]
@@ -319,9 +319,9 @@ def duviri_status(url: str):
 
 
 # Function to get information on Nightwave
-def nightwave_status(url: str):
+async def nightwave_status(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about Nightwave
     nw = wf_world["SeasonInfo"]
@@ -383,9 +383,9 @@ def nightwave_status(url: str):
 
 
 # Function to get information on the current sortie
-def sortie_status(url: str):
+async def sortie_status(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about sorties
     sorties = wf_world["Sorties"][0]
@@ -422,9 +422,9 @@ def sortie_status(url: str):
 
 
 # Function to get information on the current Temporal Archimedea
-def temporal_archimedea_status(url: str):
+async def temporal_archimedea_status(bot: ChaosBot, url: str):
     # Convert the response content for the world state into a Python object
-    wf_world = request_wf_info(url)
+    wf_world = await request_wf_info(bot, url)
 
     # Access specifically the information about sorties
     ta = wf_world["Conquests"][1]
@@ -498,7 +498,7 @@ class Warframe(commands.Gear, name="Warframe"):
 
     GEAR_EMOJI = "⚔️"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
         # Create a dictionary of Warframe Progenitor types to retrieve later
         self.progenitor = {
@@ -600,10 +600,10 @@ class Warframe(commands.Gear, name="Warframe"):
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
             await daily_wf_channel.send(
-                embed=deep_archimedea_status(self.worldstate_url)
+                embeds=[deep_archimedea_status(self.worldstate_url)]
             )
             await daily_wf_channel.send(
-                embed=temporal_archimedea_status(self.worldstate_url)
+                embeds=[temporal_archimedea_status(self.worldstate_url)]
             )
 
     async def archon_timer(self):
@@ -614,7 +614,7 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embed=archon_hunt(self.worldstate_url))
+            await daily_wf_channel.send(embeds=[archon_hunt(self.worldstate_url)])
 
     async def baro_timer(self):
         # Fetch the list of enrolled warframe channels to post daily content to
@@ -624,7 +624,7 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embed=baro_kiteer(self.worldstate_url))
+            await daily_wf_channel.send(embeds=[baro_kiteer(self.worldstate_url)])
 
     async def duviri_timer(self):
         # Fetch the list of enrolled warframe channels to post daily content to
@@ -634,7 +634,7 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embed=duviri_status(self.worldstate_url))
+            await daily_wf_channel.send(embeds=[duviri_status(self.worldstate_url)])
 
     # Handle all weekly Warframe tasks
     async def daily_warframe(self):
@@ -672,47 +672,55 @@ class Warframe(commands.Gear, name="Warframe"):
         await duviri_task
 
     @commands.command()
-    async def alerts(self, interaction: stoat.Interaction):
+    async def alerts(self, ctx: commands.Context):
         """Find information on current alerts, if there are any"""
-        await interaction.send(embed=alerts_search(self.worldstate_url))
+        alert_embed = await alerts_search(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[alert_embed])
 
     @commands.command()
-    async def archon(self, interaction: stoat.Interaction):
+    async def archon(self, ctx: commands.Context):
         """Find the current Archon, missions, and remaining time for the current hunt"""
-        await interaction.send(embed=archon_hunt(self.worldstate_url))
+        archon_embed = await archon_hunt(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[archon_embed])
 
     @commands.command()
-    async def baro(self, interaction: stoat.Interaction):
+    async def baro(self, ctx: commands.Context):
         """Get information on Baro Ki'Teer"""
-        await interaction.send(embed=baro_kiteer(self.worldstate_url))
+        baro_embed = await baro_kiteer(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[baro_embed])
 
     @commands.command()
-    async def deep_archimedea(self, interaction: stoat.Interaction):
+    async def deep_archimedea(self, ctx: commands.Context):
         """Get information on Deep Archimedea"""
-        await interaction.send(embed=deep_archimedea_status(self.worldstate_url))
+        deep_embed = await deep_archimedea_status(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[deep_embed])
 
     @commands.command()
-    async def duviri(self, interaction: stoat.Interaction):
+    async def duviri(self, ctx: commands.Context):
         """Find information on the current Duviri cycle rewards"""
-        await interaction.send(embed=duviri_status(self.worldstate_url))
+        duviri_embed = await duviri_status(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[duviri_embed])
 
     @commands.command()
-    async def nightwave(self, interaction: stoat.Interaction):
+    async def nightwave(self, ctx: commands.Context):
         """Find information on the current Nightwave season and challenges"""
-        await interaction.send(embed=nightwave_status(self.worldstate_url))
+        nightwave_embed = await nightwave_status(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[nightwave_embed])
 
     @commands.command()
-    async def sortie(self, interaction: stoat.Interaction):
+    async def sortie(self, ctx: commands.Context):
         """Find information on the current sortie"""
-        await interaction.send(embed=sortie_status(self.worldstate_url))
+        sortie_embed = await sortie_status(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[sortie_embed])
 
     @commands.command()
-    async def temporal_archimedea(self, interaction: stoat.Interaction):
+    async def temporal_archimedea(self, ctx: commands.Context):
         """Get information on Temporal Archimedea"""
-        await interaction.send(embed=temporal_archimedea_status(self.worldstate_url))
+        temporal_embed = await temporal_archimedea_status(self.bot, self.worldstate_url)
+        await ctx.send(embeds=[temporal_embed])
 
     @commands.command()
-    async def progenitors(self, interaction: stoat.Interaction):
+    async def progenitors(self, ctx: commands.Context):
         """Returns progenitor elements and their corresponding warframes"""
         progenitor_description = ""
 
@@ -728,46 +736,42 @@ class Warframe(commands.Gear, name="Warframe"):
             color=stoat.Colour.from_rgb(0, 128, 255),
         )
 
-        await interaction.send(embed=progenitor_embed)
+        await ctx.send(embeds=[progenitor_embed])
 
     @commands.command()
     @commands.has_permissions(manage_server=True)
-    async def set_warframe_channel(self, interaction: stoat.Interaction, channel: str):
+    async def set_warframe_channel(self, ctx: commands.Context, channel: str):
         """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
         wf_channel_id = int(channel.split("/")[-1])
         # Prepares the new server & channel combination for this server
-        new_channel = {"server": interaction.server_id, "channel": wf_channel_id}
+        new_channel = {"server": ctx.server.id, "channel": wf_channel_id}
         # Updates the Warframe channel for the server or inserts it if one doesn't exist currently
         db.warframe_channels.replace_one(
-            {"server": interaction.server_id}, new_channel, upsert=True
+            {"server": ctx.server.id}, new_channel, upsert=True
         )
 
         # Let users know where the updated channel is
-        updated_channel = interaction.server.get_channel(interaction.channel_id)
+        updated_channel = ctx.server.get_channel(ctx.channel.id)
         if updated_channel:
-            await interaction.send(
+            await ctx.send(
                 f"Warframe content for this server will go to {updated_channel.name}."
             )
 
     @commands.command()
     @commands.has_permissions(manage_server=True)
-    async def remove_warframe_channel(self, interaction: stoat.Interaction):
+    async def remove_warframe_channel(self, ctx: commands.Context):
         """Removes the automated Warframe channel for this server, if it exists."""
 
         # Removes the Warframe channel for the server if it exists
-        if db.warframe_channels.find_one({"server": interaction.server_id}):
-            db.warframe_channels.delete_one({"server": interaction.server_id})
-            await interaction.send(
-                "Warframe automated content for this server is stopped."
-            )
+        if db.warframe_channels.find_one({"server": ctx.server.id}):
+            db.warframe_channels.delete_one({"server": ctx.server.id})
+            await ctx.send("Warframe automated content for this server is stopped.")
         # Lets the user know if there is no existing Warframe channel
         else:
-            await interaction.send(
-                "There is no Warframe automated content for this server."
-            )
+            await ctx.send("There is no Warframe automated content for this server.")
 
 
-def setup(bot: commands.Bot):
+def setup(bot: ChaosBot):
     bot.add_gear(Warframe(bot))

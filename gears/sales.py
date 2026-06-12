@@ -4,7 +4,7 @@ from stoat.ext import commands
 from json import dumps
 from datetime import datetime, date, timedelta
 from utilities import (
-    Client,
+    ChaosBot,
     db,
     check_permitted_servers,
     delay_until,
@@ -23,7 +23,7 @@ class Sales(commands.Gear, name="Sales"):
 
     GEAR_EMOJI = "💲"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
         # Fetch the list of sales channels to post sale information to
         self.sales_channels = db.sales_channels.distinct("channel")
@@ -56,6 +56,7 @@ class Sales(commands.Gear, name="Sales"):
         "Risk of Rain 2 Survivors of the Void": "018d937f-5db9-7246-b784-e94f402d7cd9",
         "SANABI": "018d937f-62fb-7394-b7df-25ff35798fe6",
         "Slay the Spire": "018d937f-285e-7065-a58b-23400688cc12",
+        "Slay the Spire 2": "018ec8ff-e01c-70b6-bf65-5b184f82f859",
         "Terraria": "018d937f-30fa-705e-8a3a-f39719bdde93",
     }
 
@@ -98,7 +99,7 @@ class Sales(commands.Gear, name="Sales"):
         return base_url
 
     # Function to get a game's ID on IsThereAnyDeal given it's title
-    def get_game_id(self, title: str):
+    async def get_game_id(self, title: str):
         # Put the game title in lower case, separate each word and then join with +'s
         format_title = "+".join(title.lower().split())
 
@@ -107,7 +108,7 @@ class Sales(commands.Gear, name="Sales"):
         query_url = base_url + f"&title={format_title}"
 
         # Query the API and return the ID field
-        game = await Client.get_content(query_url)
+        game = await self.bot.client.get_json(query_url)
         game_id: str = game["game"]["id"]
 
         return game_id
@@ -134,7 +135,9 @@ class Sales(commands.Gear, name="Sales"):
         sale_url = self.get_base_url("/games/prices/v3")
 
         # Make a POST request to the API and load the response as a python iterable object
-        sale = await Client.post(url=sale_url, data=dumps(payload), headers=headers)
+        sale = await self.bot.client.post(
+            url=sale_url, data=dumps(payload), headers=headers
+        )
 
         return sale
 
@@ -283,7 +286,7 @@ class Sales(commands.Gear, name="Sales"):
     @commands.command()
     @commands.check(check_permitted_servers)
     @commands.has_permissions(manage_server=True)
-    async def set_sales_channel(self, ctx: stoat.ctx, channel: str):
+    async def set_sales_channel(self, ctx: commands.Context, channel: str):
         """Takes in a channel link/ID and sets it as the automated sales channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
@@ -305,7 +308,7 @@ class Sales(commands.Gear, name="Sales"):
     @commands.command()
     @commands.check(check_permitted_servers)
     @commands.has_permissions(manage_server=True)
-    async def remove_sales_channel(self, ctx: stoat.ctx):
+    async def remove_sales_channel(self, ctx: commands.Context):
         """Removes the automated sales channel for this server, if it exists."""
 
         # Removes the daily channel for the server if it exists
@@ -320,11 +323,11 @@ class Sales(commands.Gear, name="Sales"):
     # Function to get the best price for a given game according to IsThereAnyDeal
     @commands.command()
     @commands.check(check_permitted_servers)
-    async def best_price(self, ctx: stoat.ctx, game: str):
+    async def best_price(self, ctx: commands.Context, game: str):
         """Searches IsThereAnyDeal for the best discount on a game given a title."""
         # Get the game's ID given its title
         try:
-            game_id = self.get_game_id(game)
+            game_id = await self.get_game_id(game)
         except Exception as e:
             await ctx.send("Unable to retrieve information on this game, sorry!")
             print(f"Best_price error: {e}")
@@ -337,7 +340,7 @@ class Sales(commands.Gear, name="Sales"):
     # Function to get all current sales as an embed
     @commands.command()
     @commands.check(check_permitted_servers)
-    async def current_sales(self, ctx: stoat.ctx):
+    async def current_sales(self, ctx: commands.Context):
         """Displays all currently stored game sales"""
         current_sale_embed = self.get_current_sales()
 
@@ -347,11 +350,11 @@ class Sales(commands.Gear, name="Sales"):
     @commands.command()
     @commands.check(check_permitted_servers)
     @commands.has_permissions(manage_server=True)
-    async def fetch_game_id(self, ctx: stoat.ctx, game: str):
+    async def fetch_game_id(self, ctx: commands.Context, game: str):
         """Fetches the corresponding ID for a given game title, if possible"""
         # Get the game's ID given its title
         try:
-            game_id = self.get_game_id(game)
+            game_id = await self.get_game_id(game)
         except Exception as e:
             await ctx.send("Unable to retrieve the ID for this game, sorry!")
             print(f"fetch_game_id error: {e}")
@@ -359,5 +362,5 @@ class Sales(commands.Gear, name="Sales"):
         await ctx.send(f"ID for {game} is {game_id}")
 
 
-def setup(bot: commands.Bot):
+def setup(bot: ChaosBot):
     bot.add_gear(Sales(bot))

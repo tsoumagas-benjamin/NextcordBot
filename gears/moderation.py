@@ -1,6 +1,7 @@
 import stoat
 from humanfriendly import parse_timespan
 from stoat.ext import commands
+from utilities import ChaosBot
 
 
 # Create a gear for information commands
@@ -9,7 +10,7 @@ class Moderation(commands.Gear, name="Moderation"):
 
     GEAR_EMOJI = "🔨"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
     @commands.command()
@@ -116,5 +117,5 @@ class Moderation(commands.Gear, name="Moderation"):
             )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: ChaosBot):
     bot.add_gear(Moderation(bot))

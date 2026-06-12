@@ -1,7 +1,7 @@
 import stoat
 from stoat.ext import commands
 from datetime import datetime
-from utilities import db, send_embed
+from utilities import ChaosBot, db, send_embed
 
 # TODO: Switch from MongoDB
 
@@ -12,7 +12,7 @@ class Audit(commands.Gear, name="Audit"):
 
     GEAR_EMOJI = "📋"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
     # Function to format
@@ -635,5 +635,5 @@ class Audit(commands.Gear, name="Audit"):
         await send_embed(self.bot, server_audit_log["channel"], member_remove)
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: ChaosBot):
     bot.add_gear(Audit(bot))

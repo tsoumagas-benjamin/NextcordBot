@@ -54,7 +54,7 @@ class ChaosBot(commands.Bot):
         super().__init__(*args, **kwargs)
 
         # Custom bot attributes are set below
-        self.client = None
+        self.client: Client() = Client()
 
 
 # Create a client session to be used for all async HTTP requests
@@ -148,7 +148,7 @@ async def send_embed(
     audit_channel = bot.get_channel(audit_channel_id)
     if audit_channel is None:
         audit_channel = await bot.fetch_channel(audit_channel_id)
-    await audit_channel.send(embed=target_embed)
+    await audit_channel.send(embeds=[target_embed])
 
 
 # Function to convert a string to time in seconds

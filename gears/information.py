@@ -3,7 +3,7 @@ from asyncio import sleep
 import matplotlib.pyplot as plt
 import numpy as np
 from stoat.ext import commands
-from utilities import db, check_permitted_servers
+from utilities import ChaosBot, db, check_permitted_servers
 
 # Switch from MongoDB
 
@@ -14,7 +14,7 @@ class Information(commands.Gear, name="Information"):
 
     GEAR_EMOJI = "📗"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot: commands.Bot = bot
         self.title: str = ""
         self.id: int = 0
@@ -217,7 +217,7 @@ class Information(commands.Gear, name="Information"):
             color=stoat.Colour.from_rgb(0, 128, 255),
             icon_url=ctx.channel.server.icon.url(),
         )
-        await ctx.channel.send(embed=embed)
+        await ctx.channel.send(embeds=[embed])
 
     @commands.command()
     async def statistics(self, ctx: commands.Context):
@@ -245,7 +245,7 @@ class Information(commands.Gear, name="Information"):
             color=stoat.Colour.from_rgb(0, 128, 255),
             icon_url=ctx.channel.server.icon.url(),
         )
-        await ctx.channel.send(embed=embed)
+        await ctx.channel.send(embeds=[embed])
 
     @commands.command()
     async def timer(
@@ -278,5 +278,5 @@ class Information(commands.Gear, name="Information"):
         return await timer_set.reply(f"Timer {description}is done.")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: ChaosBot):
     bot.add_gear(Information(bot))

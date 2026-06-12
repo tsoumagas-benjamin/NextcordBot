@@ -1,6 +1,7 @@
 import stoat
 from stoat.ext import commands
 from asyncio import sleep
+from utilities import ChaosBot
 
 
 # Create a gear for error handling
@@ -9,7 +10,7 @@ class Error(commands.Gear, name="Error"):
 
     GEAR_EMOJI = "❌"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
     # Occurs whenever an error appears from a command
@@ -61,5 +62,5 @@ class Error(commands.Gear, name="Error"):
         await command_error_embed.delete()
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: ChaosBot):
     bot.add_gear(Error(bot))

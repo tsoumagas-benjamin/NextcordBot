@@ -2,7 +2,7 @@ import stoat
 from stoat.ext import commands
 import PIL.Image
 import PIL.ImageFilter
-from utilities import Client
+from utilities import ChaosBot
 
 filters = {
     "Blur": PIL.ImageFilter.BLUR,
@@ -36,13 +36,13 @@ class Image(commands.Gear, name="Image"):
 
     GEAR_EMOJI = "📷"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
     @commands.command()
     async def contrast_image(self, ctx: commands.Context, url: str, value: float = 1.5):
         """Increase image contrast by choosing a high value, decrease by choosing a low value, given its URL"""
-        img_data = await Client.get_content(url)
+        img_data = await self.bot.client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
@@ -56,7 +56,7 @@ class Image(commands.Gear, name="Image"):
     @commands.command()
     async def convert_image(self, ctx: commands.Context, url: str):
         """Convert an image to greyscale, given its URL"""
-        img_data = await Client.get_content(url)
+        img_data = await self.bot.client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
@@ -75,7 +75,7 @@ class Image(commands.Gear, name="Image"):
             return await ctx.channel.send(
                 f"Please try again with a valid filter: {list(filters.keys())}"
             )
-        img_data = await Client.get_content(url)
+        img_data = await self.bot.client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
@@ -98,7 +98,7 @@ class Image(commands.Gear, name="Image"):
             return await ctx.channel.send(
                 "Please try again with a style of either `horizontal` or `vertical`"
             )
-        img_data = await Client.get_content(url)
+        img_data = await self.bot.client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
@@ -115,7 +115,7 @@ class Image(commands.Gear, name="Image"):
     @commands.command()
     async def invert_image(self, ctx: commands.Context, url: str):
         """Invert the colours of an colour image, given its URL"""
-        img_data = await Client.get_content(url)
+        img_data = await self.bot.client.get_content(url)
         with open("../image.jpg", "wb") as handler:
             handler.write(img_data)
         im = PIL.Image.open("../image.jpg")
@@ -133,5 +133,5 @@ class Image(commands.Gear, name="Image"):
 
 
 # Add the gear to the bot
-def setup(bot: commands.Bot):
+def setup(bot: ChaosBot):
     bot.add_gear(Image(bot))

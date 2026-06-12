@@ -2,7 +2,7 @@ import stoat
 from random import shuffle
 from asyncio import sleep
 from stoat.ext import commands
-from utilities import Client
+from utilities import ChaosBot
 
 
 class TriviaQuestion:
@@ -103,7 +103,7 @@ class Trivia(commands.Gear, name="Trivia"):
     GEAR_EMOJI = "🎲"
 
     # Initialize all the default variables we need for trivia
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
     @commands.command()
@@ -113,7 +113,7 @@ class Trivia(commands.Gear, name="Trivia"):
         ts = TriviaSetup()
 
         # Get trivia content from the API
-        res = await Client.get_json(ts.url)
+        res = await self.bot.client.get_json(ts.url)
         for question in range(0, 10):
             ts.categories.append(res[question]["category"])
             ts.corrects.append(res[question]["correctAnswer"])
@@ -140,5 +140,5 @@ class Trivia(commands.Gear, name="Trivia"):
 
 
 # Add the gear to the bot
-def setup(bot: commands.Bot):
+def setup(bot: ChaosBot):
     bot.add_gear(Trivia(bot))

@@ -2,7 +2,7 @@ import stoat
 from stoat.ext import commands
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from utilities import db, Client
+from utilities import ChaosBot, db
 
 # TODO: Switch from MongoDB
 
@@ -31,7 +31,7 @@ class Progress(commands.Gear, name="Progress"):
 
     GEAR_EMOJI = "📈"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
     async def card_maker(self, ctx: commands.Context, uid: int, server_id: int):
@@ -57,7 +57,7 @@ class Progress(commands.Gear, name="Progress"):
         bar_mask = "../assets/bar_mask.png"
 
         # Get the avatar of the target user from URL
-        avatar_bytes = await Client.get_bytes(avatar_url)
+        avatar_bytes = await self.bot.client.get_bytes(avatar_url)
         avatar = Image.open(BytesIO(avatar_bytes)).resize((170, 170))
 
         # Overlay the text card and avatar on the level card
@@ -195,5 +195,5 @@ class Progress(commands.Gear, name="Progress"):
 
 
 # Add the gear to the bot
-def setup(bot: commands.Bot):
+def setup(bot: ChaosBot):
     bot.add_gear(Progress(bot))
