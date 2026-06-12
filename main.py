@@ -2,7 +2,7 @@ from stoat.ext import commands
 from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
 from os import getenv, listdir
 from log import log
-from utilities import db, collections, collection_names
+from utilities import Client, db, collections, collection_names
 
 # TODO: Switch from MongoDB
 
@@ -41,8 +41,19 @@ permissions = Permissions(
     listen=False,
 )
 
+
+# Create a subclass for the bot to allow for extra customizability
+class ChaosBot(commands.Bot):
+    def __init__(self, *args, **kwargs) -> None:
+        # Forward all arguments, and keyword-only arguments to commands.ChaosBot
+        super().__init__(*args, **kwargs)
+
+        # Custom bot attributes are set below
+        self.client = Client()
+
+
 # Instantiate the bot
-bot = commands.Bot(
+bot = ChaosBot(
     case_insensitive=True,
     command_prefix=commands.when_mentioned_or("/"),
     description="Multi-purpose Stoat bot\nAuthor: ChaosHerald2\nUsing Stoat.py, hosted locally.\nWIP Porting from Discord",
@@ -57,6 +68,10 @@ bot = commands.Bot(
 @bot.listen()
 async def on_ready(event: ReadyEvent):
     """When bot is connected to Stoat"""
+    # If the ClientSession for GET/POST requests isn't initialized, do so here
+    if bot.client is None:
+        bot.client = Client()
+
     # Initialize default collections
     for collection in collection_names:
         if collection not in collections:
