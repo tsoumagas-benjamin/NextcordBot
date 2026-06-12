@@ -47,6 +47,16 @@ permitted_servers: list[str] = [
 ]
 
 
+# Create a subclass for the bot to allow for extra customizability
+class ChaosBot(commands.Bot):
+    def __init__(self, *args, **kwargs) -> None:
+        # Forward all arguments, and keyword-only arguments to commands.ChaosBot
+        super().__init__(*args, **kwargs)
+
+        # Custom bot attributes are set below
+        self.client = None
+
+
 # Create a client session to be used for all async HTTP requests
 class Client:
     def __init__(self) -> None:

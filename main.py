@@ -2,7 +2,7 @@ from stoat.ext import commands
 from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
 from os import getenv, listdir
 from log import log
-from utilities import Client, db, collections, collection_names
+from utilities import ChaosBot, Client, db, collections, collection_names
 
 # TODO: Switch from MongoDB
 
@@ -40,16 +40,6 @@ permissions = Permissions(
     move_members=False,
     listen=False,
 )
-
-
-# Create a subclass for the bot to allow for extra customizability
-class ChaosBot(commands.Bot):
-    def __init__(self, *args, **kwargs) -> None:
-        # Forward all arguments, and keyword-only arguments to commands.ChaosBot
-        super().__init__(*args, **kwargs)
-
-        # Custom bot attributes are set below
-        self.client = Client()
 
 
 # Instantiate the bot
