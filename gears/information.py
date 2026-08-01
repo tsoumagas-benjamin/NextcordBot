@@ -1,11 +1,13 @@
-import stoat
+#!/usr/bin/env python
 from asyncio import sleep
+
+import aiofiles
 import matplotlib.pyplot as plt
 import numpy as np
+import stoat
 from stoat.ext import commands
-from utilities import ChaosBot, db, check_permitted_servers
 
-# Switch from MongoDB
+from utilities import ChaosBot, check_permitted_servers
 
 
 # Create a gear for information commands
@@ -137,74 +139,18 @@ class Information(commands.Gear, name="Information"):
         pie = np.array(self.count)
         plt.pie(pie, colors=self.colors, startangle=90)
         plt.title(label=self.title, color="w")
-        plt.savefig("../poll.png", bbox_inches=None, transparent=True)
+        plt.savefig("../assets/poll.png", bbox_inches=None, transparent=True)
         plt.close()
         # Open, send, and close the chart file
-        with open("../poll.png", "rb") as chart:
+        async with aiofiles.open("../assets/poll.png", mode="rb") as chart:
             await ctx.channel.send(attachments=[chart])
-
-    @commands.command()
-    async def rule(self, ctx: commands.Context, number: int):
-        """Returns a numbered server rule"""
-        if db.rules.find_one({"_id": ctx.channel.server.id}) is not None:
-            output = db.rules.find_one({"_id": ctx.channel.server.id})
-            if number < 1 or number >= len(output["rules"]):
-                await ctx.channel.send(f"Rule {number} doesn't exist!")
-                return
-            description = output["rules"][number - 1]
-            embed = stoat.SendableEmbed(
-                title=f"{ctx.channel.server.name} Rule {number}",
-                description=f"{description}\nRequested by {ctx.author.display_name}",
-                color=stoat.Colour.from_rgb(0, 128, 255),
-                icon_url=ctx.author.server_avatar.url(),
-            )
-            await ctx.channel.send(embeds=[embed])
-        else:
-            await ctx.channel.send("You must first set your rules with !setrules!")
-
-    @commands.command()
-    async def rules(self, ctx: commands.Context):
-        """Returns all server rules"""
-        if db.rules.find_one({"_id": ctx.channel.server.id}) is not None:
-            output = db.rules.find_one({"_id": ctx.channel.server.id})
-            description = ""
-            for rule in output["rules"]:
-                description += f"{rule}\n"
-            embed = stoat.SendableEmbed(
-                title=f"{ctx.channel.server.name} Rules",
-                description=f"{description}\nRequested by {ctx.author.display_name}",
-                color=stoat.Colour.from_rgb(0, 128, 255),
-                icon_url=ctx.author.server_avatar,
-            )
-            await ctx.channel.send(embeds=[embed])
-        else:
-            await ctx.channel.send("You must first set your rules with !setrules!")
-
-    @commands.command()
-    @commands.has_permissions(manage_server=True)
-    async def setrules(self, ctx: commands.Context, *, rules: str):
-        """Takes the given string as rules for the bot to read. Each rule is punctuated by a semicolon `;`."""
-        rule_arr = rules.split(";")
-        db.rules.replace_one(
-            {"_id": ctx.channel.server.id},
-            {"_id": ctx.channel.server.id, "rules": rule_arr},
-            upsert=True,
-        )
-        rule_body = rules.replace("; ", "\n")
-        embed = stoat.SendableEmbed(
-            title=f"{ctx.channel.server.name} Rules",
-            description=f"{rule_body}\nRequested by: {ctx.author.display_name}",
-            color=stoat.Colour.from_rgb(0, 128, 255),
-            icon_url=ctx.author.server_avatar.url(),
-        )
-        await ctx.channel.send(embeds=[embed])
 
     @commands.command()
     @commands.check(check_permitted_servers)
     async def socials(self, ctx: commands.Context):
         """Returns links to Chaos's socials"""
         embed = stoat.SendableEmbed(
-            title="Ben's Socials", color=stoat.Colour.from_rgb(0, 128, 255)
+            title="Chaos' Socials", color=stoat.Colour.from_rgb(0, 128, 255)
         )
         twitch_link = "https://www.twitch.tv/chaosherald2"
         youtube_link = "https://www.youtube.com/channel/UC147mLQpBtta_ykHdo-fZDw"
@@ -254,7 +200,7 @@ class Information(commands.Gear, name="Information"):
         amount: int,
         unit: str,
         *,
-        description: str = None,
+        description: str | None = None,
     ):
         """Sets a timer with an optional description i.e. 30 s"""
         if description is None:
