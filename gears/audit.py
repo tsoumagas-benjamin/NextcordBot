@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+
+import pytz
 import stoat
 from stoat.ext import commands
-from datetime import datetime
-from utilities import ChaosBot, db, send_embed
 
-# TODO: Switch from MongoDB
+from utilities import ChaosBot, db, send_embed
 
 
 # Create a gear for audit log functionality
@@ -19,6 +22,19 @@ class Audit(commands.Gear, name="Audit"):
     def date_format(self, time: datetime):
         return time.strftime("%m/%d/%Y %H:%M:%S")
 
+    def fetch_audit_channel(self, server_id: str):
+        with db.cursor() as cur:
+            cur.execute(
+                "SELECT channel_id FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                (server_id, "audit"),
+            )
+            server_audit_log = cur.fetchone()
+        # If there exists a audit log for the server, return the channel ID field, otherwise return None
+        if server_audit_log:
+            return server_audit_log
+        else:
+            return None
+
     # Function to set audit log channel for this server
     @commands.command()
     @commands.has_permissions(manage_server=True)
@@ -28,19 +44,20 @@ class Audit(commands.Gear, name="Audit"):
         # Get the channel ID
         channel_id: str = channel_link.split("/")[-1]
 
-        # Prepares the new server & channel combination for this server
-        new_channel = {"server": ctx.server.id, "channel": channel_id}
-
-        # Updates the daily channel for the server or inserts it if one doesn't exist currently
-        db.audit_logs.replace_one({"server": ctx.server.id}, new_channel, upsert=True)
+        with db.cursor() as cur:
+            cur.execute(
+                """INSERT INTO channels (server_id, category, channel_id) VALUES (%s, %s, %s) 
+                ON CONFLICT (server_id, category) DO UPDATE SET channel_id = EXCLUDED.channel_id""",
+                (ctx.server.id, "audit", channel_id),
+            )
+            db.commit()
 
         # Let users know where the updated channel is
-        updated_channel = self.bot.get_channel(channel_id)
-        if updated_channel is None:
-            updated_channel = await self.bot.fetch_channel(channel_id)
-        await ctx.channel.send(
-            f"Audit logs for this server will go to {updated_channel.name}."
-        )
+        updated_channel = ctx.server.get_channel(channel_id)
+        if updated_channel:
+            return await ctx.channel.send(
+                f"Audit logs for this server will go to {updated_channel.name}."
+            )
 
     # Function to remove audit log channel for this server
     @commands.command()
@@ -48,14 +65,19 @@ class Audit(commands.Gear, name="Audit"):
     async def remove_audit_log(self, ctx: commands.Context):
         """Removes the automated audit log channel for this server, if it exists."""
 
-        # Removes the daily channel for the server if it exists
-        if db.audit_logs.find_one({"server": ctx.server.id}):
-            db.audit_logs.delete_one({"server": ctx.server.id})
-            await ctx.channel.send("Audit logs for this server are stopped.")
-
-        # Lets the user know if there is no existing audit log channel
-        else:
-            await ctx.channel.send("There is no audit log channel for this server.")
+        # Removes the audit log channel if it exists
+        with db.cursor() as cur:
+            cur.execute(
+                "DELETE FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                (ctx.server.id, "audit"),
+            )
+            db.commit()
+            if cur.rowcount == 0:
+                return await ctx.channel.send(
+                    "There is no audit log channel for this server."
+                )
+            else:
+                return await ctx.channel.send("Audit logs for this server are stopped.")
 
     # Record when a server channel is created
     @commands.Gear.listener()
@@ -63,14 +85,12 @@ class Audit(commands.Gear, name="Audit"):
         # Get the created server channel
         target_channel: stoat.ServerChannel = to.channel
 
-        # If there is no assigned audit log channel for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": target_channel.server_id})
+        server_audit_log = self.fetch_audit_channel(target_channel.server_id)
+
         if not server_audit_log:
             return
 
-        embed_footer = (
-            f"Channel ID: {target_channel.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Channel ID: {target_channel.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
 
         # Check if channel is a text or voice channel, create the embed for each
         if target_channel.voice is None:
@@ -87,7 +107,7 @@ class Audit(commands.Gear, name="Audit"):
             )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], create_channel)
+        return await send_embed(self.bot, server_audit_log, create_channel)
 
     # Record when a server channel is deleted
     @commands.Gear.listener()
@@ -98,21 +118,26 @@ class Audit(commands.Gear, name="Audit"):
         else:
             return
 
-        # If there is no assigned audit log channel for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": target_channel.server_id})
+        with db.cursor() as cur:
+            # If the removed channel is stored in the database, remove it
+            cur.execute(
+                "DELETE * FROM channels WHERE (server_id, channel_id) = (%s, %s)",
+                (target_channel.server_id, target_channel.id),
+            )
+            db.commit()
+
+        server_audit_log = self.fetch_audit_channel(target_channel.server_id)
+
         if not server_audit_log:
             return
 
-        embed_footer = (
-            f"Channel ID: {target_channel.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Channel ID: {target_channel.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
 
         # Check if channel is a text or voice channel, create the embed for each
         if target_channel.voice is None:
             delete_channel = stoat.SendableEmbed(
                 title="Text Channel Deleted",
-                description=f"Name {target_channel.name}\nCategory {target_channel.category.title}\n{embed_footer}"
-                + embed_footer,
+                description=f"Name {target_channel.name}\nCategory {target_channel.category.title}\n{embed_footer}",
                 color="red",
             )
         else:
@@ -123,7 +148,7 @@ class Audit(commands.Gear, name="Audit"):
             )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], delete_channel)
+        return await send_embed(self.bot, server_audit_log, delete_channel)
 
     # Record when a server channel is updated
     @commands.Gear.listener()
@@ -135,8 +160,8 @@ class Audit(commands.Gear, name="Audit"):
         else:
             return
 
-        # If there is no assigned audit log channel for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": to.after.server_id})
+        server_audit_log = self.fetch_audit_channel(target_channel.server_id)
+
         if not server_audit_log:
             return
 
@@ -151,7 +176,10 @@ class Audit(commands.Gear, name="Audit"):
             "Icon": (to.before.icon, to.after.icon),
             "Name": (to.before.name, to.after.name),
             "NSFW": (to.before.nsfw, to.after.nsfw),
-            "Role Permissions": (to.before.role_permissions, to.after.role_permissions),
+            "Role Permissions": (
+                to.before.role_permissions,
+                to.after.role_permissions,
+            ),
         }
 
         attribute_changes: str = ""
@@ -166,9 +194,7 @@ class Audit(commands.Gear, name="Audit"):
         if attribute_changes == "":
             return
 
-        embed_footer = (
-            f"Channel ID: {target_channel.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Channel ID: {target_channel.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
 
         # Check if channel is a text or voice channel, create the embed for each
         if target_channel.voice is None:
@@ -185,34 +211,36 @@ class Audit(commands.Gear, name="Audit"):
             )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], update_channel)
+        return await send_embed(self.bot, server_audit_log, update_channel)
 
     # Record when a server role is deleted
     @commands.Gear.listener()
     async def on_server_role_delete(self, on: stoat.ServerRoleDeleteEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.server_id})
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
         if not server_audit_log:
             return
 
         delete_role = stoat.SendableEmbed(
             title="Role Deleted",
-            description=f"Name {on.role.name}\tColour {on.role.color}\nRole ID: {on.role_id} | {self.date_format(datetime.now())}",
+            description=f"Name {on.role.name}\tColour {on.role.color}\nRole ID: {on.role_id} | {self.date_format(datetime.now(tz=pytz.utc))}",
             color="red",
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], delete_role)
+        return await send_embed(self.bot, server_audit_log, delete_role)
 
     # Record when a server role is updated
     @commands.Gear.listener()
     async def on_server_role_update(self, on: stoat.RawServerRoleUpdateEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.server.id})
+        server_audit_log = self.fetch_audit_channel(on.server.id)
+
         if not server_audit_log:
             return
 
-        embed_footer = f"Role ID: {on.new_role.id} | {self.date_format(datetime.now())}"
+        embed_footer = (
+            f"Role ID: {on.new_role.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
+        )
 
         # Check if role is being created
         if on.old_role is None:
@@ -251,13 +279,13 @@ class Audit(commands.Gear, name="Audit"):
             )
 
             # Send the embed to the designated channel
-            await send_embed(self.bot, server_audit_log["channel"], update_role)
+            await send_embed(self.bot, server_audit_log, update_role)
 
     # Record when a server updates
     @commands.Gear.listener()
     async def on_server_update(self, on: stoat.ServerUpdateEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.before.id})
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
         if not server_audit_log:
             return
 
@@ -310,18 +338,18 @@ class Audit(commands.Gear, name="Audit"):
 
         update_server = stoat.SendableEmbed(
             title="Server Updated",
-            description=f"Name {on.new_role.name}\n{attribute_changes}\nRole ID: {on.after.id} | {self.date_format(datetime.now())}",
+            description=f"Name {on.new_role.name}\n{attribute_changes}\nRole ID: {on.after.id} | {self.date_format(datetime.now(tz=pytz.utc))}",
             color="purple",
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], update_server)
+        await send_embed(self.bot, server_audit_log, update_server)
 
     # Record when an emoji is removed, added, or updated
     @commands.Gear.listener()
     async def on_server_emojis_update(self, on: stoat.ServerUpdateEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.after.id})
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
         if (not server_audit_log) or (on.server.emojis is stoat.UNDEFINED):
             return
 
@@ -335,7 +363,7 @@ class Audit(commands.Gear, name="Audit"):
                 if emoji not in on.after.emojis
             }
             for emoji in removed.values():
-                emoji_changes += f"Old Name: {emoji.name}\nCreated by: {emoji.creator.name}\nEmoji ID: {emoji.id} | {self.date_format(datetime.now())}"
+                emoji_changes += f"Old Name: {emoji.name}\nCreated by: {emoji.creator.name}\nEmoji ID: {emoji.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
             emoji_update = stoat.SendableEmbed(
                 title="Emoji Removed", description=emoji_changes, color="red"
             )
@@ -348,7 +376,7 @@ class Audit(commands.Gear, name="Audit"):
                 if emoji not in on.before.emojis
             }
             for emoji in added.values():
-                emoji_changes += f"New Name: {emoji.name}\nCreated by: {emoji.creator.name}\nEmoji ID: {emoji.id} | {self.date_format(datetime.now())}"
+                emoji_changes += f"New Name: {emoji.name}\nCreated by: {emoji.creator.name}\nEmoji ID: {emoji.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
             emoji_update = stoat.SendableEmbed(
                 title="Emoji Added", description=emoji_changes, color="green"
             )
@@ -370,19 +398,19 @@ class Audit(commands.Gear, name="Audit"):
             for emoji in removed.values():
                 emoji_changes += f"{emoji.name} -> "
             for emoji in added.values():
-                emoji_changes += f"{emoji.name}\nCreated by: {emoji.creator.name}\nEmoji ID: {emoji.id} | {self.date_format(datetime.now())}"
+                emoji_changes += f"{emoji.name}\nCreated by: {emoji.creator.name}\nEmoji ID: {emoji.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
             emoji_update = stoat.SendableEmbed(
                 title="Emoji Updated", description=emoji_changes, color="purple"
             )
 
-        await send_embed(self.bot, server_audit_log["channel"], emoji_update)
+        await send_embed(self.bot, server_audit_log, emoji_update)
 
     # Record when a member's roles, display name, or server avatar are updated
     @commands.Gear.listener()
     async def on_member_update(self, on: stoat.ServerMemberUpdateEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.after.server_id})
-        if not server_audit_log or on.before.bot or on.after.bot:
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
+        if (not server_audit_log) or (on.before.bot) or (on.after.bot):
             return
 
         # Return early if there is no changes to the member's roles, display name, or server avatar
@@ -393,7 +421,9 @@ class Audit(commands.Gear, name="Audit"):
         ):
             return
 
-        embed_footer = f"Member ID: {on.after.id} | {self.date_format(datetime.now())}"
+        embed_footer = (
+            f"Member ID: {on.after.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
+        )
 
         # Check if a role has been added
         if len(on.before.roles) < len(on.after.roles):
@@ -442,19 +472,19 @@ class Audit(commands.Gear, name="Audit"):
             )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], member_update)
+        await send_embed(self.bot, server_audit_log, member_update)
 
     # Records when a member is banned
     @commands.Gear.listener()
     async def on_member_ban(self, on: stoat.UserBannedSystemEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one(
-            {"server": on.user_as_member.server_id}
-        )
-        if not server_audit_log or on.user.bot:
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
+        if (not server_audit_log) or (on.user.bot):
             return
 
-        embed_footer = f"Member ID: {on.user.id} | {self.date_format(datetime.now())}"
+        embed_footer = (
+            f"Member ID: {on.user.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
+        )
 
         member_ban = stoat.SendableEmbed(
             title="Member Banned",
@@ -464,41 +494,37 @@ class Audit(commands.Gear, name="Audit"):
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], member_ban)
+        await send_embed(self.bot, server_audit_log, member_ban)
 
-    # Records when a member is unbanned
-    @commands.Gear.listener()
-    async def on_member_unban(self, on: stoat.UserBannedSystemEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one(
-            {"server": on.user_as_member.server_id}
-        )
-        if not server_audit_log or on.user.bot:
-            return
+    # # Records when a member is unbanned
+    # @commands.Gear.listener()
+    # async def on_member_unban(self, on: stoat.UserBannedSystemEvent):
+    #     server_audit_log = self.fetch_audit_channel(on.server_id)
 
-        embed_footer = f"Member ID: {on.user.id} | {self.date_format(datetime.now())}"
+    #     if (not server_audit_log) or (on.user.bot):
+    #         return
 
-        member_unban = stoat.SendableEmbed(
-            title="Member Unbanned",
-            description=f"{on.user_as_member.display_name}\n{on.user_as_member.mention}\n{embed_footer}",
-            icon_url=on.user_as_member.server_avatar.url(),
-            color="green",
-        )
+    #     embed_footer = f"Member ID: {on.user.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
 
-        # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], member_unban)
+    #     member_unban = stoat.SendableEmbed(
+    #         title="Member Unbanned",
+    #         description=f"{on.user_as_member.display_name}\n{on.user_as_member.mention}\n{embed_footer}",
+    #         icon_url=on.user_as_member.server_avatar.url(),
+    #         color="green",
+    #     )
+
+    #     # Send the embed to the designated channel
+    #     await send_embed(self.bot, server_audit_log["channel"], member_unban)
 
     # Records when a message is deleted
     @commands.Gear.listener()
     async def on_message_delete(self, on: stoat.MessageDeleteEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.message.server.id})
-        if not server_audit_log or on.message.author.bot:
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
+        if (not server_audit_log) or (on.message.author.bot):
             return
 
-        embed_footer = (
-            f"Message ID: {on.message.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Message ID: {on.message.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
         embed_contents = ""
 
         # If there are attachments, mention them and the deleted filenames
@@ -520,19 +546,17 @@ class Audit(commands.Gear, name="Audit"):
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], message_delete)
+        await send_embed(self.bot, server_audit_log, message_delete)
 
     # Records when a message is edited
     @commands.Gear.listener()
     async def on_message_edit(self, on: stoat.MessageUpdateEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.message.server.id})
-        if not server_audit_log or on.before.author.bot or on.after.author.bot:
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
+        if (not server_audit_log) or (on.before.author.bot) or (on.before.author.bot):
             return
 
-        embed_footer = (
-            f"Message ID: {on.message.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Message ID: {on.message.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
         embed_contents = ""
 
         # If attachments are removed, mention them and the deleted filenames
@@ -567,19 +591,17 @@ class Audit(commands.Gear, name="Audit"):
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], message_edit)
+        await send_embed(self.bot, server_audit_log, message_edit)
 
     # Records when a member joins
     @commands.Gear.listener()
     async def on_member_join(self, on: stoat.ServerMemberJoinEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.member.server_id})
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
         if not server_audit_log:
             return
 
-        embed_footer = (
-            f"Message ID: {on.member.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Message ID: {on.member.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
         embed_contents = ""
 
         embed_contents += (
@@ -595,19 +617,17 @@ class Audit(commands.Gear, name="Audit"):
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], member_join)
+        await send_embed(self.bot, server_audit_log, member_join)
 
     # Records when a member leaves
     @commands.Gear.listener()
     async def on_member_remove(self, on: stoat.ServerMemberRemoveEvent):
-        # If there is no assigned audit log role for this server, return before creating an embed
-        server_audit_log = db.audit_logs.find_one({"server": on.member.server_id})
+        server_audit_log = self.fetch_audit_channel(on.server_id)
+
         if not server_audit_log:
             return
 
-        embed_footer = (
-            f"Message ID: {on.member.id} | {self.date_format(datetime.now())}"
-        )
+        embed_footer = f"Message ID: {on.member.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
         embed_contents = ""
 
         embed_contents += (
@@ -632,7 +652,7 @@ class Audit(commands.Gear, name="Audit"):
         )
 
         # Send the embed to the designated channel
-        await send_embed(self.bot, server_audit_log["channel"], member_remove)
+        await send_embed(self.bot, server_audit_log, member_remove)
 
 
 async def setup(bot: ChaosBot):
