@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 import stoat
 from humanfriendly import parse_timespan
 from stoat.ext import commands
+
 from utilities import ChaosBot
 
 
@@ -20,7 +22,7 @@ class Moderation(commands.Gear, name="Moderation"):
         ctx: commands.Context,
         member_id: str,
         *,
-        reason: str = None,
+        reason: str | None = None,
     ):
         """Ban a member from the server"""
         member: stoat.Member = ctx.server.get_member(member_id)
@@ -52,7 +54,7 @@ class Moderation(commands.Gear, name="Moderation"):
         ctx: commands.Context,
         member_id: str,
         *,
-        reason: str = None,
+        reason: str | None = None,
     ):
         """Kick a member from the server"""
         member: stoat.Member = ctx.server.get_member(member_id)
@@ -75,7 +77,7 @@ class Moderation(commands.Gear, name="Moderation"):
         member_id: str,
         amount: str,
         *,
-        reason: str = None,
+        reason: str | None = None,
     ):
         """Timeout a member"""
         member: stoat.Member = ctx.server.get_member(member_id)
@@ -104,7 +106,7 @@ class Moderation(commands.Gear, name="Moderation"):
         ctx: commands.Context,
         member_id: str,
         *,
-        reason: str = None,
+        reason: str | None = None,
     ):
         """Removes member from timeout"""
         member: stoat.Member = ctx.server.get_member(member_id)
