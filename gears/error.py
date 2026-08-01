@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+from asyncio import sleep
+
 import stoat
 from stoat.ext import commands
-from asyncio import sleep
+
 from utilities import ChaosBot
 
 
