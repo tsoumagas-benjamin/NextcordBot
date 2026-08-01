@@ -1,20 +1,22 @@
-import stoat
-from os import getenv
-from stoat.ext import commands
+#!/usr/bin/env python
+import asyncio
+from datetime import date, datetime, timedelta
 from json import dumps
-from datetime import datetime, date, timedelta
+from os import getenv
+
+import pytz
+import stoat
+from stoat.ext import commands
+
 from utilities import (
     ChaosBot,
-    db,
     check_permitted_servers,
+    db,
     delay_until,
     schedule,
+    target_games,
     time_from_string,
 )
-import asyncio
-
-# TODO: Switch from MongoDB
-# TODO: Test sales functions in Tinkering
 
 
 # Create a gear for checking sales on games
@@ -26,7 +28,7 @@ class Sales(commands.Gear, name="Sales"):
     def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
         # Fetch the list of sales channels to post sale information to
-        self.sales_channels = db.sales_channels.distinct("channel")
+        self.sales_channels = self.fetch_sales_channels()
         self.loop = asyncio.get_event_loop()
 
     def gear_load(self):
@@ -35,42 +37,22 @@ class Sales(commands.Gear, name="Sales"):
     def gear_unload(self):
         self.loop.stop(self.daily_sales())
 
-    # Dictionary of Game titles and IDs to regularly check for sales
-    target_games: dict = {
-        "Balatro": "018d937f-700e-7161-9c8d-5423af1b7c99",
-        "Blasphemous": "018d937f-046c-70c2-89ad-3db21e19f40f",
-        "Blasphemous 2": "018d937f-6ee2-70f6-940c-6212ac74369e",
-        "Blasphemous 2 Mea Culpa": "01921ec1-46fb-71a7-9ccf-c164312fcf97",
-        "Death Must Die": "018d937f-701d-7262-bfce-91908d4a68bf",
-        "Deep Rock Galactic": "018d937e-fdb1-704e-8962-3e822f2f223e",
-        "Elden Ring": "018d937f-590c-728b-ac35-38bcff85f086",
-        "Elden Ring Shadow of the Erdtree": "018dcc3c-5be6-7113-97c8-380547ec6cc3",
-        "Hades": "018d937f-33f0-7200-80fc-87f769196c84",
-        "Hades II": "018d937f-6ee3-738a-b578-ddd7e9a0d24d",
-        "Nine Sols": "018d937f-6ee3-738a-b578-ddd7eb7b327d",
-        "Ori and the Blind Forest Definitive Edition": "018d937f-1919-732b-82d4-9af60320b548",
-        "Ori and the Will of the Wisps": "018d937f-3cc5-7116-b8e1-06ca7dd2e7ca",
-        "Risk of Rain 2": "018d937f-1ad0-731b-a5bd-1937cb346030",
-        "Risk of Rain 2 Alloyed Collective": "0196b61b-9226-7203-b2fd-1b743b30374b",
-        "Risk of Rain 2 Seekers of the Storm": "018d9591-5076-72c7-8f9f-5814e4d41004",
-        "Risk of Rain 2 Survivors of the Void": "018d937f-5db9-7246-b784-e94f402d7cd9",
-        "SANABI": "018d937f-62fb-7394-b7df-25ff35798fe6",
-        "Slay the Spire": "018d937f-285e-7065-a58b-23400688cc12",
-        "Slay the Spire 2": "018ec8ff-e01c-70b6-bf65-5b184f82f859",
-        "Terraria": "018d937f-30fa-705e-8a3a-f39719bdde93",
-    }
+    def fetch_sales_channels(self) -> list[str]:
+        with db.cursor() as cur:
+            cur.execute("SELECT channel_id FROM channels WHERE category = 'sales'")
+            daily_channels = cur.fetchall()
+        return daily_channels
 
-    def get_sales(self):
+    async def get_sales(self):
         # Run a function similar to update_sales where all games are checked for sales and the database is updated
-        for game_id in self.target_games.values():
-            self.compare_cut(game_id)
+        for game_id in target_games.values():
+            await self.compare_cut(game_id)
 
     def prune_sales(self):
-        # Delete all sales with expiries older than the present datetime
-        db.sales.delete_many({"expiry": {"$lt": datetime.now()}})
-
-        # Delete all sales with discounts lower or equal to 0% if they exist
-        db.sales.delete_many({"cut": {"$lte": 0}})
+        # Delete all sales that expire before today or discounts less than or equal to 0%
+        with db.cursor() as cur:
+            cur.execute("DELETE FROM sales WHERE expiry < now() OR cut <= 0")
+            db.commit()
 
     # Handle all daily sales related tasks
     async def daily_sales(self):
@@ -123,12 +105,12 @@ class Sales(commands.Gear, name="Sales"):
         year, month, day = list(map(int, date))
 
         # Create and return our date object
-        expiry_date = datetime(year, month, day, 0, 0, 0)
+        expiry_date = datetime(year, month, day, 0, 0, 0, tzinfo=pytz.utc)
 
         return expiry_date
 
     # Function to return sale contents for a game
-    def get_sale_content(self, game_id: str):
+    async def get_sale_content(self, game_id: str):
         # Format game ID as a payload and set up header and API URL
         payload = [game_id]
         headers = {"content-type": "application/json"}
@@ -142,11 +124,11 @@ class Sales(commands.Gear, name="Sales"):
         return sale
 
     # Function to check for the best cut on a game and when it expires
-    def best_cut(self, game_id: str):
+    async def best_cut(self, game_id: str):
 
         # Make a POST request to the API and load the response as a python iterable object
         try:
-            sale = self.get_sale_content(game_id=game_id)
+            sale = await self.get_sale_content(game_id=game_id)
         except Exception as e:
             print(f"JSON for {game_id} could not be decoded because {e}")
             return
@@ -163,8 +145,8 @@ class Sales(commands.Gear, name="Sales"):
 
     # Function to return the corresponding title for a given game ID
     def get_title(self, game_id: str):
-        for title, id in self.target_games.items():
-            if id == game_id:
+        for title, gid in target_games.items():
+            if gid == game_id:
                 return title
 
     # Function to format content to be sent to sales channels(see best_price())
@@ -205,12 +187,16 @@ class Sales(commands.Gear, name="Sales"):
     def get_current_sales(self):
         sale_description = "Use /best_price on a game here to see more details\n"
 
-        for sale in db.sales.find():
+        with db.cursor() as cur:
+            cur.execute("SELECT * FROM sales")
+            sales = cur.fetchall()
+
+        for sale in sales:
             # Retrieve the game's title, discount, and expiry and format them for the embed
-            sale_title = self.get_title(sale["_id"])
-            sale_expiry = sale["expiry"].strftime("%m-%d-%Y")
+            sale_title = self.get_title(sale[0])
+            sale_expiry = sale[2].strftime("%m-%d-%Y")
             sale_description += (
-                f"**{sale_title}**:\t{sale['cut']}% off until {sale_expiry}\n"
+                f"**{sale_title}**:\t{sale[1]}% off until {sale_expiry}\n"
             )
 
         current_sale_embed = stoat.SendableEmbed(
@@ -232,20 +218,23 @@ class Sales(commands.Gear, name="Sales"):
 
     # Function to store information on a game's sale cut and expiry in the database
     def store_sale(self, game_id: str, cut: int, expiry_date: date):
-        # Format the record to insert/replace the old record
-        new_sale = {"_id": game_id, "cut": cut, "expiry": expiry_date}
-
         # Overwrite the existing sale info or create a new entry if there is nothing
-        db.sales.replace_one({"_id": game_id}, new_sale, True)
+        with db.cursor() as cur:
+            cur.execute(
+                """INSERT INTO sales (sale_id, cut, expiry) VALUES (%s, %s, %s) 
+                ON CONFLICT (sale_id) DO UPDATE SET cut = EXCLUDED.cut, expiry = EXCLUDED.expiry""",
+                (game_id, cut, expiry_date),
+            )
+            db.commit()
 
         # Write to the servers about the new best sale
         self.send_sale_info(self.format_sale(game_id))
 
     # Function to compare a game's current best price against the database or append it if it's better
-    def compare_cut(self, game_id: str):
+    async def compare_cut(self, game_id: str):
         # Get the current best sale info on a game
         try:
-            current_best = self.best_cut(game_id)
+            current_best = await self.best_cut(game_id)
         except Exception as e:
             print(f"Could not retrieve current sale date for {game_id} because {e}")
             return
@@ -260,19 +249,20 @@ class Sales(commands.Gear, name="Sales"):
         # If there is no expiry, put the expiry as tomorrow
         if current_best_expiry is None:
             # Get today's date and increment it by one day to get tomorrow's date
-            today = date.today()
+            today = datetime.now(tz=pytz.utc).date()
             tomorrow = today + timedelta(days=1)
             current_best_expiry = tomorrow.strftime("%Y-%m-%d")
 
         formatted_expiry = self.format_expiry(current_best_expiry)
 
         # Check database for the if there is already a sale stored for this game
-        game_sale = db.sales.find_one(
-            {"_id": game_id}, {"_id": False, "best_cut": True}
-        )
+        with db.cursor() as cur:
+            cur.execute("SELECT cut FROM sales WHERE sale_id = %s", [game_id])
+            game_sale = cur.fetchone()
+
         if game_sale:
             # Check the cut for the existing record
-            previous_cut = game_sale["best_cut"]
+            previous_cut = game_sale[0]
 
             # Replace previous sale if new sale is better
             if current_best_cut > previous_cut:
@@ -291,12 +281,14 @@ class Sales(commands.Gear, name="Sales"):
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
         sales_channel_id = int(channel.split("/")[-1])
-        # Prepares the new server & channel combination for this server
-        new_channel = {"server": ctx.server_id, "channel": sales_channel_id}
+
         # Updates the sales channel for the server or inserts it if one doesn't exist currently
-        db.sales_channels.replace_one(
-            {"server": ctx.server_id}, new_channel, upsert=True
-        )
+        with db.cursor() as cur:
+            cur.execute(
+                "INSERT INTO channels (server_id, category, channel_id) VALUES (%s, %s, %s) ON CONFLICT (server_id, category) DO UPDATE SET channel_id = EXCLUDED.channel_id",
+                (ctx.server_id, "sales", sales_channel_id),
+            )
+            db.commit()
 
         # Let users know where the updated channel is
         updated_channel = ctx.server.get_channel(sales_channel_id)
@@ -311,14 +303,21 @@ class Sales(commands.Gear, name="Sales"):
     async def remove_sales_channel(self, ctx: commands.Context):
         """Removes the automated sales channel for this server, if it exists."""
 
-        # Removes the daily channel for the server if it exists
-        if db.sales_channels.find_one({"server": ctx.server_id}):
-            db.sales_channels.delete_one({"server": ctx.server_id})
-            await ctx.send("Sales for this server are stopped.")
-
-        # Lets the user know if there is no existing sales channel
-        else:
-            await ctx.send("There is no sales channel for this server.")
+        # Removes the sales channel if it exists
+        with db.cursor() as cur:
+            cur.execute(
+                "DELETE FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                (ctx.server.id, "sales"),
+            )
+            db.commit()
+            if cur.rowcount == 0:
+                return await ctx.channel.send(
+                    "There is no sales channel for this server."
+                )
+            else:
+                return await ctx.channel.send(
+                    "Sales content for this server is stopped."
+                )
 
     # Function to get the best price for a given game according to IsThereAnyDeal
     @commands.command()
