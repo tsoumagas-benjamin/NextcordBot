@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+import aiofiles
+import PIL.Image
+import PIL.ImageFile
+import PIL.ImageFilter
 import stoat
 from stoat.ext import commands
-import PIL.Image
-import PIL.ImageFilter
+
 from utilities import ChaosBot
 
 filters = {
@@ -20,7 +24,7 @@ filters = {
 
 # Function to verify if an image is greyscale
 def is_grey_scale(img_path):
-    img = PIL.Image.open(img_path).convert("RGB")
+    img: PIL.ImageFile.ImageFile = PIL.Image.open(img_path).convert("RGB")
     w, h = img.size
     for i in range(w):
         for j in range(h):
@@ -43,13 +47,15 @@ class Image(commands.Gear, name="Image"):
     async def contrast_image(self, ctx: commands.Context, url: str, value: float = 1.5):
         """Increase image contrast by choosing a high value, decrease by choosing a low value, given its URL"""
         img_data = await self.bot.client.get_content(url)
-        with open("../image.jpg", "wb") as handler:
+        async with aiofiles.open("../assets/image.jpg", mode="wb") as handler:
             handler.write(img_data)
-        im = PIL.Image.open("../image.jpg")
+        im: PIL.ImageFile.ImageFile = PIL.Image.open("../assets/image.jpg")
         if im:
             out = im.point(lambda i: i * value)
-            out.save("../output.jpg")
-            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
+            out.save("../assets/output.jpg")
+            await ctx.channel.send(
+                attachments=[stoat.Asset(filename="../assets/output.jpg")]
+            )
         else:
             await ctx.channel.send("Could not load the image, sorry!")
 
@@ -57,13 +63,15 @@ class Image(commands.Gear, name="Image"):
     async def convert_image(self, ctx: commands.Context, url: str):
         """Convert an image to greyscale, given its URL"""
         img_data = await self.bot.client.get_content(url)
-        with open("../image.jpg", "wb") as handler:
+        async with aiofiles.open("../assets/image.jpg", mode="wb") as handler:
             handler.write(img_data)
-        im = PIL.Image.open("../image.jpg")
+        im: PIL.ImageFile.ImageFile = PIL.Image.open("../assets/image.jpg")
         if im:
             out = im.convert("L")
-            out.save("../output.jpg")
-            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
+            out.save("../assets/output.jpg")
+            await ctx.channel.send(
+                attachments=[stoat.Asset(filename="../assets/output.jpg")]
+            )
         else:
             await ctx.channel.send("Could not load the image, sorry!")
 
@@ -71,18 +79,20 @@ class Image(commands.Gear, name="Image"):
     async def filter_image(self, ctx: commands.Context, url: str, filter: str = "Blur"):
         """Apply filters to an image, given its URL"""
         # If the given filter is invalid, return an error message
-        if filter.capitalize() not in filters.keys():
+        if filter.capitalize() not in filters:
             return await ctx.channel.send(
                 f"Please try again with a valid filter: {list(filters.keys())}"
             )
         img_data = await self.bot.client.get_content(url)
-        with open("../image.jpg", "wb") as handler:
+        async with aiofiles.open("../assets/image.jpg", mode="wb") as handler:
             handler.write(img_data)
-        im = PIL.Image.open("../image.jpg")
+        im: PIL.ImageFile.ImageFile = PIL.Image.open("../assets/image.jpg")
         if im:
             out = im.filter(filters[filter.capitalize()])
-            out.save("../output.jpg")
-            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
+            out.save("../assets/output.jpg")
+            await ctx.channel.send(
+                attachments=[stoat.Asset(filename="../assets/output.jpg")]
+            )
         else:
             await ctx.channel.send("Could not load the image, sorry!")
 
@@ -99,16 +109,18 @@ class Image(commands.Gear, name="Image"):
                 "Please try again with a style of either `horizontal` or `vertical`"
             )
         img_data = await self.bot.client.get_content(url)
-        with open("../image.jpg", "wb") as handler:
+        async with aiofiles.open("../assets/image.jpg", mode="wb") as handler:
             handler.write(img_data)
-        im = PIL.Image.open("../image.jpg")
+        im: PIL.ImageFile.ImageFile = PIL.Image.open("../assets/image.jpg")
         if im:
             if style.capitalize() == "Vertical":
                 out = im.transpose(PIL.Image.Transpose.FLIP_TOP_BOTTOM)
             else:
                 out = im.transpose(PIL.Image.Transpose.FLIP_LEFT_RIGHT)
-            out.save("../output.jpg")
-            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
+            out.save("../assets/output.jpg")
+            await ctx.channel.send(
+                attachments=[stoat.Asset(filename="../assets/output.jpg")]
+            )
         else:
             await ctx.channel.send("Could not load the image, sorry!")
 
@@ -116,18 +128,20 @@ class Image(commands.Gear, name="Image"):
     async def invert_image(self, ctx: commands.Context, url: str):
         """Invert the colours of an colour image, given its URL"""
         img_data = await self.bot.client.get_content(url)
-        with open("../image.jpg", "wb") as handler:
+        async with aiofiles.open("../assets/image.jpg", mode="wb") as handler:
             handler.write(img_data)
-        im = PIL.Image.open("../image.jpg")
-        if is_grey_scale("../image.jpg"):
+        im: PIL.ImageFile.ImageFile = PIL.Image.open("../assets/image.jpg")
+        if is_grey_scale("../assets/image.jpg"):
             return await ctx.channel.send(
                 "This image doesn't contain any colour to invert!"
             )
         if im:
             r, g, b = im.split()
             out = PIL.Image.merge("RGB", (b, g, r))
-            out.save("../output.jpg")
-            await ctx.channel.send(attachments=[stoat.Asset(filename="../output.jpg")])
+            out.save("../assets/output.jpg")
+            await ctx.channel.send(
+                attachments=[stoat.Asset(filename="../assets/output.jpg")]
+            )
         else:
             await ctx.channel.send("Could not load the image, sorry!")
 
