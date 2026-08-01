@@ -1,10 +1,11 @@
-from stoat.ext import commands
-from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
+#!/usr/bin/env python
 from os import getenv, listdir
-from log import log
-from utilities import ChaosBot, Client, db, collections, collection_names
 
-# TODO: Switch from MongoDB
+from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
+from stoat.ext import commands
+
+from log import log
+from utilities import ChaosBot, Client, collection_names, db
 
 # Define bot permissions, see: enums / UserPermissions
 permissions = Permissions(
@@ -62,11 +63,6 @@ async def on_ready(event: ReadyEvent):
     if bot.client is None:
         bot.client = Client()
 
-    # Initialize default collections
-    for collection in collection_names:
-        if collection not in collections:
-            db.create_collection(collection)
-
     # Add functionality from gears
     for filename in listdir("./gears"):
         if filename.endswith(".py"):
@@ -88,7 +84,7 @@ async def on_ready(event: ReadyEvent):
         print(f"{name}: {gear_commands}")
 
     # Print database collections
-    print(f"Collections: {collections}")
+    print(f"Collections: {collection_names}")
 
     # Print that the bot is set up
     print(f"We have set up as {bot.user}")
@@ -97,17 +93,18 @@ async def on_ready(event: ReadyEvent):
 # Handle when a user leaves a server
 @bot.listen()
 async def on_member_remove(event: ServerMemberRemoveEvent):
-    # If user and this bot have no mutual servers, remove their birthday information
+    # If user and this bot have no mutual servers, remove their member information
     mutual_servers: list[str] | None = await event.member.mutual_server_ids()
     if mutual_servers is None:
-        if db.birthdays.find_one({"_id": event.member.id}):
-            db.birthdays.delete_many({"_id": event.member.id})
+        with db.cursor() as cur:
+            cur.execute("DELETE FROM members WHERE user_id = %s", (event.user_id))
+            db.commit()
 
     # If user is this bot, delete all collections pertaining to that server
     if event.user_id == getenv("STOAT_ID"):
-        for collection in db.list_collection_names():
-            mycol = db[collection]
-            mycol.delete_many({"_id": event.server_id})
+        with db.cursor() as cur:
+            cur.execute("DELETE FROM servers WHERE server_id = %s", (event.server_id))
+            db.commit()
 
 
 # Tell the bot to store logs in nextcord.log
