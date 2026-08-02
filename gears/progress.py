@@ -1,10 +1,13 @@
-import stoat
-from stoat.ext import commands
-from PIL import Image, ImageDraw, ImageFont
+#! usr/bin/env python
 from io import BytesIO
-from utilities import ChaosBot, db
+from uuid import uuid7
 
-# TODO: Switch from MongoDB
+import aiofiles
+import stoat
+from PIL import Image, ImageDraw, ImageFile, ImageFont
+from stoat.ext import commands
+
+from utilities import ChaosBot, db
 
 
 # Generates xp for a given message
@@ -16,13 +19,11 @@ def give_xp(message: stoat.Message):
         return len(words)
 
 
-# Determines whether the user levels up or not
+# Determines whether the user levels up or not; max level due to PostgreSQL int4 capacity
+# Capacity is 2147483647 and level 13107 is 2147254275
 def level_up(xp: int, level: int):
     threshold = (level + 1) * 25
-    if xp >= threshold:
-        return True
-    else:
-        return False
+    return xp >= threshold
 
 
 # Create a gear for levelling
@@ -34,19 +35,23 @@ class Progress(commands.Gear, name="Progress"):
     def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
-    async def card_maker(self, ctx: commands.Context, uid: int, server_id: int):
+    async def card_maker(self, ctx: commands.Context, user_id: int, server_id: int):
         # Get user information from ID
-        target = db.levels.find_one({"uid": uid, "server": server_id})
-        if self.bot.get_user(uid):
-            user = self.bot.get_user(uid)
+        with db.cursor() as cur:
+            cur.execute(
+                """SELECT server_level, xp FROM levels WHERE member_id IN 
+                (SELECT member_id FROM members WHERE (server_id, user_id) = (%s, %s)) LIMIT 1""",
+                (server_id, user_id),
+            )
+            level, xp = cur.fetchone()
+        if self.bot.get_user(user_id):
+            user = self.bot.get_user(user_id)
             username = user.display_name
             avatar_url = user.avatar.url()
         else:
-            return await ctx.send(f"Could not get user {uid}!")
+            return await ctx.send(f"Could not get user {user_id}!")
 
         # Gather information for the level card
-        level = target["level"]
-        xp = target["xp"]
         threshold = (level + 1) * 25
         progress = (xp / threshold) * 870
         textcard = "../assets/textcard.png"
@@ -58,13 +63,17 @@ class Progress(commands.Gear, name="Progress"):
 
         # Get the avatar of the target user from URL
         avatar_bytes = await self.bot.client.get_bytes(avatar_url)
-        avatar = Image.open(BytesIO(avatar_bytes)).resize((170, 170))
+        avatar: ImageFile.ImageFile = Image.open(BytesIO(avatar_bytes)).resize(
+            (170, 170)
+        )
 
         # Overlay the text card and avatar on the level card
-        background = Image.open(levelcard)
-        overlay = Image.open(textcard)
+        background: ImageFile.ImageFile = Image.open(levelcard)
+        overlay: ImageFile.ImageFile = Image.open(textcard)
         background.paste(overlay, (200, 0), overlay)
-        a_mask = Image.open(avatar_mask).convert("L").resize((170, 170))
+        a_mask: ImageFile.ImageFile = (
+            Image.open(avatar_mask).convert("L").resize((170, 170))
+        )
         background.paste(avatar, (15, 15), a_mask)
 
         # Print username, level, and xp on the level card
@@ -101,14 +110,13 @@ class Progress(commands.Gear, name="Progress"):
         draw = ImageDraw.Draw(img, "RGBA")
         draw.rounded_rectangle((0, 0, 870, 50), 25, fill=(255, 255, 255, 50))
         draw.rounded_rectangle((0, 0, progress, 50), 25, fill=(0, 128, 255))
-        b_mask = Image.open(bar_mask).convert("L")
+        b_mask: ImageFile.ImageFile = Image.open(bar_mask).convert("L")
         background.paste(img, (15, 225), b_mask)
 
         # Create and save the file and send it
-        file = open(result, "wb")
-        background.save(file, "PNG")
-        await ctx.send(attachments=[stoat.Asset(filename="../assets/result.png")])
-        file.close()
+        async with aiofiles.open(result, mode="wb") as file:
+            background.save(file, "PNG")
+            await ctx.send(attachments=[stoat.Asset(filename="../assets/result.png")])
 
     @commands.Gear.listener("on_message")
     async def xp(self, message: stoat.Message):
@@ -119,46 +127,59 @@ class Progress(commands.Gear, name="Progress"):
         channel = message.channel
         ctx = message.ctx
         person = message.author
-        target = {"uid": author.id, "server": server.id}
 
-        # If xp collection doesn't exist for server, make one
-        if "levels" not in db.list_collection_names():
-            db.create_collection("levels")
-
-        # If member is not registered, create an entry for them
-        if not db.levels.find_one(target):
-            db.levels.insert_one(
-                {"uid": author.id, "server": server.id, "level": 0, "xp": 0}
+        with db.cursor() as cur:
+            cur.execute(
+                """SELECT server_level, xp FROM levels WHERE member_id IN 
+                (SELECT member_id FROM members WHERE (server_id, user_id) = (%s, %s)) LIMIT 1""",
+                (server.id, author.id),
             )
-
-        # Increase user xp and level as necessary
-        user = db.levels.find_one(target)
-        xp = user["xp"] + give_xp(message)
-        level = user["level"]
-        if level_up(xp, level):
-            level += 1
-            xp = 0
-            if ctx is None:
-                await channel.send(
-                    f"**{author.display_name}** reached level {level} on {server}!"
+            user = cur.fetchone()
+            # If member is not registered, create an entry for them
+            if not user:
+                cur.execute(
+                    "INSERT INTO levels (member_id, server_level, xp) VALUES (%s, %s, %s)",
+                    (uuid7(), 0, 0),
                 )
+            # Increase user xp and level as necessary
             else:
-                await self.card_maker(self, ctx, person.id, message.server.id)
-        db.levels.replace_one(
-            target, {"uid": author.id, "server": server.id, "level": level, "xp": xp}
-        )
+                # Prevent users gaining more xp if they are already at the maximum level
+                # For now, cap at 1000 but can go up to 13107 if needed
+                level = user[0]
+                if level > 999:
+                    return
+                xp = user[1] + give_xp(message)
+                if level_up(xp, level):
+                    level += 1
+                    xp = 0
+                    if ctx is None:
+                        await channel.send(
+                            f"**{author.display_name}** reached level {level} on {server}!"
+                        )
+                    else:
+                        await self.card_maker(self, ctx, person.id, message.server.id)
+                cur.execute(
+                    "UPDATE levels SET (server_level, xp) = (%s, %s) WHERE member_id = %s",
+                    (level, xp, user[0]),
+                )
+                db.commit()
 
     @stoat.slash_command()
     async def level(
         self,
         ctx: commands.Context,
-        person: stoat.Member | stoat.User | None = None,
+        person: stoat.Member | stoat.User | None,
     ):
         """Check level of a person, defaults to checking your own level"""
         if person is None:
             person = ctx.user
-        target = {"uid": person.id, "server": ctx.server.id}
-        record = db.levels.find_one(target)
+        with db.cursor() as cur:
+            cur.execute(
+                """SELECT server_level, xp FROM levels WHERE member_id IN 
+                (SELECT member_id FROM members WHERE (server_id, user_id) = (%s, %s)) LIMIT 1""",
+                (ctx.server.id, person.id),
+            )
+            record = cur.fetchone()
 
         # Return XP and level or nothing if user is not registered
         if not record:
@@ -171,16 +192,22 @@ class Progress(commands.Gear, name="Progress"):
         """Gets the top 10 highest ranked people on the server"""
         server = ctx.server
         # Sort the database for the highest 10 scoring on the server
-        cursor = db.levels.find({"server": server.id})
-        leaders = cursor.sort([("level", -1), ("xp", -1)]).limit(10)
+        with db.cursor() as cur:
+            cur.execute(
+                """SELECT l.server_level, l.xp, m.user_id FROM levels l
+                INNER JOIN members m ON (m.member_id, m.server_id) = (l.member_id, %s)
+                ORDER BY l.server_level DESC NULLS LAST, l.xp DESC NULLS LAST LIMIT 10""",
+                [server.id],
+            )
+            leaders = cur.fetchall()
         embed_description = ""
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10
-            uid = leader["uid"]
-            user = self.bot.get_user(uid) if self.bot.get_user(uid) else uid
-            username = user.display_name if self.bot.get_user(uid) else uid
-            xp = leader["xp"]
-            level = leader["level"]
+            level = leader[0]
+            xp = leader[1]
+            user_id = leader[2]
+            user = self.bot.get_user(user_id) if self.bot.get_user(user_id) else user_id
+            username = user.display_name if self.bot.get_user(user_id) else user_id
             threshold = (level + 1) * 25
             embed_description += (
                 f"{position + 1}. {username}\tLevel: {level}\t{xp}/{threshold} XP\n"
