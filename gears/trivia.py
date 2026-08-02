@@ -1,7 +1,10 @@
-import stoat
-from random import shuffle
+#!/usr/bin/env python
 from asyncio import sleep
+from random import shuffle
+
+import stoat
 from stoat.ext import commands
+
 from utilities import ChaosBot
 
 
@@ -39,18 +42,19 @@ class TriviaQuestion:
 
     @commands.Gear.listener()
     async def handle_response(self, to: stoat.MessageReactEvent):
-        # TODO: If someone responds to a trivia question, update their score accordingly
-        if to.user_id in self.responders or to.message is not self.message:
+        if (
+            to.user_id in self.responders
+            or to.message is not self.message
+            or to.emoji not in self.choices
+        ):
             return
         else:
-            if to.emoji in self.choices:
-                self.responders.append(to.user_id)
-                if to.emoji == self.correct:
-                    if to.user_id in self.score:
-                        self.score[to.user_id] += 1
-                    else:
-                        self.score[to.user_id] = 1
-        return self.correct
+            self.responders.append(to.user_id)
+            if to.emoji == self.correct:
+                if to.user_id in self.score:
+                    self.score[to.user_id] += 1
+                else:
+                    self.score[to.user_id] = 1
 
 
 # Class to handle trivia setup and initialization
@@ -62,7 +66,7 @@ class TriviaSetup:
         self.incorrects: list[str] = []
         self.questions: list[str] = []
         self.difficulties: list[str] = []
-        self.score: dict = dict()
+        self.score: dict = {}
         self.embed: stoat.SendableEmbed = stoat.SendableEmbed(
             title="Trivia Results", color=stoat.Colour.from_rgb(0, 128, 255)
         )
@@ -75,7 +79,6 @@ class TriviaSetup:
             self.score[user.display_name] += 1
         else:
             self.score[user.display_name] = 1
-        return None
 
     def display_score(self, server: stoat.Server):
         # Sort player scores in descending order and convert back to dictionary
@@ -114,7 +117,7 @@ class Trivia(commands.Gear, name="Trivia"):
 
         # Get trivia content from the API
         res = await self.bot.client.get_json(ts.url)
-        for question in range(0, 10):
+        for question in range(10):
             ts.categories.append(res[question]["category"])
             ts.corrects.append(res[question]["correctAnswer"])
             ts.incorrects.append(res[question]["incorrectAnswers"])
@@ -123,7 +126,7 @@ class Trivia(commands.Gear, name="Trivia"):
 
         await ctx.channel.send("Trivia Time!")
         # Each round takes 10 seconds with each trivia question having it's own embed
-        for x in range(0, 10):
+        for x in range(10):
             content = f"**{ts.questions[x]}**\n> {ts.categories[x]} - {ts.difficulties[x].title()}"
             trivia_question = TriviaQuestion(
                 content, ts.incorrects[x], ts.corrects[x], ts.score
