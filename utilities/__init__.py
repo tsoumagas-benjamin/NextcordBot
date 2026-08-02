@@ -9,10 +9,12 @@ from re import sub
 import psycopg
 import pytz
 from aiohttp import ClientSession
+from dotenv import find_dotenv, load_dotenv
 from stoat import SendableEmbed
 from stoat.ext import commands
 
 # Name our access to our client database
+load_dotenv(".env")
 db: psycopg.Connection = psycopg.connect(
     f"dbname={getenv('DB_NAME')} user={getenv('DB_USER')}"
 )

@@ -6,6 +6,7 @@ from os import getenv
 
 import pytz
 import stoat
+from dotenv import load_dotenv
 from stoat.ext import commands
 
 from utilities import (
@@ -75,6 +76,7 @@ class Sales(commands.Gear, name="Sales"):
 
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):
+        load_dotenv("../.env")
         base_url = (
             "https://api.isthereanydeal.com" + substring + "?key=" + getenv("DEAL_KEY")
         )
