@@ -418,4 +418,4 @@ class Fun(commands.Gear, name="Fun"):
 
 
 async def setup(bot: ChaosBot):
-    bot.add_gear(Fun(bot))
+    await bot.add_gear(Fun(bot))

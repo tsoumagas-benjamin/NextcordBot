@@ -726,5 +726,5 @@ class Warframe(commands.Gear, name="Warframe"):
                 )
 
 
-def setup(bot: ChaosBot):
-    bot.add_gear(Warframe(bot))
+async def setup(bot: ChaosBot):
+    await bot.add_gear(Warframe(bot))

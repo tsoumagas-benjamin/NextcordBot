@@ -656,4 +656,4 @@ class Audit(commands.Gear, name="Audit"):
 
 
 async def setup(bot: ChaosBot):
-    bot.add_gear(Audit(bot))
+    await bot.add_gear(Audit(bot))

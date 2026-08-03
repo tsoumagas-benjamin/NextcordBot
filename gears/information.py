@@ -225,4 +225,4 @@ class Information(commands.Gear, name="Information"):
 
 
 async def setup(bot: ChaosBot):
-    bot.add_gear(Information(bot))
+    await bot.add_gear(Information(bot))

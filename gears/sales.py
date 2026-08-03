@@ -363,5 +363,5 @@ class Sales(commands.Gear, name="Sales"):
         await ctx.send(f"ID for {game} is {game_id}")
 
 
-def setup(bot: ChaosBot):
-    bot.add_gear(Sales(bot))
+async def setup(bot: ChaosBot):
+    await bot.add_gear(Sales(bot))

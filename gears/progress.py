@@ -222,5 +222,5 @@ class Progress(commands.Gear, name="Progress"):
 
 
 # Add the gear to the bot
-def setup(bot: ChaosBot):
-    bot.add_gear(Progress(bot))
+async def setup(bot: ChaosBot):
+    await bot.add_gear(Progress(bot))

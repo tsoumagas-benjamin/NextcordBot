@@ -119,5 +119,5 @@ class Moderation(commands.Gear, name="Moderation"):
             )
 
 
-def setup(bot: ChaosBot):
-    bot.add_gear(Moderation(bot))
+async def setup(bot: ChaosBot):
+    await bot.add_gear(Moderation(bot))

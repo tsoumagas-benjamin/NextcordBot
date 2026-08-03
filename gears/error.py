@@ -66,4 +66,4 @@ class Error(commands.Gear, name="Error"):
 
 
 async def setup(bot: ChaosBot):
-    bot.add_gear(Error(bot))
+    await bot.add_gear(Error(bot))

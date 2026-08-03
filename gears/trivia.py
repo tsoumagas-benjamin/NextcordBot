@@ -143,5 +143,5 @@ class Trivia(commands.Gear, name="Trivia"):
 
 
 # Add the gear to the bot
-def setup(bot: ChaosBot):
-    bot.add_gear(Trivia(bot))
+async def setup(bot: ChaosBot):
+    await bot.add_gear(Trivia(bot))

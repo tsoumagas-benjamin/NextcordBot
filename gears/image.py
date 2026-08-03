@@ -147,5 +147,5 @@ class Image(commands.Gear, name="Image"):
 
 
 # Add the gear to the bot
-def setup(bot: ChaosBot):
-    bot.add_gear(Image(bot))
+async def setup(bot: ChaosBot):
+    await bot.add_gear(Image(bot))
