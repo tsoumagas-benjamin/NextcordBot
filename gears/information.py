@@ -43,8 +43,15 @@ class Information(commands.Gear, name="Information"):
         elif on.emoji == "❌":
             self.count[1] -= 1
 
+    @commands.command()
+    async def calculate(self, ctx: commands.Context, *, equation: str):
+        """Calculates user input and returns the output"""
+        equation = equation.replace(" ", "")
+        evaluation = eval(equation)
+        await ctx.channel.send(f" Result of {equation} is {evaluation}")
+
     @commands.command(name="commands")
-    async def bot_commands(self, ctx: commands.Context):
+    async def get_commands(self, ctx: commands.Context):
         """Get a list of commands for the bot"""
         commands_list = self.bot.get_application_commands()
         cmds = []
@@ -58,13 +65,6 @@ class Information(commands.Gear, name="Information"):
             color=stoat.Colour.from_rgb(0, 128, 255),
         )
         await ctx.channel.send(embeds=[embed])
-
-    @commands.command()
-    async def calculate(self, ctx: commands.Context, *, equation: str):
-        """Calculates user input and returns the output"""
-        equation = equation.replace(" ", "")
-        evaluation = eval(equation)
-        await ctx.channel.send(f" Result of {equation} is {evaluation}")
 
     @commands.command()
     async def info(self, ctx: commands.Context, user_id: str):
