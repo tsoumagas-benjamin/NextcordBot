@@ -3,7 +3,6 @@ from os import getenv, listdir
 
 from dotenv import load_dotenv
 from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
-from stoat.ext import commands
 
 from log import log
 from utilities import ChaosBot, Client, collection_names, db
@@ -50,7 +49,6 @@ permissions = Permissions(
 # Instantiate the bot
 bot = ChaosBot(
     case_insensitive=True,
-    command_prefix=commands.when_mentioned_or("/"),
     description="Multi-purpose Stoat bot\nAuthor: ChaosHerald2\nUsing Stoat.py, hosted locally.\nPorted from Discord",
     self_bot=True,
     strip_after_prefix=True,

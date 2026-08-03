@@ -9,7 +9,7 @@ from re import sub
 import psycopg
 import pytz
 from aiohttp import ClientSession
-from dotenv import find_dotenv, load_dotenv
+from dotenv import load_dotenv
 from stoat import SendableEmbed
 from stoat.ext import commands
 
@@ -112,14 +112,16 @@ class Client:
             await self._session.close()
 
 
-# Create a subclass for the bot to allow for extra customizability
+# TODO: Create a subclass for the bot to allow for extra customizability
 class ChaosBot(commands.Bot):
     def __init__(self, *args, **kwargs) -> None:
-        # Forward all arguments, and keyword-only arguments to commands.ChaosBot
-        super().__init__(*args, **kwargs)
+        # Forward all arguments, and keyword-only arguments to commands.Bot
+        super().__init__(
+            command_prefix=commands.when_mentioned_or("/"),
+        )
 
         # Custom bot attributes are set below
-        self.client: Client() = Client()
+        self.client: Client = Client()
 
 
 def check_permitted_servers(ctx: commands.Context):
