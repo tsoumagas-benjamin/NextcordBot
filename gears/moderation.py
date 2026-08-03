@@ -70,7 +70,7 @@ class Moderation(commands.Gear, name="Moderation"):
             )
 
     @commands.command()
-    @commands.has_permissions(moderate_members=True)
+    @commands.has_permissions(mute_members=True)
     async def mute(
         self,
         ctx: commands.Context,
@@ -100,7 +100,7 @@ class Moderation(commands.Gear, name="Moderation"):
         await ctx.channel.send(f"Member {member_id} has been unbanned.")
 
     @commands.command()
-    @commands.has_permissions(moderate_members=True)
+    @commands.has_permissions(mute_members=True)
     async def unmute(
         self,
         ctx: commands.Context,
