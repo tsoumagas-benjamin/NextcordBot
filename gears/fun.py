@@ -12,7 +12,6 @@ from utilities import (
     db,
     delay_until,
     schedule,
-    session,
     time_from_string,
 )
 
@@ -295,7 +294,7 @@ class Fun(commands.Gear, name="Fun"):
     @commands.has_permissions(manage_emojis=True)
     async def getemoji(self, ctx: commands.Context, url: str, *, name: str):
         """Add an emoji to the server"""
-        async with session.get(url) as resp:
+        async with self.bot.client.get_bytes(url) as resp:
             try:
                 media = BytesIO(await resp.read())
                 val = media.getvalue()
