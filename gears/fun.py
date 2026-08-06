@@ -291,7 +291,7 @@ class Fun(commands.Gear, name="Fun"):
         await ctx.channel.send(embeds=[embed])
 
     @commands.command()
-    @commands.has_permissions(manage_emojis=True)
+    @commands.has_permissions(manage_customization=True)
     async def getemoji(self, ctx: commands.Context, url: str, *, name: str):
         """Add an emoji to the server"""
         async with self.bot.client.get_bytes(url) as resp:
