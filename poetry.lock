@@ -1635,4 +1635,4 @@ transcript = ["yt-dlp ; python_version >= \"3.10\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14"
-content-hash = "eea8a6035b0aa9710eca90f5cfb2e695160a007a81a6cfd5aa87d823c4875c61"
+content-hash = "ec1bd5a5fe19d0ddb89e4ecb0e2cf84eb8bbe785ccb77d050fded57c85328674"
