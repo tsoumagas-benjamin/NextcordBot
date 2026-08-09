@@ -81,7 +81,7 @@ class Client:
     async def __aexit__(self, *args, **kwargs):
         await self.close()
 
-    async def get_bytes(self, url):
+    async def get_bytes(self, url) -> bytes:
         async with self._session.get(url) as r:
             output = r.read()
             return output
@@ -112,7 +112,7 @@ class Client:
             await self._session.close()
 
 
-# TODO: Create a subclass for the bot to allow for extra customizability
+# Create a subclass for the bot to allow for extra customizability
 class ChaosBot(commands.Bot):
     def __init__(self, *args, **kwargs) -> None:
         # Forward all arguments, and keyword-only arguments to commands.Bot
@@ -121,7 +121,8 @@ class ChaosBot(commands.Bot):
         )
 
         # Custom bot attributes are set below
-        self.client: Client = Client()
+        self.client: Client = None
+        self.loop: asyncio.AbstractEventLoop | None = None
 
 
 def check_permitted_servers(ctx: commands.Context):
@@ -132,7 +133,7 @@ def check_permitted_servers(ctx: commands.Context):
 def delay_until(day: str, hour: int):
     if (
         day.capitalize() not in days
-        or day.capitalize() == "Tomorrow"
+        or day.capitalize() != "Tomorrow"
         or hour < 0
         or hour > 24
     ):
@@ -140,11 +141,11 @@ def delay_until(day: str, hour: int):
 
     # Get the next day coming up, i.e. the next Monday
     today = datetime.now(tz=pytz.utc).date()
-    if day.capitalize == "Tomorrow":
+    if day.capitalize() == "Tomorrow":
         target_day = today + timedelta(days=1)
     else:
         target_day = today + timedelta(
-            days=(days[day.capitalize] - today.weekday()) % 7
+            days=(days[day.capitalize()] - today.weekday()) % 7
         )
 
     # Add the hours onto the date to make the datetime
@@ -158,7 +159,7 @@ def delay_until(day: str, hour: int):
 
     # Get the time from the target datetime to now in seconds
     delta = full_datetime - datetime.now(tz=pytz.utc).date()
-    delay = delta.total_seconds()
+    delay: float = delta.total_seconds()
     return delay
 
 
