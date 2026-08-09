@@ -25,13 +25,9 @@ class Fun(commands.Gear, name="Fun"):
         self.bot = bot
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_channels = self.fetch_daily_channels()
-        self.loop = asyncio.get_event_loop()
 
-    def gear_load(self):
-        self.loop.run_forever(self.daily_fun())
-
-    def gear_unload(self):
-        self.loop.stop(self.daily_fun())
+    async def gear_load(self):
+        self.bot.loop.create_task(await self.daily_fun())
 
     def fetch_daily_channels(self) -> list[str]:
         with db.cursor() as cur:

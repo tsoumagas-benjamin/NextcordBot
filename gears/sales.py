@@ -30,13 +30,9 @@ class Sales(commands.Gear, name="Sales"):
         self.bot = bot
         # Fetch the list of sales channels to post sale information to
         self.sales_channels = self.fetch_sales_channels()
-        self.loop = asyncio.get_event_loop()
 
-    def gear_load(self):
-        self.loop.run_forever(self.daily_sales())
-
-    def gear_unload(self):
-        self.loop.stop(self.daily_sales())
+    async def gear_load(self):
+        self.bot.loop.create_task(await self.daily_sales())
 
     def fetch_sales_channels(self) -> list[str]:
         with db.cursor() as cur:

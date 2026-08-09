@@ -115,13 +115,9 @@ class Warframe(commands.Gear, name="Warframe"):
         self.worldstate_data = ""
         # Fetch the list of enrolled warframe channels to post daily content to
         self.daily_wf_channels = self.fetch_warframe_channels()
-        self.loop = asyncio.get_event_loop()
 
-    def gear_load(self):
-        self.loop.run_forever(self.daily_warframe())
-
-    def gear_unload(self):
-        self.loop.stop(self.daily_warframe())
+    async def gear_load(self):
+        self.bot.loop.create_task(await self.daily_warframe())
 
     def fetch_warframe_channels(self) -> list[str]:
         with db.cursor() as cur:
