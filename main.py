@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import asyncio
+import atexit
 from os import getenv, listdir
 
 from dotenv import load_dotenv
@@ -62,8 +64,16 @@ bot = ChaosBot(
 async def on_ready(event: ReadyEvent):
     """When bot is connected to Stoat"""
     # If the ClientSession for GET/POST requests isn't initialized, do so here
-    if bot.client is None:
-        bot.client = Client()
+    if bot.client:
+        await bot.client.close()
+    bot.client = Client()
+
+    # Set up loop for recurring daily/weekly functions
+    if bot.loop:
+        bot.loop.stop()
+        bot.loop.close()
+    bot.loop = asyncio.new_event_loop()
+    bot.loop.run_forever()
 
     # Add functionality from gears
     for filename in listdir("./gears"):
@@ -81,15 +91,24 @@ async def on_ready(event: ReadyEvent):
     print(f"Extensions: {bot.extensions.keys()}")
 
     # Print commands per gear
-    for name, gear in bot.gears.items():
+    for gear_name, gear in bot.gears.items():
         gear_commands = gear.get_commands()
-        print(f"{name}: {gear_commands}")
+        print(f"{gear_name}: {[command.name for command in gear_commands]}")
 
     # Print database collections
     print(f"Collections: {collection_names}")
 
     # Print that the bot is set up
     print(f"We have set up as {bot.user}")
+
+
+# Handle closing of processes when the bot shuts down
+def teardown():
+    bot.loop.stop()
+    bot.loop.close()
+
+
+atexit.register(teardown)
 
 
 # Handle when a user leaves a server
