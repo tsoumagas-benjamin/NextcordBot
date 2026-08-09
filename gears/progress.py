@@ -9,21 +9,7 @@ from stoat.ext import commands
 
 from utilities import ChaosBot, db
 
-
-# Generates xp for a given message
-def give_xp(message: stoat.Message):
-    words = message.content.split()
-    if len(words) < 5:
-        return 5
-    else:
-        return len(words)
-
-
-# Determines whether the user levels up or not; max level due to PostgreSQL int4 capacity
-# Capacity is 2147483647 and level 13107 is 2147254275
-def level_up(xp: int, level: int):
-    threshold = (level + 1) * 25
-    return xp >= threshold
+# TODO: TypeError: issubclass() arg 1 must be a class"
 
 
 # Create a gear for levelling
@@ -118,6 +104,20 @@ class Progress(commands.Gear, name="Progress"):
             background.save(file, "PNG")
             await ctx.send(attachments=[stoat.Asset(filename="../assets/result.png")])
 
+    # Generates xp for a given message
+    def give_xp(self, message: stoat.Message):
+        words = message.content.split()
+        if len(words) < 5:
+            return 5
+        else:
+            return len(words)
+
+    # Determines whether the user levels up or not; max level due to PostgreSQL int4 capacity
+    # Capacity is 2147483647 and level 13107 is 2147254275
+    def level_up(self, xp: int, level: int):
+        threshold = (level + 1) * 25
+        return xp >= threshold
+
     @commands.Gear.listener("on_message")
     async def xp(self, message: stoat.Message):
         if message.author.bot:
@@ -148,8 +148,8 @@ class Progress(commands.Gear, name="Progress"):
                 level = user[0]
                 if level > 999:
                     return
-                xp = user[1] + give_xp(message)
-                if level_up(xp, level):
+                xp = user[1] + self.give_xp(message)
+                if self.level_up(xp, level):
                     level += 1
                     xp = 0
                     if ctx is None:
