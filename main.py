@@ -70,8 +70,11 @@ async def on_ready(event: ReadyEvent):
 
     # Set up loop for recurring daily/weekly functions
     if bot.loop:
+        print("LOOP EXISTS")
         bot.loop.stop()
         bot.loop.close()
+    else:
+        print("LOOP DOESN'T EXIST")
     bot.loop = asyncio.new_event_loop()
     bot.loop.run_forever()
 

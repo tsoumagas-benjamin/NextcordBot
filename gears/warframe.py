@@ -17,7 +17,7 @@ from utilities import (
 )
 
 # Credit to the WFCD for the Warframe worldstate parser API found here: https://api.warframestat.us/pc
-# TODO: Wait on alert/baro for related function
+# TODO: Wait on baro for related function
 
 
 class Warframe(commands.Gear, name="Warframe"):
@@ -165,12 +165,10 @@ class Warframe(commands.Gear, name="Warframe"):
 
             alert_min_level = alert_mission["minEnemyLevel"]
             alert_max_level = alert_mission["maxEnemyLevel"]
-            alert_tag = (
-                "Gift of the Lotus" if alert["tag"] == "LotusGift" else "Tactical Alert"
-            )
+            alert_tag = alert["tag"]
 
             # Get information on the alert rewards
-            alert_reward = alert["rewardTypes"]
+            alert_reward = alert["reward"]
             alert_credits = alert_reward["credits"]
             alert_items = alert_reward["countedItems"]
 
@@ -188,8 +186,8 @@ class Warframe(commands.Gear, name="Warframe"):
 
             # Get the type and quantity of additional rewards
             for item in alert_items:
-                item_type = item["itemType"]
-                item_count = item["itemCount"]
+                item_type = item["type"]
+                item_count = item["count"]
                 alert_rewards += f"- {item_count} {item_type}\n"
 
             alert_info += f"**Rewards:**\n{alert_rewards}"
