@@ -262,9 +262,9 @@ class Warframe(commands.Gear, name="Warframe"):
             # Iterate Baro's inventory
             for item in baro_inventory:
                 # Get each item's name, ducat, and credit cost
-                ducats = item["primePrice"]
-                wf_credits = item["regularPrice"]
-                name = item["itemType"]
+                ducats = item["ducats"]
+                wf_credits = item["credits"]
+                name = item["item"]
 
                 # Format everything into one line and append it to the list
                 baro_list.append(f"{name} - {ducats} D {wf_credits} C")
