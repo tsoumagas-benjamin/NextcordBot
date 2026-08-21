@@ -44,7 +44,6 @@ permitted_servers: list[str] = [
     "01KHZYXDM1F104EQQ7V3ATRRER",
 ]
 
-# Dictionary of Game titles and IDs to regularly check for sales
 target_games: dict = {
     "Balatro": "018d937f-700e-7161-9c8d-5423af1b7c99",
     "Blasphemous": "018d937f-046c-70c2-89ad-3db21e19f40f",
@@ -73,7 +72,7 @@ target_games: dict = {
 # Create a client session to be used for all async HTTP requests
 class Client:
     def __init__(self) -> None:
-        self._session = ClientSession()
+        self._session = ClientSession()  # TODO: Fix this <-
 
     async def __aenter__(self):
         return self
@@ -123,6 +122,14 @@ class ChaosBot(commands.Bot):
         # Custom bot attributes are set below
         self.client: Client = None
         self.loop: asyncio.AbstractEventLoop | None = None
+
+    # Extend the existing setup_hook behaviour
+    async def setup_hook(self):
+        super().setup_hook()
+        # If the ClientSession for GET/POST requests isn't initialized, do so here
+        if self.client:
+            await self.client.close()
+        self.client = Client()
 
 
 def check_permitted_servers(ctx: commands.Context):
