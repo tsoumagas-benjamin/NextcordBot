@@ -1,5 +1,6 @@
-import sys
+#!/usr/bin/env python
 import logging
+import sys
 
 
 class LogFilter(logging.Filter):
