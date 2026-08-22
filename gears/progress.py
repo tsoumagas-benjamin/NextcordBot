@@ -171,7 +171,7 @@ class Progress(commands.Gear, name="Progress"):
         person: stoat.Member | stoat.User | None,
     ):
         """Check level of a person, defaults to checking your own level"""
-        if person is None:
+        if not person:
             person = ctx.user
         with db.cursor() as cur:
             cur.execute(
