@@ -151,7 +151,7 @@ class ChaosBot(commands.Bot):
     def __init__(self, *args, **kwargs) -> None:
         # Forward all arguments, and keyword-only arguments to commands.Bot
         super().__init__(
-            command_prefix=commands.when_mentioned_or("/"),
+            command_prefix="/",
         )
 
         # Custom bot attributes are set below
