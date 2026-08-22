@@ -7,10 +7,7 @@ from dotenv import load_dotenv
 from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
 
 from log import log
-from utilities import ChaosBot, Client, collection_names, db
-
-# Load our .env file for later use
-load_dotenv("./.env")
+from utilities import ChaosBot, collection_names, db
 
 # Define bot permissions, see: enums / UserPermissions
 permissions = Permissions(
@@ -47,6 +44,10 @@ permissions = Permissions(
     listen=False,
 )
 
+# Get the ID and Token for the bot
+load_dotenv("./.env")
+bot_ID = getenv("STOAT_ID")
+bot_token = getenv("STOAT_TOKEN")
 
 # Instantiate the bot
 bot = ChaosBot(
@@ -54,7 +55,7 @@ bot = ChaosBot(
     description="Multi-purpose Stoat bot\nAuthor: ChaosHerald2\nUsing Stoat.py, hosted locally.\nPorted from Discord",
     self_bot=True,
     strip_after_prefix=True,
-    token=getenv("STOAT_TOKEN"),
+    token=bot_token,
     owner_ids=["01KHMEY5VV8E9NF0NY840EFF4R"],
 )
 
@@ -63,20 +64,9 @@ bot = ChaosBot(
 @bot.listen()
 async def on_ready(event: ReadyEvent):
     """When bot is connected to Stoat"""
-    # If the ClientSession for GET/POST requests isn't initialized, do so here
-    if bot.client:
-        await bot.client.close()
-    bot.client = Client()
-
     # Set up loop for recurring daily/weekly functions
-    if bot.loop:
-        print("LOOP EXISTS")
-        bot.loop.stop()
-        bot.loop.close()
-    else:
-        print("LOOP DOESN'T EXIST")
-    bot.loop = asyncio.new_event_loop()
-    bot.loop.run_forever()
+    if active_loop := asyncio.get_running_loop():
+        bot.loop = active_loop
 
     # Add functionality from gears
     for filename in listdir("./gears"):
@@ -107,8 +97,9 @@ async def on_ready(event: ReadyEvent):
 
 # Handle closing of processes when the bot shuts down
 def teardown():
-    bot.loop.stop()
-    bot.loop.close()
+    if bot.loop:
+        bot.loop.stop()
+        bot.loop.close()
 
 
 atexit.register(teardown)
@@ -125,7 +116,7 @@ async def on_member_remove(event: ServerMemberRemoveEvent):
             db.commit()
 
     # If user is this bot, delete all collections pertaining to that server
-    if event.user_id == getenv("STOAT_ID"):
+    if event.user_id == bot_ID:
         with db.cursor() as cur:
             cur.execute("DELETE FROM servers WHERE server_id = %s", (event.server_id))
             db.commit()
@@ -135,4 +126,4 @@ async def on_member_remove(event: ServerMemberRemoveEvent):
 log()
 
 # Run Discord bot
-bot.run(getenv("STOAT_TOKEN"))
+bot.run(token=bot_token, asyncio_debug=True)
