@@ -72,7 +72,7 @@ target_games: dict = {
 # Create a client session to be used for all async HTTP requests
 class Client:
     def __init__(self) -> None:
-        self._session = ClientSession()  # TODO: Fix this <-
+        self._session = ClientSession()
 
     async def __aenter__(self):
         return self
@@ -125,7 +125,7 @@ class ChaosBot(commands.Bot):
 
     # Extend the existing setup_hook behaviour
     async def setup_hook(self):
-        super().setup_hook()
+        await super().setup_hook()
         # If the ClientSession for GET/POST requests isn't initialized, do so here
         if self.client:
             await self.client.close()
@@ -139,8 +139,7 @@ def check_permitted_servers(ctx: commands.Context):
 # Function to get the time in seconds until a given date and hour
 def delay_until(day: str, hour: int):
     if (
-        day.capitalize() not in days
-        or day.capitalize() != "Tomorrow"
+        (day.capitalize() not in days and day.capitalize() != "Tomorrow")
         or hour < 0
         or hour > 24
     ):
@@ -156,7 +155,7 @@ def delay_until(day: str, hour: int):
         )
 
     # Add the hours onto the date to make the datetime
-    full_datetime = datetime(
+    full_datetime: datetime = datetime(
         year=target_day.year,
         month=target_day.month,
         day=target_day.day,
@@ -165,8 +164,13 @@ def delay_until(day: str, hour: int):
     )
 
     # Get the time from the target datetime to now in seconds
-    delta = full_datetime - datetime.now(tz=pytz.utc).date()
+    delta = full_datetime - datetime.now(tz=pytz.utc)
     delay: float = delta.total_seconds()
+    # If target has already passed, look for the day next week
+    if delay < 0:
+        full_datetime += timedelta(days=7)
+        delta = full_datetime - datetime.now(tz=pytz.utc)
+        delay: float = delta.total_seconds()
     return delay
 
 
