@@ -408,7 +408,7 @@ class Audit(commands.Gear, name="Audit"):
     # Record when a member's roles, display name, or server avatar are updated
     @commands.Gear.listener()
     async def on_member_update(self, on: stoat.ServerMemberUpdateEvent):
-        server_audit_log = self.fetch_audit_channel(on.server_id)
+        server_audit_log = self.fetch_audit_channel(on.after.server_id)
 
         if (not server_audit_log) or (on.before.bot) or (on.after.bot):
             return
@@ -519,7 +519,7 @@ class Audit(commands.Gear, name="Audit"):
     # Records when a message is deleted
     @commands.Gear.listener()
     async def on_message_delete(self, on: stoat.MessageDeleteEvent):
-        server_audit_log = self.fetch_audit_channel(on.server_id)
+        server_audit_log = self.fetch_audit_channel(on.message.server.id)
 
         if (not server_audit_log) or (on.message.author.bot):
             return
