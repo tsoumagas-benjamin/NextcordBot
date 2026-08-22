@@ -53,12 +53,13 @@ class Information(commands.Gear, name="Information"):
     @commands.command(name="commands")
     async def get_commands(self, ctx: commands.Context):
         """Get a list of commands for the bot"""
-        commands_list = self.bot.get_application_commands()
-        cmds = []
-        for cmd in commands_list:
-            cmds.append(cmd.qualified_name)
-        cmds.sort()
-        bot_commands = ", ".join(cmds)
+        command_list = self.bot.walk_commands()
+        commands = []
+        for command in command_list:
+            if isinstance(command, stoat.ext.commands.command):
+                commands.append(command.qualified_name)
+        commands.sort()
+        bot_commands = ", ".join(commands)
         embed = stoat.SendableEmbed(
             title=f"{self.bot.user.name} Commands",
             description=bot_commands,
