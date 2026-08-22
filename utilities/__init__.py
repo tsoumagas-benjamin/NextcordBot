@@ -10,7 +10,7 @@ import psycopg
 import pytz
 from aiohttp import ClientSession
 from dotenv import load_dotenv
-from stoat import SendableEmbed
+from stoat import Permissions, SendableEmbed
 from stoat.ext import commands
 
 # Name our access to our client database
@@ -38,6 +38,41 @@ days = {
     "Saturday": 5,
     "Sunday": 6,
 }
+
+# Define bot permissions, see: enums / UserPermissions
+permissions = Permissions(
+    manage_channels=False,
+    manage_server=False,
+    manage_roles=True,
+    manage_customization=True,
+    kick_members=True,
+    ban_members=True,
+    timeout_members=True,
+    assign_roles=True,
+    change_nickname=False,
+    manage_nicknames=False,
+    change_avatar=False,
+    remove_avatars=False,
+    view_channel=False,
+    read_message_history=True,
+    send_messages=True,
+    manage_messages=True,
+    manage_webhooks=False,
+    create_invites=False,
+    send_embeds=True,
+    upload_files=True,
+    use_masquerade=False,
+    react=True,
+    mention_everyone=False,
+    mention_roles=False,
+    connect=False,
+    speak=False,
+    video=False,
+    mute_members=False,
+    deafen_members=False,
+    move_members=False,
+    listen=False,
+)
 
 permitted_servers: list[str] = [
     "01KHMHCAEVX96FMMA3FHEXZEKF",

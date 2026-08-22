@@ -4,45 +4,10 @@ import atexit
 from os import getenv, listdir
 
 from dotenv import load_dotenv
-from stoat import Permissions, ReadyEvent, ServerMemberRemoveEvent
+from stoat import ReadyEvent, ServerMemberRemoveEvent
 
 from log import log
 from utilities import ChaosBot, collection_names, db
-
-# Define bot permissions, see: enums / UserPermissions
-permissions = Permissions(
-    manage_channels=False,
-    manage_server=False,
-    manage_roles=True,
-    manage_customization=True,
-    kick_members=True,
-    ban_members=True,
-    timeout_members=True,
-    assign_roles=True,
-    change_nickname=False,
-    manage_nicknames=False,
-    change_avatar=False,
-    remove_avatars=False,
-    view_channel=False,
-    read_message_history=True,
-    send_messages=True,
-    manage_messages=True,
-    manage_webhooks=False,
-    create_invites=False,
-    send_embeds=True,
-    upload_files=True,
-    use_masquerade=False,
-    react=True,
-    mention_everyone=False,
-    mention_roles=False,
-    connect=False,
-    speak=False,
-    video=False,
-    mute_members=False,
-    deafen_members=False,
-    move_members=False,
-    listen=False,
-)
 
 # Get the ID and Token for the bot
 load_dotenv("./.env")
@@ -95,16 +60,6 @@ async def on_ready(event: ReadyEvent):
     print(f"We have set up as {bot.user}")
 
 
-# Handle closing of processes when the bot shuts down
-def teardown():
-    if bot.loop:
-        bot.loop.stop()
-        bot.loop.close()
-
-
-atexit.register(teardown)
-
-
 # Handle when a user leaves a server
 @bot.listen()
 async def on_member_remove(event: ServerMemberRemoveEvent):
@@ -120,6 +75,16 @@ async def on_member_remove(event: ServerMemberRemoveEvent):
         with db.cursor() as cur:
             cur.execute("DELETE FROM servers WHERE server_id = %s", (event.server_id))
             db.commit()
+
+
+# Handle closing of processes when the bot shuts down
+def teardown():
+    if bot.loop:
+        bot.loop.stop()
+        bot.loop.close()
+
+
+atexit.register(teardown)
 
 
 # Tell the bot to store logs in nextcord.log
