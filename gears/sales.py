@@ -57,14 +57,14 @@ class Sales(commands.Gear, name="Sales"):
             schedule(
                 delay=delay_until("Tomorrow", 12),
                 loop_time=time_from_string(1, "day"),
-                function=self.get_sales(),
+                function=self.get_sales,
             )
         )
         prune_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Tomorrow", 0),
                 loop_time=time_from_string(1, "day"),
-                function=self.prune_sales(),
+                function=self.prune_sales,
             )
         )
         await sale_task

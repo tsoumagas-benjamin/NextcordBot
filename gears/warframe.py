@@ -579,28 +579,28 @@ class Warframe(commands.Gear, name="Warframe"):
             schedule(
                 delay=delay_until("Sunday", 21),
                 loop_time=time_from_string(1, "week"),
-                function=self.archimedea_timer(),
+                function=self.archimedea_timer,
             )
         )
         archon_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Sunday", 21),
                 loop_time=time_from_string(1, "week"),
-                function=self.archon_timer(),
+                function=self.archon_timer,
             )
         )
         baro_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Friday", 10),
                 loop_time=time_from_string(1, "week"),
-                function=self.baro_timer(),
+                function=self.baro_timer,
             )
         )
         duviri_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Sunday", 21),
                 loop_time=time_from_string(1, "week"),
-                function=self.duviri_timer(),
+                function=self.duviri_timer,
             )
         )
         await archimedea_task

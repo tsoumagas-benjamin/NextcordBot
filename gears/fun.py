@@ -174,28 +174,28 @@ class Fun(commands.Gear, name="Fun"):
             schedule(
                 delay=delay_until("Tomorrow", 8),
                 loop_time=time_from_string(1, "day"),
-                function=self.daily_positivity(),
+                function=self.daily_positivity,
             )
         )
         animal_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Tomorrow", 12),
                 loop_time=time_from_string(1, "day"),
-                function=self.daily_animal(),
+                function=self.daily_animal,
             )
         )
         joke_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Tomorrow", 16),
                 loop_time=time_from_string(1, "day"),
-                function=self.daily_joke(),
+                function=self.daily_joke,
             )
         )
         meme_task = asyncio.create_task(
             schedule(
                 delay=delay_until("Tomorrow", 20),
                 loop_time=time_from_string(1, "day"),
-                function=self.daily_meme(),
+                function=self.daily_meme,
             )
         )
         await positivity_task
