@@ -284,7 +284,7 @@ class Audit(commands.Gear, name="Audit"):
     # Record when a server updates
     @commands.Gear.listener()
     async def on_server_update(self, on: stoat.ServerUpdateEvent):
-        server_audit_log = self.fetch_audit_channel(on.server_id)
+        server_audit_log = self.fetch_audit_channel(on.server.id)
 
         if not server_audit_log:
             return
@@ -348,7 +348,7 @@ class Audit(commands.Gear, name="Audit"):
     # Record when an emoji is removed, added, or updated
     @commands.Gear.listener()
     async def on_server_emojis_update(self, on: stoat.ServerUpdateEvent):
-        server_audit_log = self.fetch_audit_channel(on.server_id)
+        server_audit_log = self.fetch_audit_channel(on.server.id)
 
         if (not server_audit_log) or (on.server.emojis is stoat.UNDEFINED):
             return
