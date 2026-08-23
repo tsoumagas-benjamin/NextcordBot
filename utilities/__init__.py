@@ -171,7 +171,7 @@ class ChaosBot(commands.Bot):
             self.loop = active_loop
 
         # Add functionality from gears
-        for filename in listdir("../gears"):
+        for filename in listdir("./gears"):
             if filename.endswith(".py"):
                 try:
                     # Reload the gear if it already exists, otherwise load the new gear
