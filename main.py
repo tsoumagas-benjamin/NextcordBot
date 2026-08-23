@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-import asyncio
 import atexit
-from os import getenv, listdir
+from os import getenv
 
 from dotenv import load_dotenv
-from stoat import ReadyEvent, ServerMemberRemoveEvent
+from stoat import ServerMemberRemoveEvent
 
 from log import log
-from utilities import ChaosBot, collection_names, db
+from utilities import ChaosBot, db
 
 # Get the ID and Token for the bot
 load_dotenv("./.env")
@@ -23,41 +22,6 @@ bot = ChaosBot(
     token=bot_token,
     owner_ids=["01KHMEY5VV8E9NF0NY840EFF4R"],
 )
-
-
-# Define bot behaviour on start up
-@bot.listen()
-async def on_ready(event: ReadyEvent):
-    """When bot is connected to Stoat"""
-    # Set up loop for recurring daily/weekly functions
-    if active_loop := asyncio.get_running_loop():
-        bot.loop = active_loop
-
-    # Add functionality from gears
-    for filename in listdir("./gears"):
-        if filename.endswith(".py"):
-            try:
-                # Reload the gear if it already exists, otherwise load the new gear
-                if bot.get_gear(filename[:-3]):
-                    await bot.reload_extension(f"gears.{filename[:-3]}")
-                else:
-                    await bot.load_extension(f"gears.{filename[:-3]}")
-            except Exception as e:
-                print(f"Gear Error: {e}")
-
-    # Print loaded extensions
-    print(f"Extensions: {bot.extensions.keys()}")
-
-    # Print commands per gear
-    for gear_name, gear in bot.gears.items():
-        gear_commands = gear.get_commands()
-        print(f"{gear_name}: {[command.name for command in gear_commands]}")
-
-    # Print database collections
-    print(f"Collections: {collection_names}")
-
-    # Print that the bot is set up
-    print(f"We have set up as {bot.user}")
 
 
 # Handle when a user leaves a server

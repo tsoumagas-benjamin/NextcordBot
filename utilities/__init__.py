@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from json import loads
-from os import getenv
+from os import getenv, listdir
 from re import sub
 
 import psycopg
@@ -165,6 +165,36 @@ class ChaosBot(commands.Bot):
         if self.client:
             await self.client.close()
         self.client = Client()
+
+        # Set up loop for recurring daily/weekly functions
+        if active_loop := asyncio.get_running_loop():
+            self.loop = active_loop
+
+        # Add functionality from gears
+        for filename in listdir("../gears"):
+            if filename.endswith(".py"):
+                try:
+                    # Reload the gear if it already exists, otherwise load the new gear
+                    if self.get_gear(filename[:-3]):
+                        await self.reload_extension(f"gears.{filename[:-3]}")
+                    else:
+                        await self.load_extension(f"gears.{filename[:-3]}")
+                except Exception as e:
+                    print(f"Gear Error: {e}")
+
+        # Print loaded extensions
+        print(f"Extensions: {self.extensions.keys()}")
+
+        # Print commands per gear
+        for gear_name, gear in self.gears.items():
+            gear_commands = gear.get_commands()
+            print(f"{gear_name}: {[command.name for command in gear_commands]}")
+
+        # Print database collections
+        print(f"Collections: {collection_names}")
+
+        # Print that the bot is set up
+        print(f"We have set up as {self.user}")
 
 
 def check_permitted_servers(ctx: commands.Context):
