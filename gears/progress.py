@@ -9,8 +9,6 @@ from stoat.ext import commands
 
 from utilities import ChaosBot, db
 
-# TODO: TypeError: issubclass() arg 1 must be a class"
-
 
 # Create a gear for levelling
 class Progress(commands.Gear, name="Progress"):
@@ -118,15 +116,15 @@ class Progress(commands.Gear, name="Progress"):
         threshold = (level + 1) * 25
         return xp >= threshold
 
-    @commands.Gear.listener("on_message")
-    async def xp(self, message: stoat.Message):
-        if message.author.bot:
+    @commands.Gear.listener()
+    async def xp(self, on: stoat.MessageCreateEvent):
+        if on.message.author.bot:
             return
-        author = message.author
-        server = message.server
-        channel = message.channel
-        ctx = message.ctx
-        person = message.author
+        author = on.message.author
+        server = on.message.server
+        channel = on.message.channel
+        ctx = on.message.ctx
+        person = on.message.author
 
         with db.cursor() as cur:
             cur.execute(
@@ -148,7 +146,7 @@ class Progress(commands.Gear, name="Progress"):
                 level = user[0]
                 if level > 999:
                     return
-                xp = user[1] + self.give_xp(message)
+                xp = user[1] + self.give_xp(on.message)
                 if self.level_up(xp, level):
                     level += 1
                     xp = 0
@@ -157,14 +155,16 @@ class Progress(commands.Gear, name="Progress"):
                             f"**{author.display_name}** reached level {level} on {server}!"
                         )
                     else:
-                        await self.card_maker(self, ctx, person.id, message.server.id)
+                        await self.card_maker(
+                            self, ctx, person.id, on.message.server.id
+                        )
                 cur.execute(
                     "UPDATE levels SET (server_level, xp) = (%s, %s) WHERE member_id = %s",
                     (level, xp, user[0]),
                 )
                 db.commit()
 
-    @stoat.slash_command()
+    @commands.command()
     async def level(
         self,
         ctx: commands.Context,
@@ -187,7 +187,7 @@ class Progress(commands.Gear, name="Progress"):
         else:
             return await self.card_maker(self, ctx, person.id, ctx.server.id)
 
-    @stoat.slash_command()
+    @commands.command()
     async def leaderboard(self, ctx: commands.Context):
         """Gets the top 10 highest ranked people on the server"""
         server = ctx.server
