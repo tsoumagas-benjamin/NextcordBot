@@ -113,7 +113,7 @@ class Fun(commands.Gear, name="Fun"):
         try:
             # Create daily animal post
 
-            animal_picture = await self.get_animal(self.bot.client)
+            animal_picture = await self.get_animal()
             animal = stoat.SendableEmbed(
                 title="😊\tHere's your cute animal of the day!\t😊",
                 color="blue",
@@ -121,7 +121,7 @@ class Fun(commands.Gear, name="Fun"):
             )
 
             # Get the animal embed and send it to each daily channel
-            await self.send_dailies(self.bot, animal)
+            await self.send_dailies(animal)
 
         except Exception as e:
             print(f"The animal task error is: {e}")
@@ -129,7 +129,7 @@ class Fun(commands.Gear, name="Fun"):
     async def daily_joke(self):
         # Gets daily joke
         try:
-            joke, category = await self.get_joke(self.bot.client)
+            joke, category = await self.get_joke()
             joke_embed = stoat.SendableEmbed(
                 title=f"{category} Joke",
                 description=joke,
@@ -137,7 +137,7 @@ class Fun(commands.Gear, name="Fun"):
             )
 
             # Get the joke embed and send it to each daily channel
-            await self.send_dailies(self.bot, joke_embed)
+            await self.send_dailies(joke_embed)
 
         except Exception as e:
             print(f"The animal task error is: {e}")
@@ -145,17 +145,17 @@ class Fun(commands.Gear, name="Fun"):
     async def daily_meme(self):
         try:
             # Get the meme embed and send it to each daily channel
-            meme_embed: stoat.SendableEmbed = await self.get_meme(self.bot.client)
-            await self.send_dailies(self.bot, meme_embed)
+            meme_embed: stoat.SendableEmbed = await self.get_meme()
+            await self.send_dailies(meme_embed)
         except Exception as e:
             print(f"The meme task error is: {e}")
 
     async def daily_positivity(self):
         try:
             # Creates daily positivity post
-            advice = await self.get_advice(self.bot.client)
-            affirm = await self.get_affirmation(self.bot.client)
-            quote = await self.get_quote(self.bot.client)
+            advice = await self.get_advice()
+            affirm = await self.get_affirmation()
+            quote = await self.get_quote()
             positivity = stoat.SendableEmbed(
                 title="😊\tHere's your reminder to stay positive today!\t😊",
                 description=f"Advice of the day:\t{advice}\nAffirmation of the day:\t{affirm}\n{quote}",
@@ -163,7 +163,7 @@ class Fun(commands.Gear, name="Fun"):
             )
 
             # Get the positivity embed and send it to each daily channel
-            await self.send_dailies(self.bot, positivity)
+            await self.send_dailies(positivity)
 
         except Exception as e:
             print(f"The positivity task error is: {e}")
@@ -206,13 +206,13 @@ class Fun(commands.Gear, name="Fun"):
     @commands.command()
     async def animal(self, ctx: commands.Context):
         """Get a random animal picture"""
-        result = await self.get_animal(self.bot.client)
+        result = await self.get_animal()
         await ctx.channel.send(attachments=[result])
 
     @commands.command()
     async def advice(self, ctx: commands.Context):
         """Get a random piece of advice"""
-        advice = await self.get_advice(self.bot.client)
+        advice = await self.get_advice()
         embed = stoat.SendableEmbed(
             title=f"Advice for {ctx.author.display_name}:",
             description=f"{advice}.",
