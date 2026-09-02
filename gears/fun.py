@@ -1,19 +1,14 @@
 #!/usr/bin/env python
-import asyncio
 from io import BytesIO
 from random import choice
 
+import pytz
 import stoat
+from apscheduler.triggers.cron import CronTrigger
 from stoat.ext import commands
 from youtubesearchpython.future import VideosSearch
 
-from utilities import (
-    ChaosBot,
-    db,
-    delay_until,
-    schedule,
-    time_from_string,
-)
+from utilities import ChaosBot, db
 
 
 class Fun(commands.Gear, name="Fun"):
@@ -27,7 +22,22 @@ class Fun(commands.Gear, name="Fun"):
         self.daily_channels = self.fetch_daily_channels()
 
     async def gear_load(self):
-        self.bot.loop.create_task(await self.daily_fun())
+        self.bot.scheduler.add_job(
+            func=self.daily_positivity,
+            trigger=CronTrigger(hour=8, timezone=pytz.UTC),
+        )
+        self.bot.scheduler.add_job(
+            func=self.daily_animal,
+            trigger=CronTrigger(hour=12, timezone=pytz.UTC),
+        )
+        self.bot.scheduler.add_job(
+            func=self.daily_joke,
+            trigger=CronTrigger(hour=16, timezone=pytz.UTC),
+        )
+        self.bot.scheduler.add_job(
+            func=self.daily_meme,
+            trigger=CronTrigger(hour=20, timezone=pytz.UTC),
+        )
 
     def fetch_daily_channels(self) -> list[str]:
         with db.cursor() as cur:
@@ -167,41 +177,6 @@ class Fun(commands.Gear, name="Fun"):
 
         except Exception as e:
             print(f"The positivity task error is: {e}")
-
-    # Handle all daily fun tasks
-    async def daily_fun(self):
-        positivity_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Tomorrow", 8),
-                loop_time=time_from_string(1, "day"),
-                function=self.daily_positivity,
-            )
-        )
-        animal_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Tomorrow", 12),
-                loop_time=time_from_string(1, "day"),
-                function=self.daily_animal,
-            )
-        )
-        joke_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Tomorrow", 16),
-                loop_time=time_from_string(1, "day"),
-                function=self.daily_joke,
-            )
-        )
-        meme_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Tomorrow", 20),
-                loop_time=time_from_string(1, "day"),
-                function=self.daily_meme,
-            )
-        )
-        await positivity_task
-        await animal_task
-        await joke_task
-        await meme_task
 
     @commands.command()
     async def animal(self, ctx: commands.Context):

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import asyncio
 from datetime import date, datetime, timedelta
 from json import dumps
 from os import getenv
 
 import pytz
 import stoat
+from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from stoat.ext import commands
 
@@ -13,10 +13,7 @@ from utilities import (
     ChaosBot,
     check_permitted_servers,
     db,
-    delay_until,
-    schedule,
     target_games,
-    time_from_string,
 )
 
 
@@ -32,7 +29,12 @@ class Sales(commands.Gear, name="Sales"):
         self.sales_channels = self.fetch_sales_channels()
 
     async def gear_load(self):
-        self.bot.loop.create_task(await self.daily_sales())
+        self.bot.scheduler.add_job(
+            self.get_sales, trigger=CronTrigger(hour=12, timezone=pytz.UTC)
+        )
+        self.bot.scheduler.add_job(
+            self.prune_sales, trigger=CronTrigger(hour=0, timezone=pytz.UTC)
+        )
 
     def fetch_sales_channels(self) -> list[str]:
         with db.cursor() as cur:
@@ -50,25 +52,6 @@ class Sales(commands.Gear, name="Sales"):
         with db.cursor() as cur:
             cur.execute("DELETE FROM sales WHERE expiry < now() OR cut <= 0")
             db.commit()
-
-    # Handle all daily sales related tasks
-    async def daily_sales(self):
-        sale_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Tomorrow", 12),
-                loop_time=time_from_string(1, "day"),
-                function=self.get_sales,
-            )
-        )
-        prune_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Tomorrow", 0),
-                loop_time=time_from_string(1, "day"),
-                function=self.prune_sales,
-            )
-        )
-        await sale_task
-        await prune_task
 
     # Function to return a formatted URL to use for the GET request
     def get_base_url(self, substring: str):

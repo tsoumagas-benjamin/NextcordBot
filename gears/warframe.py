@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import pytz
 import stoat
+from apscheduler.triggers.cron import CronTrigger
 from stoat.ext import commands
 
 from utilities import (
@@ -17,7 +18,6 @@ from utilities import (
 )
 
 # Credit to the WFCD for the Warframe worldstate parser API found here: https://api.warframestat.us/pc
-# TODO: Wait on baro for related function
 
 
 class Warframe(commands.Gear, name="Warframe"):
@@ -117,7 +117,22 @@ class Warframe(commands.Gear, name="Warframe"):
         self.daily_wf_channels = self.fetch_warframe_channels()
 
     async def gear_load(self):
-        self.bot.loop.create_task(await self.daily_warframe())
+        self.bot.scheduler.add_job(
+            self.archimedea_timer,
+            trigger=CronTrigger(day_of_week=6, hour=21, timezone=pytz.UTC),
+        )
+        self.bot.scheduler.add_job(
+            self.archon_timer,
+            trigger=CronTrigger(day_of_week=6, hour=21, timezone=pytz.UTC),
+        )
+        self.bot.scheduler.add_job(
+            self.baro_timer,
+            trigger=CronTrigger(day_of_week=4, hour=10, timezone=pytz.UTC),
+        )
+        self.bot.scheduler.add_job(
+            self.duviri_timer,
+            trigger=CronTrigger(day_of_week=6, hour=21, timezone=pytz.UTC),
+        )
 
     def fetch_warframe_channels(self) -> list[str]:
         with db.cursor() as cur:
@@ -572,41 +587,6 @@ class Warframe(commands.Gear, name="Warframe"):
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
             await daily_wf_channel.send(embeds=[self.duviri_status()])
-
-    # Handle all weekly Warframe tasks
-    async def daily_warframe(self):
-        archimedea_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Sunday", 21),
-                loop_time=time_from_string(1, "week"),
-                function=self.archimedea_timer,
-            )
-        )
-        archon_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Sunday", 21),
-                loop_time=time_from_string(1, "week"),
-                function=self.archon_timer,
-            )
-        )
-        baro_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Friday", 10),
-                loop_time=time_from_string(1, "week"),
-                function=self.baro_timer,
-            )
-        )
-        duviri_task = asyncio.create_task(
-            schedule(
-                delay=delay_until("Sunday", 21),
-                loop_time=time_from_string(1, "week"),
-                function=self.duviri_timer,
-            )
-        )
-        await archimedea_task
-        await archon_task
-        await baro_task
-        await duviri_task
 
     @commands.command()
     async def alerts(self, ctx: commands.Context):
