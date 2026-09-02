@@ -15,10 +15,12 @@ def log():
     # Create logger
     client_logger = logging.getLogger("stoat.client")
     state_logger = logging.getLogger("stoat.state")
+    schedule_logger = logging.getLogger("apscheduler")
 
     # Add filters
     client_logger.addFilter(LogFilter())
     state_logger.addFilter(LogFilter())
+    schedule_logger = logging.getLogger("apscheduler")
 
     # Format log entries
     FORMAT = "[{asctime}][{filename}][{lineno:3}][{funcName}][{levelname}] {message}"
@@ -34,9 +36,12 @@ def log():
     # Add file handler to logger
     client_logger.addHandler(console_handler)
     state_logger.addHandler(console_handler)
+    schedule_logger.addHandler(console_handler)
 
     client_logger.addHandler(file_handler)
     state_logger.addHandler(file_handler)
+    schedule_logger.addHandler(file_handler)
 
     client_logger.setLevel(logging.DEBUG)
     state_logger.setLevel(logging.DEBUG)
+    schedule_logger.setLevel(logging.DEBUG)
