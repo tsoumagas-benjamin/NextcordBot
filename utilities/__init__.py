@@ -9,6 +9,7 @@ from re import sub
 import psycopg
 import pytz
 from aiohttp import ClientSession
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from stoat import Permissions, SendableEmbed
 from stoat.ext import commands
@@ -18,16 +19,6 @@ load_dotenv(".env")
 db: psycopg.Connection = psycopg.connect(
     f"dbname={getenv('DB_NAME')} user={getenv('DB_USER')}"
 )
-
-# Get all the existing collections
-collection_names = [
-    "birthdays",
-    "channels",
-    "levels",
-    "members",
-    "servers",
-    "users",
-]
 
 days = {
     "Monday": 0,
@@ -156,7 +147,7 @@ class ChaosBot(commands.Bot):
 
         # Custom bot attributes are set below
         self.client: Client = None
-        self.loop: asyncio.AbstractEventLoop | None = None
+        self.scheduler: AsyncIOScheduler = None
 
     # Extend the existing setup_hook behaviour
     async def setup_hook(self):
@@ -166,9 +157,8 @@ class ChaosBot(commands.Bot):
             await self.client.close()
         self.client = Client()
 
-        # Set up loop for recurring daily/weekly functions
-        if active_loop := asyncio.get_running_loop():
-            self.loop = active_loop
+        # Initialize the scheduler
+        self.scheduler = AsyncIOScheduler()
 
         # Add functionality from gears
         for filename in listdir("./gears"):
@@ -187,14 +177,11 @@ class ChaosBot(commands.Bot):
 
         # Print commands per gear
         for gear_name, gear in self.gears.items():
-            gear_commands = gear.get_commands()
-            print(f"{gear_name}: {[command.name for command in gear_commands]}")
-
-        # Print database collections
-        print(f"Collections: {collection_names}")
-
-        # Print that the bot is set up
-        print(f"We have set up as {self.user}")
+            try:
+                gear_commands = gear.get_commands()
+                print(f"{gear_name}: {[command.name for command in gear_commands]}")
+            except TypeError as e:
+                print(e)
 
 
 def check_permitted_servers(ctx: commands.Context):
