@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import asyncio
-import atexit
 from os import getenv
 
 from dotenv import load_dotenv
@@ -48,16 +46,6 @@ async def on_member_remove(event: ServerMemberRemoveEvent):
         with db.cursor() as cur:
             cur.execute("DELETE FROM servers WHERE server_id = %s", (event.server_id))
             db.commit()
-
-
-# Handle closing of processes when the bot shuts down
-def teardown():
-    if bot.loop:
-        bot.loop.stop()
-        bot.loop.close()
-
-
-atexit.register(teardown)
 
 
 # Tell the bot to store logs in nextcord.log
