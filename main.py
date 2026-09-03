@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+import asyncio
 import atexit
 from os import getenv
 
 from dotenv import load_dotenv
-from stoat import ServerMemberRemoveEvent
+from stoat import ReadyEvent, ServerMemberRemoveEvent
 
 from log import log
 from utilities import ChaosBot, db
@@ -22,6 +23,14 @@ bot = ChaosBot(
     token=bot_token,
     owner_ids=["01KHMEY5VV8E9NF0NY840EFF4R"],
 )
+
+
+# Handle when the bot is ready
+@bot.listen()
+async def on_ready(event: ReadyEvent):
+
+    # Print that the bot is set up
+    print(f"We have set up as {bot.user.name}")
 
 
 # Handle when a user leaves a server
@@ -55,4 +64,4 @@ atexit.register(teardown)
 log()
 
 # Run Discord bot
-bot.run(token=bot_token, asyncio_debug=True)
+bot.run(token=bot_token)
