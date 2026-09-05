@@ -19,7 +19,9 @@ class Progress(commands.Gear, name="Progress"):
     def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
 
-    async def card_maker(self, ctx: commands.Context, user_id: int, server_id: int):
+    async def card_maker(
+        self, channel: stoat.TextableChannel, user_id: str, server_id: str
+    ):
         # Get user information from ID
         with db.cursor() as cur:
             cur.execute(
@@ -33,7 +35,7 @@ class Progress(commands.Gear, name="Progress"):
             username = user.display_name
             avatar_url = user.avatar.url()
         else:
-            return await ctx.send(f"Could not get user {user_id}!")
+            return await channel.send(f"Could not get user {user_id}!")
 
         # Gather information for the level card
         threshold = (level + 1) * 25
@@ -100,7 +102,9 @@ class Progress(commands.Gear, name="Progress"):
         # Create and save the file and send it
         async with aiofiles.open(result, mode="wb") as file:
             background.save(file, "PNG")
-            await ctx.send(attachments=[stoat.Asset(filename="../assets/result.png")])
+            await channel.send(
+                attachments=[stoat.Asset(filename="../assets/result.png")]
+            )
 
     # Generates xp for a given message
     def give_xp(self, message: stoat.Message):
@@ -123,7 +127,6 @@ class Progress(commands.Gear, name="Progress"):
         author = on.message.author
         server = on.message.server
         channel = on.message.channel
-        ctx = on.message.ctx
         person = on.message.author
 
         with db.cursor() as cur:
@@ -150,14 +153,7 @@ class Progress(commands.Gear, name="Progress"):
                 if self.level_up(xp, level):
                     level += 1
                     xp = 0
-                    if ctx is None:
-                        await channel.send(
-                            f"**{author.display_name}** reached level {level} on {server}!"
-                        )
-                    else:
-                        await self.card_maker(
-                            self, ctx, person.id, on.message.server.id
-                        )
+                    await self.card_maker(channel, person.id, on.message.server.id)
                 cur.execute(
                     "UPDATE levels SET (server_level, xp) = (%s, %s) WHERE member_id = %s",
                     (level, xp, user[0]),
@@ -185,7 +181,7 @@ class Progress(commands.Gear, name="Progress"):
         if not record:
             return await ctx.send(f"{person.display_name} has no levels or XP!")
         else:
-            return await self.card_maker(self, ctx, person.id, ctx.server.id)
+            return await self.card_maker(self, ctx.channel, person.id, ctx.server.id)
 
     @commands.command()
     async def leaderboard(self, ctx: commands.Context):
