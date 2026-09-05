@@ -25,7 +25,7 @@ class Information(commands.Gear, name="Information"):
 
     @commands.Gear.listener()
     async def vote_add(self, on: stoat.MessageReactEvent):
-        if on.message.author.bot or on.message_id != self.id:
+        if on.message_id != self.id or self.bot.get_user(on.user_id).bot:
             return
         # Update count based on reaction
         elif on.emoji == "✅":
@@ -35,7 +35,7 @@ class Information(commands.Gear, name="Information"):
 
     @commands.Gear.listener()
     async def vote_remove(self, on: stoat.MessageUnreactEvent):
-        if on.message.author.bot or on.message_id != self.id:
+        if on.message_id != self.id or self.bot.get_user(on.user_id).bot:
             return
         # Update count based on reaction
         elif on.emoji == "✅":
