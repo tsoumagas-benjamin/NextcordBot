@@ -1,6 +1,5 @@
 #! usr/bin/env python
 from io import BytesIO
-from uuid import uuid7
 
 import aiofiles
 import stoat
