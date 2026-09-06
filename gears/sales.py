@@ -25,8 +25,6 @@ class Sales(commands.Gear, name="Sales"):
 
     def __init__(self, bot: ChaosBot) -> None:
         self.bot = bot
-        # Fetch the list of sales channels to post sale information to
-        self.sales_channels = self.fetch_sales_channels()
 
     async def gear_load(self):
         self.bot.scheduler.add_job(
@@ -191,14 +189,14 @@ class Sales(commands.Gear, name="Sales"):
     # Function to send formatted content to sales channels
     async def send_sale_info(self, sale_embed: stoat.SendableEmbed):
         # Send a meme to each of the daily channels
-        for channel_id in self.sales_channels:
+        for channel_id in self.fetch_sales_channels():
             sales_channel = self.bot.get_channel(channel_id)
             if sales_channel is None:
                 sales_channel = await self.bot.fetch_channel(channel_id)
             await sales_channel.send(embeds=[sale_embed()])
 
     # Function to store information on a game's sale cut and expiry in the database
-    def store_sale(self, game_id: str, cut: int, expiry_date: date):
+    async def store_sale(self, game_id: str, cut: int, expiry_date: date):
         # Overwrite the existing sale info or create a new entry if there is nothing
         with db.cursor() as cur:
             cur.execute(
@@ -209,7 +207,7 @@ class Sales(commands.Gear, name="Sales"):
             db.commit()
 
         # Write to the servers about the new best sale
-        self.send_sale_info(self.format_sale(game_id))
+        await self.send_sale_info(self.format_sale(game_id))
 
     # Function to compare a game's current best price against the database or append it if it's better
     async def compare_cut(self, game_id: str):
