@@ -25,9 +25,8 @@ class Progress(commands.Gear, name="Progress"):
         # Get user information from ID
         with db.cursor() as cur:
             cur.execute(
-                """SELECT server_level, xp FROM levels WHERE member_id IN 
-                (SELECT member_id FROM members WHERE (server_id, user_id) = (%s, %s)) LIMIT 1""",
-                (server_id, user_id),
+                """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s) LIMIT 1""",
+                (user_id, server_id),
             )
             level, xp = cur.fetchone()
         if self.bot.get_user(user_id):
@@ -127,36 +126,36 @@ class Progress(commands.Gear, name="Progress"):
         author = on.message.author
         server = on.message.server
         channel = on.message.channel
-        person = on.message.author
 
         with db.cursor() as cur:
             cur.execute(
-                """SELECT server_level, xp FROM levels WHERE member_id IN 
-                (SELECT member_id FROM members WHERE (server_id, user_id) = (%s, %s)) LIMIT 1""",
-                (server.id, author.id),
+                """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s) LIMIT 1""",
+                (author.id, server.id),
             )
             user = cur.fetchone()
             # If member is not registered, create an entry for them
             if not user:
                 cur.execute(
-                    "INSERT INTO levels (member_id, server_level, xp) VALUES (%s, %s, %s)",
-                    (uuid7(), 0, 0),
+                    "INSERT INTO members (user_id, server_id, level, xp) VALUES (%s, %s, %s, %s)",
+                    (author.id, server.id, 0, 0),
                 )
+                db.commit()
+                return
             # Increase user xp and level as necessary
             else:
                 # Prevent users gaining more xp if they are already at the maximum level
                 # For now, cap at 1000 but can go up to 13107 if needed
                 level = user[0]
-                if level > 999:
+                if level > 1000:
                     return
                 xp = user[1] + self.give_xp(on.message)
                 if self.level_up(xp, level):
                     level += 1
                     xp = 0
-                    await self.card_maker(channel, person.id, on.message.server.id)
+                    await self.card_maker(channel, author.id, server.id)
                 cur.execute(
-                    "UPDATE levels SET (server_level, xp) = (%s, %s) WHERE member_id = %s",
-                    (level, xp, user[0]),
+                    "UPDATE members SET (level, xp) = (%s, %s) WHERE (user_id, server_id) = (%s, %s)",
+                    (level, xp, author.id, server.id),
                 )
                 db.commit()
 
@@ -190,18 +189,17 @@ class Progress(commands.Gear, name="Progress"):
         # Sort the database for the highest 10 scoring on the server
         with db.cursor() as cur:
             cur.execute(
-                """SELECT l.server_level, l.xp, m.user_id FROM levels l
-                INNER JOIN members m ON (m.member_id, m.server_id) = (l.member_id, %s)
-                ORDER BY l.server_level DESC NULLS LAST, l.xp DESC NULLS LAST LIMIT 10""",
-                [server.id],
+                """SELECT user_id, level, xp FROM members
+                ORDER BY level DESC NULLS LAST, xp DESC NULLS LAST LIMIT 10"""
             )
             leaders = cur.fetchall()
         embed_description = ""
         for position, leader in enumerate(leaders):
             # Get relevant information for each of the top 10
-            level = leader[0]
-            xp = leader[1]
-            user_id = leader[2]
+            user_id = leader[0]
+            level = leader[1]
+            xp = leader[2]
+
             user = self.bot.get_user(user_id) if self.bot.get_user(user_id) else user_id
             username = user.display_name if self.bot.get_user(user_id) else user_id
             threshold = (level + 1) * 25
