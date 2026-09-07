@@ -207,7 +207,7 @@ class Warframe(commands.Gear, name="Warframe"):
         alert_embed = stoat.SendableEmbed(
             title="Alerts",
             description=alert_info,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return alert_embed
@@ -238,7 +238,7 @@ class Warframe(commands.Gear, name="Warframe"):
         archon_embed = stoat.SendableEmbed(
             title=f"{current_archon} is here between {archon_duration}",
             description="\n".join(hunt_info),
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return archon_embed
@@ -264,7 +264,7 @@ class Warframe(commands.Gear, name="Warframe"):
             baro_embed = stoat.SendableEmbed(
                 title=f"Baro Ki'Teer will be at {baro_location} between {baro_duration}",
                 description="Inventory Unknown",
-                color=stoat.Colour.from_rgb(0, 128, 255),
+                color="blue",
             )
             return baro_embed
         else:
@@ -284,7 +284,7 @@ class Warframe(commands.Gear, name="Warframe"):
         baro_embed = stoat.SendableEmbed(
             title=f"Baro Ki'Teer is at {baro_location} between {baro_duration}",
             description=baro_list,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return baro_embed
@@ -313,7 +313,7 @@ class Warframe(commands.Gear, name="Warframe"):
         calendar_embed = stoat.SendableEmbed(
             title=f"{calendar['season']} - {calendar_duration}",
             description=f"{calendar_rewards}",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return calendar_embed
@@ -366,7 +366,7 @@ class Warframe(commands.Gear, name="Warframe"):
         da_embed = stoat.SendableEmbed(
             title=f"Deep Archimedea {da_duration}",
             description=da_description,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return da_embed
@@ -404,7 +404,7 @@ class Warframe(commands.Gear, name="Warframe"):
         duviri_embed = stoat.SendableEmbed(
             title="Weekly Duviri Rewards",
             description=duviri_description,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return duviri_embed
@@ -457,7 +457,7 @@ class Warframe(commands.Gear, name="Warframe"):
         nw_embed = stoat.SendableEmbed(
             title=f"{nw_title} - {nw_duration}",
             description=f"Rewards:\n{challenge_info}",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return nw_embed
@@ -493,7 +493,7 @@ class Warframe(commands.Gear, name="Warframe"):
         sortie_embed = stoat.SendableEmbed(
             title=sortie_title,
             description=sortie_missions,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return sortie_embed
@@ -546,7 +546,7 @@ class Warframe(commands.Gear, name="Warframe"):
         ta_embed = stoat.SendableEmbed(
             title=f"Temporal Archimedea {ta_duration}",
             description=ta_description,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         return ta_embed
@@ -646,7 +646,7 @@ class Warframe(commands.Gear, name="Warframe"):
         progenitor_embed = stoat.SendableEmbed(
             title="Progenitor Elements",
             description=progenitor_description,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         await ctx.send(embeds=[progenitor_embed])

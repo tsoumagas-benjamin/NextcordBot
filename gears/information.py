@@ -63,7 +63,7 @@ class Information(commands.Gear, name="Information"):
         embed = stoat.SendableEmbed(
             title=f"{self.bot.user.name} Commands",
             description=bot_commands,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
         await ctx.channel.send(embeds=[embed])
 
@@ -93,7 +93,7 @@ class Information(commands.Gear, name="Information"):
         embed = stoat.SendableEmbed(
             title=f"{member.display_name} {member.mention}",
             description=member.mention,
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
             icon_url=member.server_avatar.url(),
         )
 
@@ -106,7 +106,7 @@ class Information(commands.Gear, name="Information"):
         embed = stoat.SendableEmbed(
             title="Ping",
             description=f"{round((stoat.Shard.last_ping_at - stoat.Shard.last_pong_at) * 1000)}ms",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
 
         await ctx.channel.send(embeds=[embed])
@@ -122,7 +122,7 @@ class Information(commands.Gear, name="Information"):
         poll = stoat.SendableEmbed(
             title=poll_title,
             description="Yes\t✅\nNo\t❌",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
         )
         message = await ctx.channel.send(embeds=[poll])
         # Set initial reactions
@@ -150,18 +150,12 @@ class Information(commands.Gear, name="Information"):
     @commands.check(check_permitted_servers)
     async def socials(self, ctx: commands.Context):
         """Returns links to Chaos's socials"""
-        embed = stoat.SendableEmbed(
-            title="Chaos' Socials", color=stoat.Colour.from_rgb(0, 128, 255)
-        )
-        twitch_link = "https://www.twitch.tv/chaosherald2"
+        velora_link = "https://velora.tv/ChaosHerald2"
         youtube_link = "https://www.youtube.com/channel/UC147mLQpBtta_ykHdo-fZDw"
-        embed.set_footer(
-            icon_url=ctx.channel.server.icon.url(), text=ctx.channel.server.name
-        )
         embed = stoat.SendableEmbed(
             title="Chaos' Socials",
-            description=f"Twitch: {twitch_link}\nYouTube: {youtube_link}\n{ctx.channel.server.name}",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            description=f"Velora: {velora_link}\nYouTube: {youtube_link}\n{ctx.channel.server.name}",
+            color="blue",
             icon_url=ctx.channel.server.icon.url(),
         )
         await ctx.channel.send(embeds=[embed])
@@ -189,7 +183,7 @@ class Information(commands.Gear, name="Information"):
         embed = stoat.SendableEmbed(
             title=f"{self.bot.user.name} Statistics",
             description=f"{serving_info}{commands_info}{ctx.channel.server.name}",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
             icon_url=ctx.channel.server.icon.url(),
         )
         await ctx.channel.send(embeds=[embed])

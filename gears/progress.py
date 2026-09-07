@@ -212,7 +212,7 @@ class Progress(commands.Gear, name="Progress"):
         embed_description += f"Requested by {ctx.author.display_name}"
         embed = stoat.SendableEmbed(
             title=f"{server.name} Leaderboard",
-            color=stoat.Colour.from_rgb(0, 128, 255),
+            color="blue",
             icon_url=ctx.server.icon.url(),
         )
         await ctx.send(embeds=[embed])
