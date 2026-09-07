@@ -46,10 +46,10 @@ class Progress(commands.Gear, name="Progress"):
         bar_mask = "../assets/bar_mask.png"
 
         # Get the avatar of the target user from URL
-        avatar_bytes = await self.bot.client.get_bytes(avatar_url)
-        avatar: ImageFile.ImageFile = Image.open(BytesIO(avatar_bytes)).resize(
-            (170, 170)
-        )
+        avatar_bytes: bytes = await self.bot.client.get_bytes(avatar_url)
+        avatar: ImageFile.ImageFile = Image.open(
+            BytesIO(initial_bytes=avatar_bytes)
+        ).resize((170, 170))
 
         # Overlay the text card and avatar on the level card
         background: ImageFile.ImageFile = Image.open(levelcard)
