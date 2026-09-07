@@ -34,12 +34,12 @@ async def on_ready(event: ReadyEvent):
 # Handle when a user leaves a server
 @bot.listen()
 async def on_member_remove(event: ServerMemberRemoveEvent):
-    # If user and this bot have no mutual servers, remove their member information
-    mutual_servers: list[str] | None = await event.member.mutual_server_ids()
-    if mutual_servers is None:
-        with db.cursor() as cur:
-            cur.execute("DELETE FROM members WHERE user_id = %s", (event.user_id))
-            db.commit()
+    with db.cursor() as cur:
+        cur.execute(
+            "DELETE FROM members WHERE (user_id, server_id) = (%s, %s)",
+            (event.user_id, event.server_id),
+        )
+        db.commit()
 
     # If user is this bot, delete all collections pertaining to that server
     if event.user_id == bot_ID:
