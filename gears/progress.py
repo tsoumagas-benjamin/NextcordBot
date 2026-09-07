@@ -128,6 +128,11 @@ class Progress(commands.Gear, name="Progress"):
 
         with db.cursor() as cur:
             cur.execute(
+                """INSERT INTO servers (server_id) VALUES (%s) ON CONFLICT (server_id) DO NOTHING""",
+                [server.id],
+            )
+            db.commit()
+            cur.execute(
                 """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s) LIMIT 1""",
                 (author.id, server.id),
             )
@@ -169,9 +174,8 @@ class Progress(commands.Gear, name="Progress"):
             person = ctx.user
         with db.cursor() as cur:
             cur.execute(
-                """SELECT server_level, xp FROM levels WHERE member_id IN 
-                (SELECT member_id FROM members WHERE (server_id, user_id) = (%s, %s)) LIMIT 1""",
-                (ctx.server.id, person.id),
+                """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s) LIMIT 1""",
+                (person.id, ctx.server.id),
             )
             record = cur.fetchone()
 

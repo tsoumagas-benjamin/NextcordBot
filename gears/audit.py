@@ -46,6 +46,10 @@ class Audit(commands.Gear, name="Audit"):
 
         with db.cursor() as cur:
             cur.execute(
+                """INSERT INTO servers (server_id) VALUES (%s) ON CONFLICT (server_id) DO NOTHING""",
+                [ctx.server.id],
+            )
+            cur.execute(
                 """INSERT INTO channels (server_id, category, channel_id) VALUES (%s, %s, %s) 
                 ON CONFLICT (server_id, category) DO UPDATE SET channel_id = EXCLUDED.channel_id""",
                 (ctx.server.id, "audit", channel_id),
