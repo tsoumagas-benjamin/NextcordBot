@@ -188,11 +188,9 @@ class Audit(commands.Gear, name="Audit"):
 
         attribute_changes: str = ""
 
-        for attribute in targeted_attributes:
-            if attribute.value[0] != attribute.value[1]:
-                attribute_changes += (
-                    f"{attribute.key}:\t{attribute.value[0]} -> {attribute.value[1]}\n"
-                )
+        for key, val in targeted_attributes.items():
+            if val[0] != val[1]:
+                attribute_changes += f"{key}:\t{val[0]} -> {val[1]}\n"
 
         # If all targeted attributes are unchanged, return before sending embed
         if attribute_changes == "":
