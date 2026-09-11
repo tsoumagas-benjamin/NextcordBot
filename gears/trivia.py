@@ -9,36 +9,45 @@ from utilities import ChaosBot
 
 
 class TriviaQuestion:
-    def __init__(self, content: str, wrong: list[str], right: str, score: dict):
-        self.content = content
+    def __init__(
+        self, title: str, question: str, wrong: list[str], right: str, score: dict
+    ):
+        self.title = title
+        self.question = question
         self.wrong = wrong
         self.right = right
         self.score = score
-        self.options = shuffle(wrong.append(right))
+        self.options = self.generate_options()
         self.choices = ["🇦", "🇧", "🇨", "🇩"]
         self.correct = ""
         self.message = None
         self.responders = []
 
+    def generate_options(self):
+        options = self.wrong.copy()
+        options.append(self.right)
+        shuffle(options)
+        return options
+
     def generate_embed(self) -> stoat.SendableEmbed:
         # Add in a prompt for players and options
-        embed_description = "Type the number for your choice!\n"
+        embed_description = f"**{self.question}**\n\n"
         for x in range(len(self.options)):
             if self.options[x] == self.right:
                 self.correct = self.choices[x]
             embed_description += f"{self.choices[x]}: {self.options[x]}\n"
 
-        embed = stoat.SendableEmbed(title=self.content, description=embed_description)
+        embed = stoat.SendableEmbed(title=self.title, description=embed_description)
 
         return embed
 
     # Function to react to embed message with 1-4 emojis
-    def generate_choices(self, message: stoat.Message):
+    async def generate_choices(self, message: stoat.Message):
         self.message = message
-        self.message.react("🇦")
-        self.message.react("🇧")
-        self.message.react("🇨")
-        self.message.react("🇩")
+        await self.message.react("🇦")
+        await self.message.react("🇧")
+        await self.message.react("🇨")
+        await self.message.react("🇩")
 
     @commands.Gear.listener()
     async def handle_response(self, to: stoat.MessageReactEvent):
@@ -68,7 +77,7 @@ class TriviaSetup:
         self.difficulties: list[str] = []
         self.score: dict = {}
         self.embed: stoat.SendableEmbed = stoat.SendableEmbed(
-            title="Trivia Results", color=stoat.Colour.from_rgb(0, 128, 255)
+            title="Trivia Results", color="blue"
         )
 
     def get_score(self):
@@ -127,15 +136,18 @@ class Trivia(commands.Gear, name="Trivia"):
         await ctx.channel.send("Trivia Time!")
         # Each round takes 10 seconds with each trivia question having it's own embed
         for x in range(10):
-            content = f"**{ts.questions[x]}**\n> {ts.categories[x]} - {ts.difficulties[x].title()}"
+            question = f"**{ts.questions[x]}**"
+            trivia_title = (
+                f"Question {x + 1}: {ts.categories[x]} - {ts.difficulties[x].title()}"
+            )
             trivia_question = TriviaQuestion(
-                content, ts.incorrects[x], ts.corrects[x], ts.score
+                trivia_title, question, ts.incorrects[x], ts.corrects[x], ts.score
             )
             trivia_embed: stoat.SendableEmbed = trivia_question.generate_embed()
             question_message: stoat.Message = await ctx.channel.send(
                 embeds=[trivia_embed]
             )
-            trivia_question.generate_choices(question_message)
+            await trivia_question.generate_choices(question_message)
             await sleep(10)
         # Send game results embed
         score_embed = ts.display_score(ctx.server)
