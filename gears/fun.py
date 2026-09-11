@@ -102,7 +102,7 @@ class Fun(commands.Gear, name="Fun"):
         return embed
 
     # Function to fetch the quote from an API
-    async def get_quote(self):
+    async def get_quote(self) -> str:
         text_data = await self.bot.client.get_text("https://zenquotes.io/api/random")
         quote = f"*{text_data[0]['q']}*  -  ***{text_data[0]['a']}***"
         return quote
@@ -190,7 +190,7 @@ class Fun(commands.Gear, name="Fun"):
         advice = await self.get_advice()
         embed = stoat.SendableEmbed(
             title=f"Advice for {ctx.author.display_name}:",
-            description=f"{advice}.",
+            description=f"{advice}",
             color="blue",
         )
         await ctx.channel.send(embeds=[embed])
@@ -312,7 +312,7 @@ class Fun(commands.Gear, name="Fun"):
     @commands.command()
     async def inspire(self, ctx: commands.Context):
         """Command to return an inspirational quote"""
-        quote = self.get_quote()
+        quote: str = self.get_quote()
         embed = stoat.SendableEmbed(title="", description=quote, color="blue")
         await ctx.channel.send(embeds=[embed])
 
@@ -331,7 +331,7 @@ class Fun(commands.Gear, name="Fun"):
     @commands.command()
     async def meme(self, ctx: commands.Context):
         """Gets a random meme from r/memes, r/dankmemes, or r/me_irl"""
-        meme_post = self.get_meme()
+        meme_post = await self.get_meme()
         await ctx.channel.send(embeds=[meme_post])
 
     @commands.command()
