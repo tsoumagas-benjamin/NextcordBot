@@ -25,10 +25,10 @@ class Audit(commands.Gear, name="Audit"):
     def fetch_audit_channel(self, server_id: str):
         with db.cursor() as cur:
             cur.execute(
-                "SELECT channel_id FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                "SELECT channel_id FROM channels WHERE (server_id, category) = (%s, %s)",
                 (server_id, "audit"),
             )
-            server_audit_log = cur.fetchone()
+            server_audit_log = cur.fetchone()[0]
         # If there exists a audit log for the server, return the channel ID field, otherwise return None
         if server_audit_log:
             return server_audit_log
@@ -72,7 +72,7 @@ class Audit(commands.Gear, name="Audit"):
         # Removes the audit log channel if it exists
         with db.cursor() as cur:
             cur.execute(
-                "DELETE FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                "DELETE FROM channels WHERE (server_id, category) = (%s, %s)",
                 (ctx.server.id, "audit"),
             )
             db.commit()
