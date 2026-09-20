@@ -2,6 +2,7 @@
 # Common utilities that may be shared across files
 import asyncio
 from datetime import datetime, timedelta
+from io import BytesIO
 from json import loads
 from os import getenv, listdir
 from re import sub
@@ -108,8 +109,12 @@ class Client:
 
     async def get_bytes(self, url) -> bytes:
         async with self._session.get(url) as r:
-            output = r.read()
-            return output
+            if r.status in range(200, 299):
+                img = BytesIO(await r.read())
+                b = img.getvalue()
+            else:
+                print(f"Could not get bytes. Error: {r.status}")
+            return b
 
     async def get_text(self, url):
         async with self._session.get(url) as r:
