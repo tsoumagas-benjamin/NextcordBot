@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from io import BytesIO
 from random import choice
 
 import pytz
@@ -50,16 +49,17 @@ class Fun(commands.Gear, name="Fun"):
         return text_data["slip"]["advice"]
 
     async def get_affirmation(self):
-        text_data = await self.bot.client.get_text("https://www.affirmations.dev/")
+        text_data = await self.bot.client.get_json("https://www.affirmations.dev/")
         return text_data["affirmation"]
 
     async def get_animal(self):
         choices = ["birb", "cats", "dogs", "sadcat", "sillycat"]
         animal_choice = choice(choices)
-        json_data = await self.bot.client.get_json(
+        json_data = await self.bot.client.get_text(
             f"https://api.alexflipnote.dev/{animal_choice}"
         )
-        return json_data["file"]
+        result: str = json_data["file"]
+        return result
 
     async def get_joke(self):
         json_data = await self.bot.client.get_json(
@@ -126,8 +126,8 @@ class Fun(commands.Gear, name="Fun"):
             animal_picture = await self.get_animal()
             animal = stoat.SendableEmbed(
                 title="😊\tHere's your cute animal of the day!\t😊",
+                description=animal_picture,
                 color="blue",
-                media=animal_picture,
             )
 
             # Get the animal embed and send it to each daily channel
@@ -182,14 +182,14 @@ class Fun(commands.Gear, name="Fun"):
     async def animal(self, ctx: commands.Context):
         """Get a random animal picture"""
         result = await self.get_animal()
-        await ctx.channel.send(attachments=[result])
+        await ctx.channel.send(result)
 
     @commands.command()
     async def advice(self, ctx: commands.Context):
         """Get a random piece of advice"""
         advice = await self.get_advice()
         embed = stoat.SendableEmbed(
-            title=f"Advice for {ctx.author.display_name}:",
+            title=f"Advice for {ctx.author.name}:",
             description=f"{advice}",
             color="blue",
         )
@@ -198,9 +198,9 @@ class Fun(commands.Gear, name="Fun"):
     @commands.command()
     async def affirmation(self, ctx: commands.Context):
         """Get a random affirmation"""
-        affirmation = self.get_affirmation()
+        affirmation = await self.get_affirmation()
         embed = stoat.SendableEmbed(
-            title=f"Affirmation for {ctx.author.display_name}:",
+            title=f"Affirmation for {ctx.author.name}:",
             description=f"{affirmation}.",
             color="blue",
         )
@@ -245,8 +245,6 @@ class Fun(commands.Gear, name="Fun"):
     async def embed(
         self,
         ctx: commands.Context,
-        *,
-        title: str | None = None,
         message: str | None = None,
     ):
         """Create an embed. Type [] in your string to indicate any blank lines you want added to your message."""
@@ -254,32 +252,20 @@ class Fun(commands.Gear, name="Fun"):
         if message is not None:
             split_message = message.split("[]")
             message = "\n".join(split_message)
-        embed = stoat.SendableEmbed(
-            title=title,
+        user_embed = stoat.SendableEmbed(
+            title="",
             description=message,
             color="blue",
         )
-        await ctx.channel.send(embeds=[embed])
+        await ctx.channel.send(embeds=[user_embed])
 
     @commands.command()
     @commands.has_permissions(manage_customization=True)
     async def getemoji(self, ctx: commands.Context, url: str, *, name: str):
         """Add an emoji to the server"""
-        async with self.bot.client.get_bytes(url) as resp:
-            try:
-                media = BytesIO(await resp.read())
-                val = media.getvalue()
-                if resp.status in range(200, 299):
-                    emoji = await ctx.channel.server.create_custom_emoji(
-                        image=val, name=name
-                    )
-                    await ctx.channel.send(f"Added emoji {name} {emoji}!")
-                else:
-                    await ctx.channel.send(
-                        f"Could not add emoji. Status: {resp.status}."
-                    )
-            except stoat.HTTPException:
-                await ctx.channel.send("The emoji is too big!")
+        resp = await self.bot.client.get_bytes(url)
+        emoji = await ctx.channel.server.create_server_emoji(name=name, image=resp)
+        await ctx.channel.send(f"Added emoji {name} {emoji}!")
 
     @commands.command()
     async def guessme(self, ctx: commands.Context, *, name: str):
@@ -312,14 +298,14 @@ class Fun(commands.Gear, name="Fun"):
     @commands.command()
     async def inspire(self, ctx: commands.Context):
         """Command to return an inspirational quote"""
-        quote: str = self.get_quote()
-        embed = stoat.SendableEmbed(title="", description=quote, color="blue")
+        quote: str = await self.get_quote()
+        embed = stoat.SendableEmbed(title=None, description=quote, color="blue")
         await ctx.channel.send(embeds=[embed])
 
     @commands.command()
     async def joke(self, ctx: commands.Context):
         """Gets a random joke"""
-        joke, category = self.get_joke()
+        joke, category = await self.get_joke()
         joke_embed = stoat.SendableEmbed(
             title=f"{category} Joke",
             description=joke,
@@ -338,8 +324,8 @@ class Fun(commands.Gear, name="Fun"):
     async def youtube(self, ctx: commands.Context, *, message: str):
         """Search youtube for a video"""
         videos_search = VideosSearch(message, limit=1)
-        video_results = await videos_search.next()["result"]
-        video_link = video_results[0]["link"]
+        video_results = await videos_search.next()
+        video_link = video_results["result"][0]["link"]
         await ctx.channel.send(video_link)
 
     @commands.command()
@@ -348,7 +334,7 @@ class Fun(commands.Gear, name="Fun"):
         """Takes in a channel link/ID and sets it as the automated daily content channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
-        channel_id = int(channel_link.split("/")[-1])
+        channel_id = str(channel_link.split("/")[-1])
 
         with db.cursor() as cur:
             cur.execute(
@@ -377,7 +363,7 @@ class Fun(commands.Gear, name="Fun"):
         # Removes the daily channel if it exists
         with db.cursor() as cur:
             cur.execute(
-                "DELETE FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                "DELETE FROM channels WHERE (server_id, category) = (%s, %s)",
                 (ctx.server.id, "daily"),
             )
             db.commit()
