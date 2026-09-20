@@ -129,10 +129,10 @@ class Sales(commands.Gear, name="Sales"):
                 return title
 
     # Function to format content to be sent to sales channels(see best_price())
-    def format_sale(self, game_id: str):
+    async def format_sale(self, game_id: str):
         # Get the title and sale information for the game
         game_title = self.get_title(game_id)
-        sale_json = self.get_sale_content(game_id)
+        sale_json = await self.get_sale_content(game_id)
 
         # Gather information on the historic lows for the game's price
         historic_low = sale_json[0]["historyLow"]
@@ -181,7 +181,7 @@ class Sales(commands.Gear, name="Sales"):
         current_sale_embed = stoat.SendableEmbed(
             title="Current Sales on IsThereAnyDeal",
             description=sale_description,
-            colour="blue",
+            color="blue",
         )
 
         return current_sale_embed
@@ -207,7 +207,7 @@ class Sales(commands.Gear, name="Sales"):
             db.commit()
 
         # Write to the servers about the new best sale
-        await self.send_sale_info(self.format_sale(game_id))
+        await self.send_sale_info(await self.format_sale(game_id))
 
     # Function to compare a game's current best price against the database or append it if it's better
     async def compare_cut(self, game_id: str):
@@ -259,7 +259,7 @@ class Sales(commands.Gear, name="Sales"):
         """Takes in a channel link/ID and sets it as the automated sales channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
-        sales_channel_id = int(channel.split("/")[-1])
+        sales_channel_id = str(channel.split("/")[-1])
 
         # Updates the sales channel for the server or inserts it if one doesn't exist currently
         with db.cursor() as cur:
@@ -269,7 +269,7 @@ class Sales(commands.Gear, name="Sales"):
             )
             cur.execute(
                 "INSERT INTO channels (server_id, category, channel_id) VALUES (%s, %s, %s) ON CONFLICT (server_id, category) DO UPDATE SET channel_id = EXCLUDED.channel_id",
-                (ctx.server_id, "sales", sales_channel_id),
+                (ctx.server.id, "sales", sales_channel_id),
             )
             db.commit()
 
@@ -315,7 +315,7 @@ class Sales(commands.Gear, name="Sales"):
             print(f"Best_price error: {e}")
 
         # Retrieve the embed with formatted information about the sale
-        sale_embed = self.format_sale(game_id)
+        sale_embed = await self.format_sale(game_id)
 
         await ctx.send(embeds=[sale_embed])
 
