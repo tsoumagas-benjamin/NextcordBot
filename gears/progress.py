@@ -171,17 +171,17 @@ class Progress(commands.Gear, name="Progress"):
     ):
         """Check level of a person, defaults to checking your own level"""
         if not person:
-            person = ctx.user
+            person = ctx.author
         with db.cursor() as cur:
             cur.execute(
-                """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s) LIMIT 1""",
+                """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s)""",
                 (person.id, ctx.server.id),
             )
-            record = cur.fetchone()
+            record = cur.fetchone()[0]
 
         # Return XP and level or nothing if user is not registered
         if not record:
-            return await ctx.send(f"{person.display_name} has no levels or XP!")
+            return await ctx.send(f"{person.name} has no levels or XP!")
         else:
             return await self.card_maker(self, ctx.channel, person.id, ctx.server.id)
 
@@ -203,15 +203,19 @@ class Progress(commands.Gear, name="Progress"):
             level = leader[1]
             xp = leader[2]
 
-            user = self.bot.get_user(user_id) if self.bot.get_user(user_id) else user_id
-            username = user.display_name if self.bot.get_user(user_id) else user_id
+            if self.bot.get_user(user_id):
+                user = self.bot.get_user(user_id)
+            else:
+                user = await self.bot.fetch_user(user_id)
+            username = user.name
             threshold = (level + 1) * 25
             embed_description += (
                 f"{position + 1}. {username}\tLevel: {level}\t{xp}/{threshold} XP\n"
             )
-        embed_description += f"Requested by {ctx.author.display_name}"
+        embed_description += f"Requested by {ctx.author.name}"
         embed = stoat.SendableEmbed(
             title=f"{server.name} Leaderboard",
+            description=embed_description,
             color="blue",
             icon_url=ctx.server.icon.url(),
         )
