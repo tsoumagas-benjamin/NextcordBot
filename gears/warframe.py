@@ -160,6 +160,15 @@ class Warframe(commands.Gear, name="Warframe"):
         # Access specifically the information about alerts
         alert_data = wf_world["alerts"]
 
+        # Return early if there are no alerts
+        if alert_data is None:
+            alert_embed = stoat.SendableEmbed(
+                title="Alerts",
+                description="No current alerts",
+                color="blue",
+            )
+            return alert_embed
+
         # Store all the alert information to pass to the embed
         alert_info = ""
 
@@ -206,7 +215,7 @@ class Warframe(commands.Gear, name="Warframe"):
         # Create an embed object to return with alert information
         alert_embed = stoat.SendableEmbed(
             title="Alerts",
-            description=alert_info,
+            description=alert_info if alert_info else "No Active Alerts",
             color="blue",
         )
 
@@ -226,18 +235,18 @@ class Warframe(commands.Gear, name="Warframe"):
         archon_duration = f"{archon_start} - {archon_end}"
 
         # Get the current Archon and the missions leading up to them
-        hunt_info = []
+        hunt_info = archon_duration
         current_archon = archon_info["boss"]
         archon_missions = archon_info["missions"]
 
         # Append each mission type and node
         for mission in archon_missions:
-            hunt_info.append(f"{mission['type']} - {mission['node']}")
+            hunt_info += f"\n{mission['type']} - {mission['node']}"
 
         # Create an embed object to return with Archon information
         archon_embed = stoat.SendableEmbed(
-            title=f"{current_archon} is here between {archon_duration}",
-            description="\n".join(hunt_info),
+            title=f"{current_archon} is here",
+            description=hunt_info,
             color="blue",
         )
 
@@ -258,7 +267,7 @@ class Warframe(commands.Gear, name="Warframe"):
 
         # Get Baro's location and inventory
         baro_location = baro["location"] if baro["location"] else "Location Unknown"
-        baro_inventory = baro["inventory"]
+        baro_inventory = baro["inventory"] if baro["inventory"] else None
         if not baro_inventory:
             # Create an embed object to return with Baro information
             baro_embed = stoat.SendableEmbed(
@@ -268,7 +277,7 @@ class Warframe(commands.Gear, name="Warframe"):
             )
             return baro_embed
         else:
-            baro_list = []
+            baro_list = ""
 
             # Iterate Baro's inventory
             for item in baro_inventory:
@@ -278,7 +287,7 @@ class Warframe(commands.Gear, name="Warframe"):
                 name = item["item"]
 
                 # Format everything into one line and append it to the list
-                baro_list.append(f"{name} - {ducats} D {wf_credits} C")
+                baro_list += f"{name} - {ducats} D {wf_credits} C\n"
 
         # Create an embed object to return with Baro information
         baro_embed = stoat.SendableEmbed(
@@ -297,7 +306,7 @@ class Warframe(commands.Gear, name="Warframe"):
         # Access specifically the information about the calendar in 1999
         calendar = wf_world["calendar"]
 
-        # Get the start and end time for this Duviri week as dynamic timestamps
+        # Get the start and end time for this week as dynamic timestamps
         calendar_start = epoch_convert(calendar["activation"])
         calendar_end = epoch_convert(calendar["expiry"])
         calendar_duration = f"{calendar_start} - {calendar_end}"
@@ -324,7 +333,7 @@ class Warframe(commands.Gear, name="Warframe"):
         wf_world = await self.request_wf_info()
 
         # Access specifically the information about sorties
-        da = wf_world["archimedeas"][0]
+        da = wf_world["archimedeas"][1]
 
         # Get the start and end times as dynamic timestamps
         da_start = epoch_convert(da["activation"])
@@ -335,21 +344,21 @@ class Warframe(commands.Gear, name="Warframe"):
         da_missions = da["missions"]
 
         # Store information on the deep archimedea
-        da_description = ""
+        da_description = da_duration
 
         # Get each mission's faction, type, and modifiers
         for mission in da_missions:
             # Add mission type and enemy faction to the embed
             da_faction = mission["faction"]
             da_type = mission["missionType"]
-            da_description += f"**{da_type}** - {da_faction}\n"
+            da_description += f"\n**{da_type}** - {da_faction}\n"
 
             # Handle risks and deviations
             da_dev = mission["deviation"]["name"]
             da_risk = mission["risks"][0]["name"]
             eda_risk = mission["risks"][1]["name"]
 
-            da_description += f"Deviations {da_dev}\n"
+            da_description += f"Deviations: {da_dev}\n"
             da_description += f"Risk: {da_risk}\n"
             da_description += f"Elite Risk: {eda_risk}\n"
 
@@ -364,7 +373,7 @@ class Warframe(commands.Gear, name="Warframe"):
 
         # Create the Deep Archimedea embed
         da_embed = stoat.SendableEmbed(
-            title=f"Deep Archimedea {da_duration}",
+            title="Deep Archimedea",
             description=da_description,
             color="blue",
         )
@@ -380,8 +389,8 @@ class Warframe(commands.Gear, name="Warframe"):
         duviri = wf_world["duviriCycle"]
 
         # Look in both regular and steel path variants for reward choices
-        regular_choices = duviri["choices"][0]
-        steel_path_choices = duviri["choices"][1]
+        regular_choices = duviri["choices"][0]["choices"]
+        steel_path_choices = duviri["choices"][1]["choices"]
 
         rewards = []
         sp_rewards = []
@@ -504,7 +513,7 @@ class Warframe(commands.Gear, name="Warframe"):
         wf_world = await self.request_wf_info()
 
         # Access specifically the information about sorties
-        ta = wf_world["archimedeas"][1]
+        ta = wf_world["archimedeas"][0]
 
         # Get the start and end times as dynamic timestamps
         ta_start = epoch_convert(ta["activation"])
@@ -515,21 +524,21 @@ class Warframe(commands.Gear, name="Warframe"):
         ta_missions = ta["missions"]
 
         # Store information on the Temporal Archimedea
-        ta_description = ""
+        ta_description = ta_duration
 
         # Get each mission's faction, type, and modifiers
         for mission in ta_missions:
             # Add mission type and enemy faction to the embed
             ta_faction = mission["faction"]
             ta_type = mission["missionType"]
-            ta_description += f"**{ta_type}** - {ta_faction}\n"
+            ta_description += f"\n**{ta_type}** - {ta_faction}\n"
 
             # Handle risks and deviations
             ta_dev = mission["deviation"]["name"]
             ta_risk = mission["risks"][0]["name"]
             eta_risk = mission["risks"][1]["name"]
 
-            ta_description += f"Deviations {ta_dev}\n"
+            ta_description += f"Deviations: {ta_dev}\n"
             ta_description += f"Risk: {ta_risk}\n"
             ta_description += f"Elite Risk: {eta_risk}\n"
 
@@ -544,7 +553,7 @@ class Warframe(commands.Gear, name="Warframe"):
 
         # Create the Deep Archimedea embed
         ta_embed = stoat.SendableEmbed(
-            title=f"Temporal Archimedea {ta_duration}",
+            title="Temporal Archimedea",
             description=ta_description,
             color="blue",
         )
@@ -603,6 +612,12 @@ class Warframe(commands.Gear, name="Warframe"):
         await ctx.send(embeds=[baro_embed])
 
     @commands.command()
+    async def calendar(self, ctx: commands.Context):
+        """Get information on the 1999 Calendar"""
+        calendar_embed = await self.calendar_status()
+        await ctx.send(embeds=[calendar_embed])
+
+    @commands.command()
     async def deep_archimedea(self, ctx: commands.Context):
         """Get information on Deep Archimedea"""
         deep_embed = await self.deep_archimedea_status()
@@ -657,7 +672,7 @@ class Warframe(commands.Gear, name="Warframe"):
         """Takes in a channel link/ID and sets it as the automated Warframe channel for this server."""
 
         # Get the channel ID as an integer whether the user inputs a channel link or channel ID
-        wf_channel_id = int(channel.split("/")[-1])
+        wf_channel_id = str(channel.split("/")[-1])
 
         with db.cursor() as cur:
             cur.execute(
@@ -672,7 +687,7 @@ class Warframe(commands.Gear, name="Warframe"):
             db.commit()
 
         # Let users know where the updated channel is
-        updated_channel = ctx.server.get_channel(ctx.channel.channel_id)
+        updated_channel = ctx.server.get_channel(wf_channel_id)
         if updated_channel:
             return await ctx.channel.send(
                 f"Warframe content for this server will go to {updated_channel.name}."
@@ -686,7 +701,7 @@ class Warframe(commands.Gear, name="Warframe"):
         # Removes the warframe channel if it exists
         with db.cursor() as cur:
             cur.execute(
-                "DELETE FROM channels WHERE (server_id, category) = (%s, %s) LIMIT 1",
+                "DELETE FROM channels WHERE (server_id, category) = (%s, %s)",
                 (ctx.server.id, "warframe"),
             )
             db.commit()
