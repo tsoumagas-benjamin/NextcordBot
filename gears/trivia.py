@@ -91,19 +91,23 @@ class TriviaSetup:
 
     def display_score(self, server: stoat.Server):
         # Sort player scores in descending order and convert back to dictionary
-        sorted_score = sorted(self.score.items(), key=lambda x: x[1], reverse=True)
-        sorted_dict = dict(sorted_score)
+        sorted_dict = {
+            key: val
+            for key, val in sorted(
+                self.score.items(), key=lambda item: item[1], reverse=True
+            )
+        }
         # Add each player and their score to game results embed
-        score_fields = ""
+        score_fields = "Score:"
         for name, score in sorted_dict.items():
             total = str(score) + "pts"
-            score_fields += f"{name}\t{total}\n"
+            score_fields += f"\n{name}\t{total}"
         # Send game results embed
         score_embed = stoat.SendableEmbed(
             title=f"Trivia Results for {server.name}",
             description=score_fields,
             color="purple",
-            icon_url=server.icon.url,
+            icon_url=server.icon.url(),
         )
         return score_embed
 
