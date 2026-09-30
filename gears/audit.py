@@ -553,7 +553,7 @@ class Audit(commands.Gear, name="Audit"):
     # Records when a message is edited
     @commands.Gear.listener()
     async def on_message_edit(self, on: stoat.MessageUpdateEvent):
-        server_audit_log = self.fetch_audit_channel(on.server_id)
+        server_audit_log = self.fetch_audit_channel(on.message.server.id)
 
         if (not server_audit_log) or (on.before.author.bot) or (on.before.author.bot):
             return
