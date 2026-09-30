@@ -41,11 +41,13 @@ class Moderation(commands.Gear, name="Moderation"):
     @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx: commands.Context, amount: int = 1):
         """Clear a specified amount of messages"""
-        for message in range(amount):
-            last_message: stoat.Message = ctx.channel.get_last_message()
-            last_message.delete()
+        last_messages: list[stoat.Message] = await ctx.channel.history(
+            limit=(amount + 1)
+        )
+        for message in last_messages:
+            await message.delete()
 
-        await ctx.channel.send(f"Cleared {amount} messages.", ephemeral=True)
+        await ctx.channel.send(f"Cleared {amount} messages.")
 
     @commands.command()
     @commands.has_permissions(kick_members=True)
@@ -80,7 +82,7 @@ class Moderation(commands.Gear, name="Moderation"):
         reason: str | None = None,
     ):
         """Timeout a member"""
-        member: stoat.Member = ctx.server.get_member(member_id)
+        member: stoat.Member = await ctx.server.fetch_member(member_id)
         init_time = amount
         await member.timeout(parse_timespan(amount))
         if reason is None:
@@ -109,7 +111,7 @@ class Moderation(commands.Gear, name="Moderation"):
         reason: str | None = None,
     ):
         """Removes member from timeout"""
-        member: stoat.Member = ctx.server.get_member(member_id)
+        member: stoat.Member = await ctx.server.fetch_member(member_id)
         await member.timeout(None)
         if reason is None:
             await ctx.channel.send(f"Member {member.name} has been unmuted.")
