@@ -1,6 +1,9 @@
 #!/usr/bin/env python
+from io import BytesIO
 from random import choice
 
+import PIL.Image
+import PIL.ImageFile
 import pytz
 import stoat
 from apscheduler.triggers.cron import CronTrigger
@@ -212,17 +215,20 @@ class Fun(commands.Gear, name="Fun"):
         self,
         ctx: commands.Context,
         embed_id: str,
-        title: str | None = None,
-        message: str | None = None,
+        title: str,
+        *,
+        message: str,
     ):
         """Edit an embed, will only work if you are the author of the original embed. Type [] in your string to indicate any blank lines you want added to your message."""
-        # Get the embed message from the message ID or return an error if it can't be found
-        try:
-            old_embed: stoat.Message = ctx.channel.get_message(embed_id)
-        except Exception as e:
-            return await ctx.channel.send(content=f"Error: {e}", silent=True)
+        # Get the embed message from the message ID
+        old_embed: stoat.Message = await ctx.channel.fetch_message(embed_id)
+
         # Allow users to add newlines to their embed messages
-        if message is not None:
+        if title is None:
+            return await ctx.channel.send("Please add a title!")
+        elif message is None:
+            return await ctx.channel.send("Please add a message!")
+        else:
             split_message = message.split("[]")
             message = "\n".join(split_message)
         edited_embed = stoat.SendableEmbed(
@@ -230,30 +236,28 @@ class Fun(commands.Gear, name="Fun"):
             description=message,
             color="blue",
         )
-        try:
-            await old_embed.edit(embeds=[edited_embed])
-            return await ctx.channel.send(
-                content=f"Embed with ID: {embed_id} should be updated", ephemeral=True
-            )
-        except Exception as e:
-            return await ctx.channel.send(
-                content=f"Unable to update embed with ID: {embed_id} due to {e}",
-                ephemeral=True,
-            )
+        await old_embed.edit(embeds=[edited_embed])
+        return await ctx.channel.send(
+            content=f"Embed with ID: {embed_id} should be updated",
+        )
 
     @commands.command()
     async def embed(
         self,
         ctx: commands.Context,
-        message: str | None = None,
+        title: str,
+        *,
+        message: str,
     ):
         """Create an embed. Type [] in your string to indicate any blank lines you want added to your message."""
         # Allow users to add newlines to their embed messages
-        if message is not None:
-            split_message = message.split("[]")
-            message = "\n".join(split_message)
+        if message is None:
+            return await ctx.channel.send("Please send a message with the embed!")
+
+        split_message = message.split("[]")
+        message = "\n".join(split_message)
         user_embed = stoat.SendableEmbed(
-            title="",
+            title=title,
             description=message,
             color="blue",
         )
@@ -263,8 +267,15 @@ class Fun(commands.Gear, name="Fun"):
     @commands.has_permissions(manage_customization=True)
     async def getemoji(self, ctx: commands.Context, url: str, *, name: str):
         """Add an emoji to the server"""
-        resp = await self.bot.client.get_bytes(url)
-        emoji = await ctx.channel.server.create_server_emoji(name=name, image=resp)
+        img_data = await self.bot.client.get_bytes(url)
+        img: PIL.ImageFile.ImageFile = PIL.Image.open(img_data)
+
+        out: PIL.Image.Image = img.copy()
+        data = BytesIO()
+        out.save(data, format="PNG")
+        emoji = await ctx.channel.server.create_server_emoji(
+            name=name, image=("image.png", data.getvalue())
+        )
         await ctx.channel.send(f"Added emoji {name} {emoji}!")
 
     @commands.command()
