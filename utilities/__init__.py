@@ -111,10 +111,9 @@ class Client:
         async with self._session.get(url) as r:
             if r.status in range(200, 299):
                 img = BytesIO(await r.read())
-                b = img.getvalue()
             else:
                 print(f"Could not get bytes. Error: {r.status}")
-            return b
+            return img
 
     async def get_text(self, url):
         async with self._session.get(url) as r:
