@@ -1,7 +1,6 @@
 #! usr/bin/env python
 from io import BytesIO
 
-import aiofiles
 import stoat
 from PIL import Image, ImageDraw, ImageFile, ImageFont
 from stoat.ext import commands
@@ -30,33 +29,30 @@ class Progress(commands.Gear, name="Progress"):
             level, xp = cur.fetchone()
         if self.bot.get_user(user_id):
             user = self.bot.get_user(user_id)
-            username = user.display_name
-            avatar_url = user.avatar.url()
         else:
-            return await channel.send(f"Could not get user {user_id}!")
+            user = await self.bot.fetch_user(user_id)
+        username = user.name
+        avatar_url = user.avatar.url()
 
         # Gather information for the level card
         threshold = (level + 1) * 25
         progress = (xp / threshold) * 870
-        textcard = "../assets/textcard.png"
-        levelcard = "../assets/levelcard.png"
-        font = "../assets/RobotoSlab-Regular.ttf"
-        result = "../assets/result.png"
-        avatar_mask = "../assets/avatar_mask.png"
-        bar_mask = "../assets/bar_mask.png"
+        textcard = "./assets/textcard.png"
+        levelcard = "./assets/levelcard.png"
+        font = "./assets/RobotoSlab-Regular.ttf"
+        avatar_mask = "./assets/avatar_mask.png"
+        bar_mask = "./assets/bar_mask.png"
 
         # Get the avatar of the target user from URL
-        avatar_bytes: bytes = await self.bot.client.get_bytes(avatar_url)
-        avatar: ImageFile.ImageFile = Image.open(
-            BytesIO(initial_bytes=avatar_bytes)
-        ).resize((170, 170))
+        avatar_bytes = await self.bot.client.get_bytes(avatar_url)
+        avatar: ImageFile.ImageFile = Image.open(avatar_bytes).resize((170, 170))
 
         # Overlay the text card and avatar on the level card
         background: ImageFile.ImageFile = Image.open(levelcard)
         overlay: ImageFile.ImageFile = Image.open(textcard)
         background.paste(overlay, (200, 0), overlay)
         a_mask: ImageFile.ImageFile = (
-            Image.open(avatar_mask).convert("L").resize((170, 170))
+            Image.open(avatar_mask).convert("RGBA").resize((170, 170))
         )
         background.paste(avatar, (15, 15), a_mask)
 
@@ -65,28 +61,25 @@ class Progress(commands.Gear, name="Progress"):
         subFont = ImageFont.truetype(font, 30)
         draw = ImageDraw.Draw(background)
         draw.text(
-            (220, 20),
-            username,
+            xy=(220, 20),
+            text=username,
             font=nameFont,
             fill="white",
             stroke_width=1,
-            stroke_fill=(0, 0, 0),
         )
         draw.text(
-            (220, 150),
-            f"Level - {level}",
+            xy=(220, 150),
+            text=f"Level - {level}",
             font=subFont,
             fill="white",
             stroke_width=1,
-            stroke_fill=(0, 0, 0),
         )
         draw.text(
-            (570, 150),
-            f"{xp}/{threshold} XP",
+            xy=(570, 150),
+            text=f"{xp}/{threshold} XP",
             font=subFont,
             fill="white",
             stroke_width=1,
-            stroke_fill=(0, 0, 0),
         )
 
         # Draw progress bar on the level card
@@ -98,14 +91,14 @@ class Progress(commands.Gear, name="Progress"):
         background.paste(img, (15, 225), b_mask)
 
         # Create and save the file and send it
-        async with aiofiles.open(result, mode="wb") as file:
-            background.save(file, "PNG")
-            await channel.send(
-                attachments=[stoat.Asset(filename="../assets/result.png")]
-            )
+        data = BytesIO()
+        background.save(data, format="PNG")
+        await channel.send(attachments=[("image.png", data.getvalue())])
 
     # Generates xp for a given message
     def give_xp(self, message: stoat.Message):
+        if not message.content:
+            return
         words = message.content.split()
         if len(words) < 5:
             return 5
@@ -167,11 +160,11 @@ class Progress(commands.Gear, name="Progress"):
     async def level(
         self,
         ctx: commands.Context,
-        person: stoat.Member | stoat.User | None,
     ):
         """Check level of a person, defaults to checking your own level"""
-        if not person:
-            person = ctx.author
+        # if not person:
+        #     person = ctx.author
+        person = ctx.author
         with db.cursor() as cur:
             cur.execute(
                 """SELECT level, xp FROM members WHERE (user_id, server_id) = (%s, %s)""",
@@ -183,7 +176,7 @@ class Progress(commands.Gear, name="Progress"):
         if not record:
             return await ctx.send(f"{person.name} has no levels or XP!")
         else:
-            return await self.card_maker(self, ctx.channel, person.id, ctx.server.id)
+            return await self.card_maker(ctx.channel, person.id, ctx.server.id)
 
     @commands.command()
     async def leaderboard(self, ctx: commands.Context):
