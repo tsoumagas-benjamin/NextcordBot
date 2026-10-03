@@ -54,6 +54,7 @@ class Warframe(commands.Gear, name="Warframe"):
                 "Gara",
                 "Hildryn",
                 "Koumei",
+                "Narin",
                 "Revenant",
                 "Styanax",
                 "Titania",
@@ -162,20 +163,16 @@ class Warframe(commands.Gear, name="Warframe"):
 
         # Return early if there are no alerts
         if alert_data is None:
-            alert_embed = stoat.SendableEmbed(
-                title="Alerts",
-                description="No current alerts",
-                color="blue",
-            )
-            return alert_embed
+            return "No current alerts"
 
-        # Store all the alert information to pass to the embed
+        # Store all the alert information to pass to the message
         alert_info = ""
 
         for alert in alert_data:
             # Get the start and end times as dynamic timestamps
             alert_start = epoch_convert(alert["activation"])
             alert_end = epoch_convert(alert["expiry"])
+            alert_duration = f"{alert_start} - {alert_end}"
 
             # Get information on the alert location, type, faction, and difficulty
             alert_mission = alert["mission"]
@@ -188,12 +185,12 @@ class Warframe(commands.Gear, name="Warframe"):
             alert_tag = alert["tag"]
 
             # Get information on the alert rewards
-            alert_reward = alert["reward"]
+            alert_reward = alert_mission["reward"]
             alert_credits = alert_reward["credits"]
             alert_items = alert_reward["countedItems"]
 
             # Get the alert tag and when it will be around
-            alert_title = f"**{alert_tag}** from {alert_start} to {alert_end}\n"
+            alert_title = f"**{alert_tag}** - {alert_duration}\n"
 
             # Get the enemy level, faction, alert type and location
             alert_desc = f"Level {alert_min_level}-{alert_max_level} {alert_faction} {alert_type} on {alert_node}\n"
@@ -212,14 +209,7 @@ class Warframe(commands.Gear, name="Warframe"):
 
             alert_info += f"**Rewards:**\n{alert_rewards}"
 
-        # Create an embed object to return with alert information
-        alert_embed = stoat.SendableEmbed(
-            title="Alerts",
-            description=alert_info if alert_info else "No Active Alerts",
-            color="blue",
-        )
-
-        return alert_embed
+        return alert_info
 
     # Function to get information on this week's archon hunt
     async def archon_hunt(self):
@@ -235,22 +225,15 @@ class Warframe(commands.Gear, name="Warframe"):
         archon_duration = f"{archon_start} - {archon_end}"
 
         # Get the current Archon and the missions leading up to them
-        hunt_info = archon_duration
         current_archon = archon_info["boss"]
         archon_missions = archon_info["missions"]
+        hunt_info = f"{current_archon} is here between {archon_duration}"
 
         # Append each mission type and node
         for mission in archon_missions:
             hunt_info += f"\n{mission['type']} - {mission['node']}"
 
-        # Create an embed object to return with Archon information
-        archon_embed = stoat.SendableEmbed(
-            title=f"{current_archon} is here",
-            description=hunt_info,
-            color="blue",
-        )
-
-        return archon_embed
+        return hunt_info
 
     # Function to handle retrieving when Baro Ki'Teer will arrive or if he is here currently
     async def baro_kiteer(self):
@@ -269,15 +252,9 @@ class Warframe(commands.Gear, name="Warframe"):
         baro_location = baro["location"] if baro["location"] else "Location Unknown"
         baro_inventory = baro["inventory"] if baro["inventory"] else None
         if not baro_inventory:
-            # Create an embed object to return with Baro information
-            baro_embed = stoat.SendableEmbed(
-                title=f"Baro Ki'Teer will be at {baro_location} between {baro_duration}",
-                description="Inventory Unknown",
-                color="blue",
-            )
-            return baro_embed
+            return f"Baro Ki'Teer will be at {baro_location} between {baro_duration}"
         else:
-            baro_list = ""
+            baro_list = f"Baro Ki'Teer is at {baro_location} between {baro_duration}"
 
             # Iterate Baro's inventory
             for item in baro_inventory:
@@ -289,14 +266,7 @@ class Warframe(commands.Gear, name="Warframe"):
                 # Format everything into one line and append it to the list
                 baro_list += f"{name} - {ducats} D {wf_credits} C\n"
 
-        # Create an embed object to return with Baro information
-        baro_embed = stoat.SendableEmbed(
-            title=f"Baro Ki'Teer is at {baro_location} between {baro_duration}",
-            description=baro_list,
-            color="blue",
-        )
-
-        return baro_embed
+        return baro_list
 
     # Function to get information on this week's calendar status/rewards
     async def calendar_status(self):
@@ -312,20 +282,15 @@ class Warframe(commands.Gear, name="Warframe"):
         calendar_duration = f"{calendar_start} - {calendar_end}"
 
         # Iterate days and only record days with rewards
-        calendar_rewards = "Calendar Rewards\n"
+        calendar_rewards = (
+            f"{calendar['season']} Calendar Rewards - {calendar_duration}\n"
+        )
         for day in calendar["days"]:
             if len(day["events"]) == 2:
                 rewards = day["events"]
-                calendar_rewards += f"{day['date'][:10]}\t{rewards[0]['reward']} or {rewards[1]['reward']}"
+                calendar_rewards += f"{day['date'][:10]}\t{rewards[0]['reward']} or {rewards[1]['reward']}\n"
 
-        # Create an embed object to return with calendar information
-        calendar_embed = stoat.SendableEmbed(
-            title=f"{calendar['season']} - {calendar_duration}",
-            description=f"{calendar_rewards}",
-            color="blue",
-        )
-
-        return calendar_embed
+        return calendar_rewards
 
     # Function to get information on the current Deep Archimedea
     async def deep_archimedea_status(self):
@@ -344,23 +309,23 @@ class Warframe(commands.Gear, name="Warframe"):
         da_missions = da["missions"]
 
         # Store information on the deep archimedea
-        da_description = da_duration
+        da_info = f"Deep Archimedea - {da_duration}"
 
         # Get each mission's faction, type, and modifiers
         for mission in da_missions:
-            # Add mission type and enemy faction to the embed
+            # Add mission type and enemy faction to the message
             da_faction = mission["faction"]
             da_type = mission["missionType"]
-            da_description += f"\n**{da_type}** - {da_faction}\n"
+            da_info += f"\n**{da_type}** - {da_faction}\n"
 
             # Handle risks and deviations
             da_dev = mission["deviation"]["name"]
             da_risk = mission["risks"][0]["name"]
             eda_risk = mission["risks"][1]["name"]
 
-            da_description += f"Deviations: {da_dev}\n"
-            da_description += f"Risk: {da_risk}\n"
-            da_description += f"Elite Risk: {eda_risk}\n"
+            da_info += f"Deviations: {da_dev}\n"
+            da_info += f"Risk: {da_risk}\n"
+            da_info += f"Elite Risk: {eda_risk}\n"
 
         # Get Deep Archimedea variables
         da_variables = da["personalModifiers"]
@@ -369,16 +334,9 @@ class Warframe(commands.Gear, name="Warframe"):
         for variable in da_variables:
             parsed_variables.append(f"  - {string_split(variable['name'])}")
 
-        da_description += f"Variables:{'\t'.join(parsed_variables)}"
+        da_info += f"Variables:{'\t'.join(parsed_variables)}"
 
-        # Create the Deep Archimedea embed
-        da_embed = stoat.SendableEmbed(
-            title="Deep Archimedea",
-            description=da_description,
-            color="blue",
-        )
-
-        return da_embed
+        return da_info
 
     # Function to handle the retrieval of Duviri information
     async def duviri_status(self):
@@ -404,19 +362,13 @@ class Warframe(commands.Gear, name="Warframe"):
         duviri_regular = "\n".join(rewards)
         duviri_steel_path = "\n".join(sp_rewards)
 
-        duviri_description = f"**Circuit Rewards** (Choose one)\n{duviri_regular}\n"
-        duviri_description += (
+        duviri_info = "Weekly Duviri Rewards\n"
+        duviri_info += f"**Circuit Rewards** (Choose one)\n{duviri_regular}\n"
+        duviri_info += (
             f"**Steel Path Circuit Rewards** (Choose two)\n{duviri_steel_path}\n"
         )
 
-        # Create an embed object to return with Duviri information
-        duviri_embed = stoat.SendableEmbed(
-            title="Weekly Duviri Rewards",
-            description=duviri_description,
-            color="blue",
-        )
-
-        return duviri_embed
+        return duviri_info
 
     # Function to get information on Nightwave
     async def nightwave_status(self):
@@ -440,7 +392,7 @@ class Warframe(commands.Gear, name="Warframe"):
         # Create a string with the current Nightwave season
         nw_title = f"**Nightwave Season {nw_season}**"
 
-        challenge_info = ""
+        nw_info = f"{nw_title} - {nw_duration}"
 
         for challenge in nw_challenges:
             # Get whether the challenge is daily or weekly
@@ -460,16 +412,9 @@ class Warframe(commands.Gear, name="Warframe"):
             requirement = f"{requirement_name} - {requirement_desc}"
             reward = challenge["reputation"]
 
-            challenge_info += f"- ({duration}) {reward} {requirement} {start}-{end}\n"
+            nw_info += f"- ({duration}) {reward} {requirement} {start}-{end}\n"
 
-        # Create an embed object to return with Nightwave information
-        nw_embed = stoat.SendableEmbed(
-            title=f"{nw_title} - {nw_duration}",
-            description=f"Rewards:\n{challenge_info}",
-            color="blue",
-        )
-
-        return nw_embed
+        return nw_info
 
     # Function to get information on the current sortie
     async def sortie_status(self):
@@ -482,30 +427,23 @@ class Warframe(commands.Gear, name="Warframe"):
         # Get the start and end time for sorties as a dynamic timestamp
         sortie_start = epoch_convert(sortie["activation"])
         sortie_end = epoch_convert(sortie["expiry"])
+        sortie_duration = f"{sortie_start} - {sortie_end}"
 
         # Get the sortie boss and missions
         sortie_boss = sortie["boss"]
         missions = sortie["variants"]
 
         # Create the message for when the sortie will be around
-        sortie_title = f"**Sortie** {sortie_boss} from {sortie_start} to {sortie_end}\n"
-        sortie_missions = ""
+        sortie_info = f"**Sortie** {sortie_boss} - {sortie_duration}\n"
 
         # Get each missions type, modifier, and node
         for mission in missions:
             sortie_type = mission["missionType"]
             sortie_modifier = mission["modifier"]
             sortie_node = mission["node"]
-            sortie_missions += f"{sortie_type} {sortie_node} {sortie_modifier}\n"
+            sortie_info += f"{sortie_type} {sortie_node} {sortie_modifier}\n"
 
-        # Create an embed object to return with sortie information
-        sortie_embed = stoat.SendableEmbed(
-            title=sortie_title,
-            description=sortie_missions,
-            color="blue",
-        )
-
-        return sortie_embed
+        return sortie_info
 
     # Function to get information on the current Temporal Archimedea
     async def temporal_archimedea_status(self):
@@ -524,23 +462,23 @@ class Warframe(commands.Gear, name="Warframe"):
         ta_missions = ta["missions"]
 
         # Store information on the Temporal Archimedea
-        ta_description = ta_duration
+        ta_info = f"Temporal Archimedea - {ta_duration}\n"
 
         # Get each mission's faction, type, and modifiers
         for mission in ta_missions:
-            # Add mission type and enemy faction to the embed
+            # Add mission type and enemy faction to the message
             ta_faction = mission["faction"]
             ta_type = mission["missionType"]
-            ta_description += f"\n**{ta_type}** - {ta_faction}\n"
+            ta_info += f"\n**{ta_type}** - {ta_faction}\n"
 
             # Handle risks and deviations
             ta_dev = mission["deviation"]["name"]
             ta_risk = mission["risks"][0]["name"]
             eta_risk = mission["risks"][1]["name"]
 
-            ta_description += f"Deviations: {ta_dev}\n"
-            ta_description += f"Risk: {ta_risk}\n"
-            ta_description += f"Elite Risk: {eta_risk}\n"
+            ta_info += f"Deviations: {ta_dev}\n"
+            ta_info += f"Risk: {ta_risk}\n"
+            ta_info += f"Elite Risk: {eta_risk}\n"
 
         # Get Temporal Archimedea variables
         ta_variables = ta["personalModifiers"]
@@ -549,16 +487,9 @@ class Warframe(commands.Gear, name="Warframe"):
         for variable in ta_variables:
             parsed_variables.append(f"  - {string_split(variable['name'])}")
 
-        ta_description += f"Variables:{'\t'.join(parsed_variables)}"
+        ta_info += f"Variables:{'\t'.join(parsed_variables)}"
 
-        # Create the Deep Archimedea embed
-        ta_embed = stoat.SendableEmbed(
-            title="Temporal Archimedea",
-            description=ta_description,
-            color="blue",
-        )
-
-        return ta_embed
+        return ta_info
 
     async def archimedea_timer(self):
         # Send the content to each of the daily warframe channels
@@ -566,8 +497,8 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embeds=[self.deep_archimedea_status()])
-            await daily_wf_channel.send(embeds=[self.temporal_archimedea_status()])
+            await daily_wf_channel.send(await self.deep_archimedea_status())
+            await daily_wf_channel.send(await self.temporal_archimedea_status())
 
     async def archon_timer(self):
         # Send the content to each of the daily warframe channels
@@ -575,7 +506,7 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embeds=[self.archon_hunt()])
+            await daily_wf_channel.send(await self.archon_hunt())
 
     async def baro_timer(self):
         # Send the content to each of the daily warframe channels
@@ -583,7 +514,7 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embeds=[self.baro_kiteer()])
+            await daily_wf_channel.send(await self.baro_kiteer())
 
     async def duviri_timer(self):
         # Send the content to each of the daily warframe channels
@@ -591,61 +522,61 @@ class Warframe(commands.Gear, name="Warframe"):
             daily_wf_channel = self.bot.get_channel(channel_id)
             if daily_wf_channel is None:
                 daily_wf_channel = await self.bot.fetch_channel(channel_id)
-            await daily_wf_channel.send(embeds=[self.duviri_status()])
+            await daily_wf_channel.send(await self.duviri_status())
 
     @commands.command()
     async def alerts(self, ctx: commands.Context):
         """Find information on current alerts, if there are any"""
-        alert_embed = await self.alerts_search()
-        await ctx.send(embeds=[alert_embed])
+        alert_info = await self.alerts_search()
+        await ctx.send(alert_info)
 
     @commands.command()
     async def archon(self, ctx: commands.Context):
         """Find the current Archon, missions, and remaining time for the current hunt"""
-        archon_embed = await self.archon_hunt()
-        await ctx.send(embeds=[archon_embed])
+        archon_info = await self.archon_hunt()
+        await ctx.send(archon_info)
 
     @commands.command()
     async def baro(self, ctx: commands.Context):
         """Get information on Baro Ki'Teer"""
-        baro_embed = await self.baro_kiteer()
-        await ctx.send(embeds=[baro_embed])
+        baro_info = await self.baro_kiteer()
+        await ctx.send(baro_info)
 
     @commands.command()
     async def calendar(self, ctx: commands.Context):
         """Get information on the 1999 Calendar"""
-        calendar_embed = await self.calendar_status()
-        await ctx.send(embeds=[calendar_embed])
+        calendar_info = await self.calendar_status()
+        await ctx.send(calendar_info)
 
     @commands.command()
     async def deep_archimedea(self, ctx: commands.Context):
         """Get information on Deep Archimedea"""
-        deep_embed = await self.deep_archimedea_status()
-        await ctx.send(embeds=[deep_embed])
+        da_info = await self.deep_archimedea_status()
+        await ctx.send(da_info)
 
     @commands.command()
     async def duviri(self, ctx: commands.Context):
         """Find information on the current Duviri cycle rewards"""
-        duviri_embed = await self.duviri_status()
-        await ctx.send(embeds=[duviri_embed])
+        duviri_info = await self.duviri_status()
+        await ctx.send(duviri_info)
 
     @commands.command()
     async def nightwave(self, ctx: commands.Context):
         """Find information on the current Nightwave season and challenges"""
-        nightwave_embed = await self.nightwave_status()
-        await ctx.send(embeds=[nightwave_embed])
+        nw_info = await self.nightwave_status()
+        await ctx.send(nw_info)
 
     @commands.command()
     async def sortie(self, ctx: commands.Context):
         """Find information on the current sortie"""
-        sortie_embed = await self.sortie_status()
-        await ctx.send(embeds=[sortie_embed])
+        sortie_info = await self.sortie_status()
+        await ctx.send(sortie_info)
 
     @commands.command()
     async def temporal_archimedea(self, ctx: commands.Context):
         """Get information on Temporal Archimedea"""
-        temporal_embed = await self.temporal_archimedea_status()
-        await ctx.send(embeds=[temporal_embed])
+        ta_info = await self.temporal_archimedea_status()
+        await ctx.send(ta_info)
 
     @commands.command()
     async def progenitors(self, ctx: commands.Context):
