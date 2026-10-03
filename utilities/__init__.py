@@ -231,10 +231,12 @@ def delay_until(day: str, hour: int):
 
 
 # Function to convert an epoch timestamp into a dynamic timestamp
-def epoch_convert(epoch: str):
-    epoch_num = epoch[:10]
-    formatted_time = f"<t:{epoch_num}:f>"
-    return formatted_time
+def epoch_convert(date_string: str):
+    date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+    date_object = datetime.strptime(date_string, date_format).astimezone(tz=pytz.utc)
+    epoch = str(int(date_object.timestamp()))
+    formatted_epoch = f"<t:{epoch}:s>"
+    return formatted_epoch
 
 
 # Function to schedule a task to run after a given delay and time to loop
