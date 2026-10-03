@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from asyncio import sleep
+from io import BytesIO
 
-import aiofiles
 import matplotlib.pyplot as plt
 import numpy as np
 import stoat
@@ -50,34 +50,14 @@ class Information(commands.Gear, name="Information"):
         evaluation = eval(equation)
         await ctx.channel.send(f" Result of {equation} is {evaluation}")
 
-    @commands.command(name="commands")
-    async def get_commands(self, ctx: commands.Context):
-        """Get a list of commands for the bot"""
-        command_list = self.bot.walk_commands()
-        commands = []
-        for command in command_list:
-            if isinstance(command, stoat.ext.commands.command):
-                commands.append(command.qualified_name)
-        commands.sort()
-        bot_commands = ", ".join(commands)
-        embed = stoat.SendableEmbed(
-            title=f"{self.bot.user.name} Commands",
-            description=bot_commands,
-            color="blue",
-        )
-        await ctx.channel.send(embeds=[embed])
-
     @commands.command()
     async def info(self, ctx: commands.Context, user_id: str):
         """Get information on a user"""
         # Get server member from user ID
-        member: stoat.Member = ctx.server.get_member(user_id)
+        member: stoat.Member = await ctx.server.fetch_member(user_id)
 
         # Get member's ID, created at date, and joined at date for this server
-        info_body = f"ID: {member.id}\n"
-        info_body += (
-            f"Created at: {member.created_at.strftime('%A, %B %d %Y @ %H:%M:%S %p')}\n"
-        )
+        info_body = f"ID: <@{member.id}>\n"
         info_body += (
             f"Joined at: {member.joined_at.strftime('%A, %B %d %Y @ %H:%M:%S %p')}\n"
         )
@@ -86,45 +66,73 @@ class Information(commands.Gear, name="Information"):
         role_list = []
         for role in member.roles:
             if role.name != "@everyone":
-                role_list.append(role.mention)
+                role_list.append(f"<%{role.id}>")
             role_list.reverse()
         info_body += f"Roles: {', '.join(role_list)}\n"
 
         embed = stoat.SendableEmbed(
-            title=f"{member.display_name} {member.mention}",
-            description=member.mention,
+            title=member.display_name,
+            description=info_body,
             color="blue",
             icon_url=member.server_avatar.url(),
         )
 
         await ctx.channel.send(embeds=[embed])
 
+    @commands.command(name="commands")
+    async def list_commands(self, ctx: commands.Context):
+        """Get a list of commands for the bot"""
+        commands = []
+        # Print commands per gear
+        for gear_name, gear in self.bot.gears.items():
+            gear_commands = gear.get_commands()
+            if not gear_commands:
+                print(f"NO COMMANDS FOR {gear_name}")
+                continue
+            sorted_commands = sorted(
+                [command.qualified_name for command in gear_commands]
+            )
+            joined_commands = ", ".join(sorted_commands)
+            commands.append(f"**{gear_name}:**\n{joined_commands}")
+        commands.sort()
+        bot_commands = "\n".join(commands)
+        embed = stoat.SendableEmbed(
+            title=f"{self.bot.user.name} Commands",
+            description=bot_commands,
+            color="blue",
+        )
+        await ctx.channel.send(embeds=[embed])
+
     @commands.command()
     async def ping(self, ctx: commands.Context):
         """Gets bot ping response time"""
 
+        await self.bot.shard.ping()
+        await sleep(1)
+        delta = self.bot.shard.last_pong_at - self.bot.shard.last_ping_at
+
         embed = stoat.SendableEmbed(
             title="Ping",
-            description=f"{round((stoat.Shard.last_ping_at - stoat.Shard.last_pong_at) * 1000)}ms",
+            description=f"{round((delta.total_seconds()) * 1000)}ms",
             color="blue",
         )
 
         await ctx.channel.send(embeds=[embed])
 
     @commands.command()
-    async def poll(self, ctx: commands.Context, question: str):
+    async def poll(self, ctx: commands.Context, *, question: str):
         """Create a poll question and have people vote yes or no"""
         # Format embed response to resemble a poll question
         if not question.endswith("?"):
             question += "?"
         # Create and send the initial poll embed
         poll_title = f"Poll: {question.capitalize()}"
-        poll = stoat.SendableEmbed(
+        poll_embed = stoat.SendableEmbed(
             title=poll_title,
             description="Yes\t✅\nNo\t❌",
             color="blue",
         )
-        message = await ctx.channel.send(embeds=[poll])
+        message = await ctx.channel.send(embeds=[poll_embed])
         # Set initial reactions
         await message.react("✅")
         await message.react("❌")
@@ -140,11 +148,11 @@ class Information(commands.Gear, name="Information"):
         pie = np.array(self.count)
         plt.pie(pie, colors=self.colors, startangle=90)
         plt.title(label=self.title, color="w")
-        plt.savefig("../assets/poll.png", bbox_inches=None, transparent=True)
+        data = BytesIO()
+        plt.savefig(data, bbox_inches=None, transparent=True)
         plt.close()
         # Open, send, and close the chart file
-        async with aiofiles.open("../assets/poll.png", mode="rb") as chart:
-            await ctx.channel.send(attachments=[chart])
+        await ctx.channel.send(attachments=[("image.png", data.getvalue())])
 
     @commands.command()
     @commands.check(check_permitted_servers)
@@ -166,23 +174,14 @@ class Information(commands.Gear, name="Information"):
         # Get the number of servers with the bot and members in each server
         server_count = len(self.bot.servers)
         total_members = 0
-        for name, server in self.bot.servers:
-            total_members += len(server.members)
-
-        # Get the list of commands and their qualified names
-        commands_list = self.bot.commands
-        cmds = []
-        for cmd in commands_list:
-            cmds.append(cmd.qualified_name)
-        cmds.sort()
-        bot_commands = ", ".join(cmds)
+        for server in self.bot.servers.values():
+            total_members += len(await server.fetch_members())
 
         # Consolidate statistics info and output the embed
         serving_info = f"Serving {total_members} in {server_count} servers\n"
-        commands_info = f"{len(commands_list)} commands:\n{bot_commands}\n"
         embed = stoat.SendableEmbed(
             title=f"{self.bot.user.name} Statistics",
-            description=f"{serving_info}{commands_info}{ctx.channel.server.name}",
+            description=f"{serving_info}{ctx.channel.server.name}",
             color="blue",
             icon_url=ctx.channel.server.icon.url(),
         )
@@ -195,7 +194,7 @@ class Information(commands.Gear, name="Information"):
         amount: int,
         unit: str,
         *,
-        description: str | None = None,
+        description: str,
     ):
         """Sets a timer with an optional description i.e. 30 s"""
         if description is None:
