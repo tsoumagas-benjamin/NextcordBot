@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # Common utilities that may be shared across files
-import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 from json import loads
 from os import getenv, listdir
@@ -20,16 +19,6 @@ load_dotenv(".env")
 db: psycopg.Connection = psycopg.connect(
     f"dbname={getenv('DB_NAME')} user={getenv('DB_USER')}"
 )
-
-days = {
-    "Monday": 0,
-    "Tuesday": 1,
-    "Wednesday": 2,
-    "Thursday": 3,
-    "Friday": 4,
-    "Saturday": 5,
-    "Sunday": 6,
-}
 
 # Define bot permissions, see: enums / UserPermissions
 permissions = Permissions(
@@ -192,58 +181,13 @@ def check_permitted_servers(ctx: commands.Context):
     return ctx.server.id in permitted_servers
 
 
-# Function to get the time in seconds until a given date and hour
-def delay_until(day: str, hour: int):
-    if (
-        (day.capitalize() not in days and day.capitalize() != "Tomorrow")
-        or hour < 0
-        or hour > 24
-    ):
-        return "Invalid date provided"
-
-    # Get the next day coming up, i.e. the next Monday
-    today = datetime.now(tz=pytz.utc).date()
-    if day.capitalize() == "Tomorrow":
-        target_day = today + timedelta(days=1)
-    else:
-        target_day = today + timedelta(
-            days=(days[day.capitalize()] - today.weekday()) % 7
-        )
-
-    # Add the hours onto the date to make the datetime
-    full_datetime: datetime = datetime(
-        year=target_day.year,
-        month=target_day.month,
-        day=target_day.day,
-        hour=hour,
-        tzinfo=pytz.utc,
-    )
-
-    # Get the time from the target datetime to now in seconds
-    delta = full_datetime - datetime.now(tz=pytz.utc)
-    delay: float = delta.total_seconds()
-    # If target has already passed, look for the day next week
-    if delay < 0:
-        full_datetime += timedelta(days=7)
-        delta = full_datetime - datetime.now(tz=pytz.utc)
-        delay: float = delta.total_seconds()
-    return delay
-
-
-# Function to convert an epoch timestamp into a dynamic timestamp
+# Function to convert a date string into a formatted epoch timestamp
 def epoch_convert(date_string: str):
     date_format = "%Y-%m-%dT%H:%M:%S.000Z"
     date_object = datetime.strptime(date_string, date_format).astimezone(tz=pytz.utc)
     epoch = str(int(date_object.timestamp()))
     formatted_epoch = f"<t:{epoch}:s>"
     return formatted_epoch
-
-
-# Function to schedule a task to run after a given delay and time to loop
-async def schedule(delay: float, loop_time: float, function, *args, **kwargs):
-    await asyncio.sleep(delay)
-    while True:
-        await asyncio.gather(function(*args, **kwargs), asyncio.sleep(loop_time))
 
 
 # Function to send embeds to the designated channel
@@ -259,12 +203,3 @@ async def send_embed(
 # Function to put spaces before capitals in strings
 def string_split(string: str):
     return sub(r"(?<!^)(?=[A-Z])", " ", string)
-
-
-# Function to convert a string to time in seconds
-def time_from_string(time: int, unit: str):
-    match unit:
-        case "week":
-            return time * 604800
-        case "day":
-            return time * 86400
