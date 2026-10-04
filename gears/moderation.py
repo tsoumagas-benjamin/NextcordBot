@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from asyncio import sleep
+
 import stoat
 from humanfriendly import parse_timespan
 from stoat.ext import commands
@@ -47,7 +49,9 @@ class Moderation(commands.Gear, name="Moderation"):
         for message in last_messages:
             await message.delete()
 
-        await ctx.channel.send(f"Cleared {amount} messages.")
+        clear_message = await ctx.channel.send(f"Cleared {amount} messages.")
+        await sleep(5)
+        await clear_message.delete()
 
     @commands.command()
     @commands.has_permissions(kick_members=True)
