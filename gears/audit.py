@@ -20,7 +20,9 @@ class Audit(commands.Gear, name="Audit"):
 
     # Function to format
     def date_format(self, time: datetime):
-        return time.strftime("%m/%d/%Y %H:%M:%S")
+        epoch = str(int(time.timestamp()))
+        formatted_epoch = f"<t:{epoch}:s>"
+        return formatted_epoch
 
     def fetch_audit_channel(self, server_id: str):
         with db.cursor() as cur:
@@ -498,33 +500,13 @@ class Audit(commands.Gear, name="Audit"):
         # Send the embed to the designated channel
         await send_embed(self.bot, server_audit_log, member_ban)
 
-    # # Records when a member is unbanned
-    # @commands.Gear.listener()
-    # async def on_member_unban(self, on: stoat.UserBannedSystemEvent):
-    #     server_audit_log = self.fetch_audit_channel(on.server_id)
-
-    #     if (not server_audit_log) or (on.user.bot):
-    #         return
-
-    #     embed_footer = f"Member ID: {on.user.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
-
-    #     member_unban = stoat.SendableEmbed(
-    #         title="Member Unbanned",
-    #         description=f"{on.user_as_member.display_name}\n{on.user_as_member.mention}\n{embed_footer}",
-    #         icon_url=on.user_as_member.server_avatar.url(),
-    #         color="green",
-    #     )
-
-    #     # Send the embed to the designated channel
-    #     await send_embed(self.bot, server_audit_log["channel"], member_unban)
-
     # Records when a message is deleted
     @commands.Gear.listener()
     async def on_message_delete(self, on: stoat.MessageDeleteEvent):
-        server_audit_log = self.fetch_audit_channel(on.message.server.id)
-
-        if (not server_audit_log) or (on.message.author.bot):
+        if (not on.message) or (on.message.author.bot):
             return
+
+        server_audit_log = self.fetch_audit_channel(on.message.server.id)
 
         embed_footer = f"Message ID: {on.message.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
         embed_contents = ""
