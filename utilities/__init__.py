@@ -115,11 +115,6 @@ class Client:
             output = await r.json()
             return output
 
-    async def get_content(self, url):
-        async with self._session.get(url) as r:
-            output = await r.content()
-            return output
-
     async def post(self, url, *args, **kwargs):
         async with self._session.post(url, *args, **kwargs) as r:
             output = await r.json()
@@ -152,6 +147,7 @@ class ChaosBot(commands.Bot):
 
         # Initialize the scheduler
         self.scheduler = AsyncIOScheduler()
+        self.scheduler.start()
 
         # Add functionality from gears
         for filename in listdir("./gears"):
