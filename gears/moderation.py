@@ -46,8 +46,7 @@ class Moderation(commands.Gear, name="Moderation"):
         last_messages: list[stoat.Message] = await ctx.channel.history(
             limit=(amount + 1)
         )
-        for message in last_messages:
-            await message.delete()
+        await self.bot.http.delete_messages(ctx.channel, last_messages)
 
         clear_message = await ctx.channel.send(f"Cleared {amount} messages.")
         await sleep(5)
