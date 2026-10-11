@@ -537,7 +537,7 @@ class Audit(commands.Gear, name="Audit"):
     async def on_message_edit(self, on: stoat.MessageUpdateEvent):
         server_audit_log = self.fetch_audit_channel(on.message.server.id)
 
-        if (not server_audit_log) or (on.before.author.bot) or (on.before.author.bot):
+        if (not server_audit_log) or (not on.before) or (not on.after):
             return
 
         embed_footer = f"Message ID: {on.message.id} | {self.date_format(datetime.now(tz=pytz.utc))}"
