@@ -52,7 +52,7 @@ class Progress(commands.Gear, name="Progress"):
         overlay: ImageFile.ImageFile = Image.open(textcard)
         background.paste(overlay, (200, 0), overlay)
         a_mask: ImageFile.ImageFile = (
-            Image.open(avatar_mask).convert("RGBA").resize((170, 170))
+            Image.open(avatar_mask).convert("L").resize((170, 170))
         )
         background.paste(avatar, (15, 15), a_mask)
 

@@ -360,7 +360,7 @@ class Fun(commands.Gear, name="Fun"):
             db.commit()
 
         # Let users know where the updated channel is
-        updated_channel = ctx.server.get_channel(ctx.channel.channel_id)
+        updated_channel = ctx.server.get_channel(channel_id)
         if updated_channel:
             return await ctx.channel.send(
                 f"Daily content for this server will go to {updated_channel.name}."
